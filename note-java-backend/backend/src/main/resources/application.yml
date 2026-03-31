@@ -1,0 +1,16 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+logging:
+  level:
+    com.simplenote.backend: TRACE
+    org.springframework.web: DEBUG
+    root: INFO
+    org.springframework.web.servlet.mvc.method.annotation.SseEmitter: TRACE
