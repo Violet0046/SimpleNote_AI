@@ -70,7 +70,7 @@ class ChatApp {
         this.abortController = new AbortController();
 
         try {
-            const baseUrl = window.location.protocol === 'file:' ? 'http://127.0.0.1:8080' : '';
+            const baseUrl = 'http://127.0.0.1:8080';
             const response = await fetch(`${baseUrl}/api/chat/stream`, {
                 method: 'POST',
                 headers: {
@@ -104,38 +104,48 @@ class ChatApp {
     /**
      * 读取流数据（每个字符）
      */
+    /**
+     * 读取流数据（每个字符）
+     */
+    /**
+     * 读取流数据（每个字符）
+     */
     async readStream(reader) {
         const decoder = new TextDecoder();
-        let buffer = '';
+        let buffer = ''; // 准备一个缓冲区，用来拼接被网络切碎的包裹
 
         while (true) {
             const { done, value } = await reader.read();
 
             if (done) {
-                // 流结束
                 console.log('流式传输完成');
                 break;
             }
 
-            // 解码当前块
-            const chunk = decoder.decode(value, { stream: true });
-            buffer += chunk;
+            // 将新读到的数据拼接到缓冲区
+            buffer += decoder.decode(value, { stream: true });
 
-            // 处理完整的事件行
+            // 按换行符把数据切分成一行行
             const lines = buffer.split('\n');
-            buffer = lines.pop(); // 保留最后一行（可能不完整）
+            
+            // 最后一行可能还没传完（比如被网络截断了），我们把它弹出来，留在 buffer 里等下一波拼接
+            buffer = lines.pop(); 
 
             for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const data = line.substring(6).trim();
-                    if (data && data !== '[DONE]') {
-                        // 处理不同的SSE事件类型
-                        if (data.startsWith('开始流式传输')) {
-                            console.log('收到开始信号');
-                        } else {
-                            // 追加字符到消息
-                            this.appendToMessage(data);
-                        }
+                // 严格按照 SSE 协议解析：只处理以 "data:" 开头的行
+                if (line.startsWith('data:')) {
+                    // 截取 data: 后面的真实内容，并去掉可能多余的空格
+                    let text = line.substring(5).trim();
+
+                    // 过滤掉我们自己定义的信号标志
+                    if (text === '[START]') continue;
+                    if (text === '[DONE]') return; // 遇到结束标志，直接收工
+
+                    if (text) {
+                        // 把刚才 Java 传过来的特殊标记换回真正的换行
+                        const formattedText = text.replace(/<br>/g, '\n');
+                        // 干净漂亮地追加到屏幕上！
+                        this.appendToMessage(formattedText);
                     }
                 }
             }

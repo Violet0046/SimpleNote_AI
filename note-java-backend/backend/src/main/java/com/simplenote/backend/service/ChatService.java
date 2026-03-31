@@ -54,15 +54,24 @@ public class ChatService {
     /**
      * 调用Python后端API获取完整响应
      */
+    /**
+     * 调用Python后端API获取完整响应
+     */
     private String callPythonApi(String userInput) throws Exception {
         try {
-            HttpClient client = HttpClient.newHttpClient();
-            // 使用JSON格式构建请求体，避免特殊字符问题
-            String requestBody = String.format("{\"text\": \"%s\"}", userInput.replace("\"", "\\\""));
+            // 【关键修复 1】强迫 Java 使用 HTTP/1.1 协议！防止 Python Uvicorn 丢失请求体
+            HttpClient client = HttpClient.newBuilder()
+                    .version(HttpClient.Version.HTTP_1_1)
+                    .build();
+
+            // 【关键修复 2】使用 objectMapper 规范、安全地打包 JSON，绝对不会出错
+            java.util.Map<String, String> bodyMap = new java.util.HashMap<>();
+            bodyMap.put("text", userInput);
+            String requestBody = objectMapper.writeValueAsString(bodyMap);
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(PYTHON_API_URL))
-                    .header("Content-Type", "application/json")
+                    .header("Content-Type", "application/json; charset=utf-8")
                     .POST(HttpRequest.BodyPublishers.ofString(requestBody))
                     .build();
 
@@ -70,11 +79,8 @@ public class ChatService {
 
             if (response.statusCode() == 200) {
                 System.out.println("Python API响应: " + response.body());
-
-                // 解析JSON响应，提取reply字段
-                String jsonResponse = response.body();
-                // 简单解析，直接提取reply字段的值
-                String reply = extractReplyFromJson(jsonResponse);
+                // 这里会调用你刚才修复好的、极其优雅的 extractReplyFromJson 方法
+                String reply = extractReplyFromJson(response.body());
                 System.out.println("提取的回复内容: " + reply);
                 return reply;
             } else {
@@ -90,30 +96,9 @@ public class ChatService {
      * 从JSON响应中提取reply字段的内容
      */
     private String extractReplyFromJson(String jsonResponse) {
-        // 使用简单的字符串提取，因为不想引入额外的依赖
         try {
-            System.out.println("原始JSON响应: " + jsonResponse);
-
-            // 检查响应格式
-            if (!jsonResponse.contains("\"status\"") || !jsonResponse.contains("\"reply\"")) {
-                throw new RuntimeException("JSON响应格式不正确，缺少status或reply字段");
-            }
-
-            // 假设格式为: {"status":"success","reply":"..."}
-            int startIndex = jsonResponse.indexOf("\"reply\":\"");
-            if (startIndex == -1) {
-                throw new RuntimeException("未找到reply字段");
-            }
-
-            startIndex += 8; // 跳过 "\"reply\":\""
-            int endIndex = jsonResponse.indexOf("\"", startIndex);
-            if (endIndex == -1) {
-                throw new RuntimeException("reply字段格式错误");
-            }
-
-            String reply = jsonResponse.substring(startIndex, endIndex);
-            System.out.println("成功提取reply内容: " + reply);
-            return reply;
+            // 使用之前被闲置的 objectMapper 优雅、安全地解析 JSON
+            return objectMapper.readTree(jsonResponse).get("reply").asText();
         } catch (Exception e) {
             System.err.println("解析JSON失败: " + e.getMessage());
             throw new RuntimeException("解析JSON失败: " + e.getMessage(), e);
@@ -124,35 +109,41 @@ public class ChatService {
      * 模拟流式输出：将完整响应拆分成字符，每隔50ms发送一个字符
      */
     private void simulateStreaming(String fullResponse, SseEmitter emitter) throws IOException {
-        // 移除引号，但保留换行和其他字符
-        String cleanResponse = fullResponse.replace("\"", "");
+        String cleanResponse = fullResponse.trim();
 
-        // 确保内容不为空
-        if (cleanResponse == null || cleanResponse.trim().isEmpty()) {
+        if (cleanResponse == null || cleanResponse.isEmpty()) {
             throw new IOException("Python API返回内容为空");
         }
 
-        // 发送开始信号
         emitter.send(SseEmitter.event()
-                .name("start")
-                .data("开始流式传输"));
+                .name("message")
+                .data("[START]"));
 
-        for (int i = 0; i < cleanResponse.length(); i++) {
-            char currentChar = cleanResponse.charAt(i);
-            String chunk = String.valueOf(currentChar);
+        // 【核心修复】：将字符串转换为 Unicode 代码点数组，完美保护 Emoji 不被劈开！
+        int[] codePoints = cleanResponse.codePoints().toArray();
+        
+        for (int codePoint : codePoints) {
+            String chunk;
+            
+            if (codePoint == '\n') {
+                chunk = "<br>";
+            } else if (codePoint == '\r') {
+                continue; // 忽略回车符
+            } else {
+                // 将完整的代码点还原成字符串（无论是普通汉字还是 32位 Emoji 都能完美还原）
+                chunk = new String(Character.toChars(codePoint));
+            }
 
-            // 发送当前字符
-            emitter.send(SseEmitter.event()
-                    .name("message")
-                    .data(chunk));
+            emitter.send(chunk);
 
-            // 等待50ms，模拟打字机效果
             try {
-                Thread.sleep(50);
+                Thread.sleep(30);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new IOException("流式传输被中断", e);
             }
         }
+        
+        emitter.send("[DONE]");
     }
 }
