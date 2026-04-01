@@ -1,10 +1,11 @@
-package com.simplenote.backend.service;
+package com.simplenote.backend.ai_legacy;
 
-import com.simplenote.backend.dto.ChatRequest;
-import org.springframework.stereotype.Service;
+//import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.simplenote.backend.ai_legacy.dto.ChatRequest;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -13,7 +14,7 @@ import java.net.http.HttpResponse;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@Service
+//@Service
 public class ChatService {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();

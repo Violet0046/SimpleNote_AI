@@ -1,28 +1,13 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
+<html lang="">
+  <head>
     <meta charset="UTF-8">
+    <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SimpleNote AI - 智能对话助手</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="chat-container">
-        <div class="chat-header">
-            SimpleNote AI - 智能对话助手
-        </div>
-        <div class="chat-messages" id="chatMessages">
-            <!-- 欢迎消息 -->
-            <div class="message ai-message">
-                欢迎使用 SimpleNote AI！我可以帮您解答问题，请输入您的问题开始对话。
-            </div>
-        </div>
-        <div class="chat-input-container">
-            <input type="text" class="chat-input" id="userInput" placeholder="输入您的问题..." autocomplete="off">
-            <button class="send-button" id="sendButton">发送</button>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
-</body>
+    <title>Vite App</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>

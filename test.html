@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>小红书 API 炼丹炉 v2.0</title>
+    <style>
+        body { font-family: sans-serif; display: flex; gap: 20px; justify-content: center; padding: 50px; background-color: #f5f5f5; }
+        .box { background: white; padding: 30px; border-radius: 10px; width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        input, button { width: 100%; margin-bottom: 15px; padding: 10px; box-sizing: border-box; }
+        button { background: #ff2442; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .login-btn { background: #333; }
+        #token-display { word-break: break-all; font-size: 12px; color: #666; background: #eee; padding: 10px; border-radius: 5px; display: none; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h3>🔥 用户注册</h3>
+    <input type="text" id="reg-u" placeholder="用户名">
+    <input type="password" id="reg-p" placeholder="密码">
+    <button onclick="sendRequest('/user/register', 'reg-u', 'reg-p')">发送注册请求</button>
+</div>
+
+<div class="box">
+    <h3>🔐 用户登录</h3>
+    <input type="text" id="login-u" placeholder="用户名">
+    <input type="password" id="login-p" placeholder="密码">
+    <button class="login-btn" onclick="sendLogin()">登录并获取 Token</button>
+    <div id="token-display"></div>
+</div>
+
+<div class="box" style="margin-top: 20px;">
+    <h3>📝 发布小红书笔记</h3>
+    <input type="text" id="post-title" placeholder="输入超吸睛的标题...">
+    <input type="text" id="post-content" placeholder="输入正文内容...">
+    <button style="background: #28a745;" onclick="sendPost()">发布笔记</button>
+</div>
+
+<script>
+    // 通用的注册请求函数
+    function sendRequest(url, uId, pId) {
+        let u = document.getElementById(uId).value;
+        let p = document.getElementById(pId).value;
+        
+        fetch(`http://localhost:8080${url}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `username=${u}&password=${p}`
+        })
+        .then(res => res.json())
+        .then(data => alert("后端返回：\n" + JSON.stringify(data, null, 2)));
+    }
+
+    // 专属的登录请求函数：要处理 Token
+    function sendLogin() {
+        let u = document.getElementById('login-u').value;
+        let p = document.getElementById('login-p').value;
+
+        fetch('http://localhost:8080/user/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `username=${u}&password=${p}`
+        })
+        .then(res => res.json())
+        .then(result => {
+            if(result.code === 1) {
+                // 1. 拿到长长的 Token
+                let token = result.data;
+                // 2. 存入浏览器的“保险箱” (LocalStorage)
+                localStorage.setItem('userToken', token);
+                
+                // 3. 显示出来看看
+                document.getElementById('token-display').style.display = 'block';
+                document.getElementById('token-display').innerText = "登录成功！获取到的 Token 为：\n" + token;
+                alert("登录成功！Token 已保存到浏览器本地缓存。");
+            } else {
+                alert("登录失败：" + result.msg);
+            }
+        });
+    }
+
+    // 专属的发帖请求函数（带有高级大厂认证）
+function sendPost() {
+    let t = document.getElementById('post-title').value;
+    let c = document.getElementById('post-content').value;
+    
+    // 1. 从保险箱拿出 Token
+    let token = localStorage.getItem('userToken');
+    if (!token) {
+        alert("请先在上面登录拿到 Token！");
+        return;
+    }
+
+    // 2. 组装高级 JSON 快递包
+    let postData = {
+        title: t,
+        content: c,
+        images: "http://dummyimage.com/200x200" // 假装传了一张图
+    };
+
+    // 3. 呼叫后端服务器
+    fetch('http://localhost:8080/post/add', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json', // 告诉服务器我是 JSON
+            'Authorization': token              // 【核心】把 Token 贴在请求头上！
+        },
+        body: JSON.stringify(postData)          // 把 JS 对象变成 JSON 字符串
+    })
+    .then(res => {
+        if(res.status === 401) {
+            alert("保安拦截：Token 无效或已过期！请重新登录。");
+            throw new Error("Unauthorized");
+        }
+        return res.json();
+    })
+    .then(result => {
+        alert("后端返回：\n" + JSON.stringify(result, null, 2));
+    })
+    .catch(err => console.log("请求中断", err));
+}
+</script>
+</body>
+</html>

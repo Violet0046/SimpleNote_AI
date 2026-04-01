@@ -1,4 +1,4 @@
-package com.simplenote.backend.dto;
+package com.simplenote.backend.ai_legacy.dto;
 
 import jakarta.validation.constraints.NotBlank;
 

@@ -10,7 +10,8 @@ spring:
 
 logging:
   level:
-    com.simplenote.backend: TRACE
-    org.springframework.web: DEBUG
+    "[com.simplenote.backend]": TRACE
+    "[org.springframework.web]": DEBUG
     root: INFO
-    org.springframework.web.servlet.mvc.method.annotation.SseEmitter: TRACE
+    "[org.springframework.web.servlet.mvc.method.annotation.SseEmitter]": TRACE
+
