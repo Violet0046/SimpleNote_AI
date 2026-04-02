@@ -91,7 +91,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { post } from '@/utils/request'
+import { post as apiPost } from '@/utils/request'
 import { ElMessage } from 'element-plus'
 import type { Post } from '@/types'
 
@@ -136,7 +136,7 @@ const handleLike = async (e: Event) => {
     isLiked.value = !isLiked.value
 
     // 调用点赞 API
-    await post(`/post/${props.post.id}/like`)
+    await apiPost(`/post/${props.post.id}/like`)
 
     // 更新本地点赞数
     if (isLiked.value) {

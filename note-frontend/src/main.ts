@@ -17,10 +17,10 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 app.use(createPinia())
 app.use(router)
 
+const appInstance = app.mount('#app')
+
 // 应用挂载后初始化用户信息
-app.mount('#app', () => {
-  const authStore = useAuthStore()
-  if (authStore.token) {
-    authStore.fetchUserInfo()
-  }
-})
+const authStore = useAuthStore()
+if (authStore.token) {
+  authStore.fetchUserInfo()
+}

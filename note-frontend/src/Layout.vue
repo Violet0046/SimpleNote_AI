@@ -41,17 +41,49 @@
             </router-link>
 
             <!-- 用户头像或登录按钮 -->
+            <!-- 用户头像或登录按钮 -->
             <template v-if="authStore.isLoggedIn">
-              <div class="w-8 h-8 bg-gray-300 rounded-full cursor-pointer overflow-hidden">
-                <img
-                  v-if="authStore.getUserAvatar"
-                  :src="authStore.getUserAvatar"
-                  alt="用户头像"
-                  class="w-full h-full object-cover"
+              <div class="relative">
+                <!-- 头像 -->
+                <div
+                  class="w-8 h-8 bg-gray-300 rounded-full cursor-pointer overflow-hidden hover:opacity-80 transition-opacity relative"
+                  @click="handleAvatarClick"
                 >
-                <span v-else class="w-full h-full flex items-center justify-center text-gray-600 text-sm">
-                  {{ authStore.getUsername?.charAt(0).toUpperCase() || 'U' }}
-                </span>
+                  <img
+                    v-if="authStore.getUserAvatar"
+                    :src="authStore.getUserAvatar"
+                    alt="用户头像"
+                    class="w-full h-full object-cover"
+                  >
+                  <span v-else class="w-full h-full flex items-center justify-center text-gray-600 text-sm">
+                    {{ authStore.getUsername?.charAt(0).toUpperCase() || 'U' }}
+                  </span>
+                </div>
+
+                <!-- 下拉菜单 -->
+                <div
+                  v-if="showUserMenu"
+                  class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50"
+                  @click.stop
+                >
+                  <div class="px-4 py-2 border-b border-gray-100">
+                    <p class="text-sm font-medium text-gray-900">{{ authStore.getUsername }}</p>
+                    <p class="text-xs text-gray-500">点击头像查看主页</p>
+                  </div>
+                  <router-link
+                    to="/user/profile"
+                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    @click="showUserMenu = false"
+                  >
+                    我的主页
+                  </router-link>
+                  <button
+                    @click="handleLogout"
+                    class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  >
+                    退出登录
+                  </button>
+                </div>
               </div>
             </template>
             <template v-else>
@@ -81,8 +113,52 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import AuthModal from '@/components/AuthModal.vue'
+import { ElMessage } from 'element-plus'
 
 const authStore = useAuthStore()
+const router = useRouter()
+const showUserMenu = ref(false)
+
+// 处理头像点击
+const handleAvatarClick = (event: Event) => {
+  event.stopPropagation()
+  // 如果菜单已经打开，则跳转到个人主页
+  if (showUserMenu.value) {
+    router.push('/user/profile')
+    showUserMenu.value = false
+  } else {
+    // 否则打开菜单
+    showUserMenu.value = true
+  }
+}
+
+// 处理退出登录
+const handleLogout = () => {
+  authStore.logout()
+  showUserMenu.value = false
+  router.push('/')
+  ElMessage.success('已退出登录')
+}
+
+// 点击其他地方关闭下拉菜单
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  const dropdown = document.querySelector('.absolute.right-0.mt-2.w-48')
+  if (dropdown && !dropdown.contains(target)) {
+    showUserMenu.value = false
+  }
+}
+
+// 监听点击事件
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>
