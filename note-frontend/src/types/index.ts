@@ -43,6 +43,8 @@ export interface Post {
   authorAvatar: string
   likeCount?: number | null
   tags?: string
+  commentCount?: number
+  isVideo?: boolean
 }
 
 // 评论信息
@@ -51,6 +53,8 @@ export interface Comment {
   userId: number
   authorName: string
   authorAvatar: string
+  userName: string
+  userAvatar: string
   content: string
   ipLocation: string
   parentId: number

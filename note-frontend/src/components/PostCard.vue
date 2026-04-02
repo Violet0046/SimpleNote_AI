@@ -1,11 +1,11 @@
 <template>
   <div
     :data-post-id="post.id"
-    class="group relative break-ins-avoid cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg mb-4"
+    class="group relative cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg mb-4 break-inside-avoid"
     @click="handleCardClick"
   >
     <!-- 图片容器 -->
-    <div class="relative aspect-[3/4] overflow-hidden rounded-xl">
+    <div class="relative aspect-[3/4] overflow-hidden rounded-lg">
       <!-- 图片 -->
       <img
         :src="post.images"
@@ -14,6 +14,16 @@
         loading="lazy"
         v-image-error="{ type: 'image' }"
       />
+
+      <!-- 视频角标 -->
+      <div
+        v-if="post.isVideo"
+        class="absolute top-2 right-2 w-8 h-8 bg-black bg-opacity-50 rounded-full flex items-center justify-center"
+      >
+        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M8 5v14l11-7z"/>
+        </svg>
+      </div>
 
       <!-- 图片加载状态 -->
       <div v-if="isLoading" class="absolute inset-0 bg-gray-200 animate-pulse">
@@ -33,7 +43,7 @@
         {{ post.title }}
       </h3>
 
-      <!-- 作者信息和点赞 -->
+      <!-- 作者信息和互动 -->
       <div class="flex items-center justify-between">
         <!-- 作者头像和昵称 -->
         <router-link
@@ -42,7 +52,7 @@
           @click.stop
         >
           <div
-            class="w-5 h-5 rounded-full overflow-hidden bg-gray-300 flex-shrink-0"
+            class="w-6 h-6 rounded-full overflow-hidden bg-gray-300 flex-shrink-0"
             :title="post.authorName"
           >
             <img
@@ -62,11 +72,11 @@
         <!-- 点赞 -->
         <button
           @click.stop="handleLike"
-          class="flex items-center space-x-1 text-gray-500 hover:text-red-500 transition-colors group-hover:text-red-500"
+          class="flex items-center space-x-1 text-gray-500 hover:text-[#FF2442] transition-colors group-hover:text-[#FF2442]"
         >
           <svg
             class="w-4 h-4"
-            :class="{ 'fill-current text-red-500': isLiked }"
+            :class="{ 'fill-current text-[#FF2442]': isLiked }"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -80,7 +90,7 @@
           </svg>
           <span
             class="text-xs"
-            :class="{ 'text-red-500': isLiked }"
+            :class="{ 'text-[#FF2442]': isLiked }"
           >
             {{ formatLikeCount(post.likesCount ?? post.likeCount) }}
           </span>
@@ -105,8 +115,6 @@ interface Props {
 
 const props = defineProps<Props>()
 const emit = defineEmits(['click', 'like'])
-// const router = useRouter()
-const authStore = useAuthStore()
 const likeStore = useLikeStore()
 const isLoading = ref(false)
 const isLiked = computed(() => props.isLiked || likeStore.isPostLiked(props.post.id))
@@ -121,16 +129,10 @@ const formatLikeCount = (count?: number | null) => {
 }
 
 // 获取卡片位置和尺寸
-const getCardRect = () => {
+const getCardRect = (): DOMRect | null => {
   const card = document.querySelector(`[data-post-id="${props.post.id}"]`)
   if (card) {
-    const rect = card.getBoundingClientRect()
-    return {
-      x: rect.left + rect.width / 2,
-      y: rect.top + rect.height / 2,
-      width: rect.width,
-      height: rect.height
-    }
+    return card.getBoundingClientRect()
   }
   return null
 }
@@ -146,8 +148,8 @@ const handleLike = async (e: Event) => {
   e.preventDefault()
   e.stopPropagation()
 
-  if (!authStore.isLoggedIn) {
-    authStore.showLoginModal()
+  if (!useAuthStore().isLoggedIn) {
+    useAuthStore().showLoginModal()
     return
   }
 
@@ -178,3 +180,35 @@ const handleLike = async (e: Event) => {
   }
 }
 </script>
+
+<style scoped>
+/* 卡片阴影和过渡效果 */
+.group {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.group:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* 瀑布流项目间距优化 */
+.break-inside-avoid {
+  break-inside: avoid;
+  margin-bottom: 1rem;
+}
+
+/* 图片加载动画 */
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
+</style>
