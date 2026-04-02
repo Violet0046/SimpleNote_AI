@@ -6,6 +6,7 @@ import { createPinia } from 'pinia'
 import App from './App.vue'
 import router from './router'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import { useAuthStore } from './stores/auth'
 
 const app = createApp(App)
 
@@ -16,4 +17,10 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 app.use(createPinia())
 app.use(router)
 
-app.mount('#app')
+// 应用挂载后初始化用户信息
+app.mount('#app', () => {
+  const authStore = useAuthStore()
+  if (authStore.token) {
+    authStore.fetchUserInfo()
+  }
+})

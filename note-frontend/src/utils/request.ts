@@ -1,9 +1,12 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
+import axios, { type InternalAxiosRequestConfig, type AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
 import type { ApiResponse } from '@/types'
 
+// 定义事件总线用于触发全局登录弹窗
+const loginEventBus = new EventTarget()
+
 // 创建axios实例
-const request: AxiosInstance = axios.create({
+const request = axios.create({
   baseURL: 'http://localhost:8080',
   timeout: 15000,
   headers: {
@@ -13,7 +16,7 @@ const request: AxiosInstance = axios.create({
 
 // 请求拦截器
 request.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig) => {
     // 从localStorage获取token
     const token = localStorage.getItem('userToken')
     if (token && config.headers) {
@@ -28,7 +31,7 @@ request.interceptors.request.use(
 
 // 响应拦截器
 request.interceptors.response.use(
-  (response: AxiosResponse<ApiResponse>) => {
+  (response) => {
     const { data } = response
 
     // 根据后端约定的格式处理响应
@@ -52,10 +55,8 @@ request.interceptors.response.use(
           ElMessage.error('登录已过期，请重新登录')
           // 清除本地存储
           localStorage.removeItem('userToken')
-          // 可以在这里跳转到登录页面
-          if (window.location.pathname !== '/login') {
-            window.location.href = '/login'
-          }
+          // 触发唤起全局登录弹窗的事件
+          loginEventBus.dispatchEvent(new CustomEvent('showLoginModal'))
           break
         case 403:
           ElMessage.error('没有权限访问')
@@ -83,27 +84,38 @@ request.interceptors.response.use(
 
 // GET请求
 export const get = <T = any>(url: string, params?: any): Promise<ApiResponse<T>> => {
-  return request.get(url, { params })
+  return request.get(url, { params }) as Promise<ApiResponse<T>>
 }
 
 // POST请求
 export const post = <T = any>(url: string, data?: any): Promise<ApiResponse<T>> => {
-  return request.post(url, data)
+  // 如果是 URLSearchParams，设置正确的 Content-Type
+  if (data instanceof URLSearchParams) {
+    return request.post(url, data, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    }) as Promise<ApiResponse<T>>
+  }
+  return request.post(url, data) as Promise<ApiResponse<T>>
 }
 
 // PUT请求
 export const put = <T = any>(url: string, data?: any): Promise<ApiResponse<T>> => {
-  return request.put(url, data)
+  return request.put(url, data) as Promise<ApiResponse<T>>
 }
 
 // DELETE请求
 export const del = <T = any>(url: string): Promise<ApiResponse<T>> => {
-  return request.delete(url)
+  return request.delete(url) as Promise<ApiResponse<T>>
 }
 
 // PATCH请求
 export const patch = <T = any>(url: string, data?: any): Promise<ApiResponse<T>> => {
-  return request.patch(url, data)
+  return request.patch(url, data) as Promise<ApiResponse<T>>
 }
 
 export default request
+
+// 导出事件总线供其他组件使用
+export { loginEventBus }

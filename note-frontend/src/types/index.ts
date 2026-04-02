@@ -8,8 +8,14 @@ export interface ApiResponse<T = any> {
 // 用户信息
 export interface UserInfo {
   id: number
-  username: string
-  // 其他用户信息字段
+  nickname: string
+  avatar: string
+  intro: string
+  gender: number
+  ipLocation: string
+  followingCount: number
+  followersCount: number
+  likesCount: number
 }
 
 // 登录请求
@@ -27,10 +33,48 @@ export interface RegisterRequest {
 // 帖子信息
 export interface Post {
   id: number
+  userId: number
   title: string
   content: string
-  images?: string[]
-  userId: number
+  images: string
+  likesCount: number
   createTime: string
-  updateTime: string
+  authorName: string
+  authorAvatar: string
+  likeCount?: number | null
+}
+
+// 评论信息
+export interface Comment {
+  id: number
+  userId: number
+  authorName: string
+  authorAvatar: string
+  content: string
+  ipLocation: string
+  parentId: number
+  isDeleted: number
+  replyToUserId: number | null
+  replyToUserName: string | null
+  createTime: string
+  replies: Comment[] | null
+}
+
+// 帖子列表响应
+export interface PostListResponse {
+  total: number
+  items: Post[]
+}
+
+// 评论列表响应
+export interface CommentListResponse {
+  code: number
+  msg: string
+  data: Comment[]
+}
+
+// 分页参数
+export interface PaginationParams {
+  pageNum: number
+  pageSize: number
 }
