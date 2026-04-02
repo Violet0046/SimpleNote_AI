@@ -282,7 +282,8 @@
 import { ref, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { get, post } from '@/utils/request'
+import { get } from '@/utils/request'
+import { post as doPost } from '@/utils/request'
 import { ElMessage } from 'element-plus'
 import type { Post, Comment } from '@/types'
 
@@ -374,7 +375,7 @@ const handleLike = async () => {
 
   try {
     isSubmitting.value = true
-    await post(`/post/${route.params.id}/like`)
+    await doPost(`/post/${route.params.id}/like`)
 
     // 更新点赞状态
     isLiked.value = !isLiked.value
@@ -408,7 +409,7 @@ const handleComment = async () => {
       commentData.replyToUserId = replyToComment.value.userId
     }
 
-    const response = await post('/comment/add', commentData)
+    const response = await doPost('/comment/add', commentData)
 
     if (response.code === 1) {
       ElMessage.success('评论成功！')
@@ -442,6 +443,11 @@ const scrollToComments = () => {
   nextTick(() => {
     document.getElementById('comments-section')?.scrollIntoView({ behavior: 'smooth' })
   })
+}
+
+// 加载更多评论
+const loadMoreComments = async () => {
+  // 这里可以实现分页加载评论的逻辑
 }
 
 // 组件挂载

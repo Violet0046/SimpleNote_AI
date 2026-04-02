@@ -1,4 +1,4 @@
-import axios, { type InternalAxiosRequestConfig, type AxiosResponse } from 'axios'
+import axios, { type InternalAxiosRequestConfig } from 'axios'
 import { ElMessage } from 'element-plus'
 import type { ApiResponse } from '@/types'
 

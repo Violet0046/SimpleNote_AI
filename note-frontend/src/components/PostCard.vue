@@ -1,5 +1,6 @@
 <template>
   <div
+    :data-post-id="post.id"
     class="group relative break-ins-avoid cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg mb-4"
     @click="handleCardClick"
   >
@@ -91,7 +92,6 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useLikeStore } from '@/stores/like'
 import { post as apiPost } from '@/utils/request'
@@ -105,7 +105,7 @@ interface Props {
 
 const props = defineProps<Props>()
 const emit = defineEmits(['click', 'like'])
-const router = useRouter()
+// const router = useRouter()
 const authStore = useAuthStore()
 const likeStore = useLikeStore()
 const isLoading = ref(false)
@@ -120,9 +120,25 @@ const formatLikeCount = (count?: number | null) => {
   return safeCount.toString()
 }
 
+// 获取卡片位置和尺寸
+const getCardRect = () => {
+  const card = document.querySelector(`[data-post-id="${props.post.id}"]`)
+  if (card) {
+    const rect = card.getBoundingClientRect()
+    return {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+      width: rect.width,
+      height: rect.height
+    }
+  }
+  return null
+}
+
 // 处理卡片点击（跳转到帖子详情）
 const handleCardClick = () => {
-  emit('click', props.post)
+  const position = getCardRect()
+  emit('click', props.post, position)
 }
 
 // 处理点赞
@@ -144,23 +160,19 @@ const handleLike = async (e: Event) => {
     // 调用点赞 API
     await apiPost(`/post/${props.post.id}/like`)
 
-    // 更新本地点赞数
+    // 更新本地点赞数（通过emit通知父组件更新）
     if (newLikedState) {
-      props.post.likesCount = (props.post.likesCount || 0) + 1
-      props.post.likeCount = (props.post.likeCount || 0) + 1
       likeStore.addLikedPost(props.post.id)
       ElMessage.success('点赞成功！')
     } else {
-      props.post.likesCount = Math.max(0, (props.post.likesCount || 0) - 1)
-      props.post.likeCount = Math.max(0, (props.post.likeCount || 0) - 1)
       likeStore.removeLikedPost(props.post.id)
       ElMessage.success('取消点赞')
     }
 
     // 通知父组件
     emit('like', props.post.id, newLikedState)
-  } catch (error: any) {
-    ElMessage.error(error.message || '操作失败，请稍后重试')
+  } catch (error: unknown) {
+    ElMessage.error((error as Error).message || '操作失败，请稍后重试')
   } finally {
     isLoading.value = false
   }

@@ -15,7 +15,7 @@
           :key="post.id"
           :post="post"
           :is-liked="likeStore.isPostLiked(post.id)"
-          @click="openPostDetail(post)"
+          @click="(event, post) => openPostDetail(post, event)"
           @like="handleLike"
           class="mb-4"
         ></PostCard>
@@ -41,6 +41,15 @@
         class="h-20"
       ></div>
     </div>
+
+    <!-- 帖子详情弹窗 -->
+    <PostDetailModal
+      v-if="selectedPost"
+      :post="selectedPost"
+      :visible="showModal"
+      @close="closePostDetail"
+      @like-toggle="handleModalLike(selectedPost.id)"
+    />
   </div>
 </template>
 
@@ -48,13 +57,13 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useLikeStore } from '@/stores/like'
-import { get, post } from '@/utils/request'
+import { get } from '@/utils/request'
 import { ElMessage } from 'element-plus'
 import PostCard from '@/components/PostCard.vue'
 import PostDetailModal from '@/components/PostDetailModal.vue'
 import type { Post, PostListResponse, PaginationParams } from '@/types'
 
-const authStore = useAuthStore()
+// const authStore = useAuthStore()
 const likeStore = useLikeStore()
 
 // 数据相关
@@ -108,7 +117,7 @@ const fetchPosts = async (isLoadMore = false) => {
     } else {
       ElMessage.error(response.msg || '获取帖子列表失败')
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('获取帖子列表失败:', error)
     ElMessage.error('获取帖子列表失败，请检查网络连接')
   } finally {
@@ -155,9 +164,10 @@ onUnmounted(() => {
 })
 
 // 打开帖子详情
-const openPostDetail = (post: Post) => {
+const openPostDetail = (post: Post, _event?: unknown) => {
   selectedPost.value = post
   showModal.value = true
+  // 暂时不使用位置信息，因为需要更复杂的动画实现
 }
 
 // 关闭弹窗
@@ -213,3 +223,4 @@ defineExpose({
     opacity: .5;
   }
 }
+</style>

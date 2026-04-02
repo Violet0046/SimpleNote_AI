@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { get, post } from '@/utils/request'
+import { get } from '@/utils/request'
 import { ElMessage } from 'element-plus'
 import type { UserInfo } from '@/types'
 
@@ -50,6 +50,10 @@ export const useAuthStore = defineStore('auth', {
     },
 
     showLoginModal() {
+      this.isLoginModalVisible = true
+    },
+
+    ensureLoginModal() {
       this.isLoginModalVisible = true
     },
 

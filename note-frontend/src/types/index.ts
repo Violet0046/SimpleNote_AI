@@ -42,6 +42,7 @@ export interface Post {
   authorName: string
   authorAvatar: string
   likeCount?: number | null
+  tags?: string
 }
 
 // 评论信息

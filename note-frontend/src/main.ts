@@ -21,7 +21,7 @@ app.use(router)
 // 注册全局指令
 app.directive('image-error', imageErrorHandler)
 
-const appInstance = app.mount('#app')
+app.mount('#app')
 
 // 应用挂载后初始化用户信息
 const authStore = useAuthStore()

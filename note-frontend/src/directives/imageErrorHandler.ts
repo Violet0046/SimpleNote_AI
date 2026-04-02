@@ -43,7 +43,7 @@ const svgToDataURL = (svg: string, size: string = '100%'): string => {
 
 const imageErrorHandler: Directive = {
   mounted(el: HTMLImageElement, binding: DirectiveBinding<BindingValue>) {
-    const { type = 'image', fallback, size } = binding.value || {}
+    const { type = 'image', size } = binding.value || {}
 
     // 创建默认图片
     const defaultImage = svgToDataURL(
