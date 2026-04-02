@@ -22,6 +22,10 @@ public class WebConfig implements WebMvcConfigurer {
                 "/post/list/page", //帖子列表
                 "/comment/list",    //游客看帖子下的评论
                 "/error", //错误页
+                "/post/{id}", //帖子详情页
+                "/**/*.jpg",
+                "/**/*.png",        
+                "/**/*.jpeg" ,       
                 "/uploads/**"); //图片访问
     }
 

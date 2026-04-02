@@ -14,11 +14,11 @@
         </p>
       </div>
 
-      <LoginForm />
+      <AuthModal @close="$router.back()" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import LoginForm from '../components/LoginForm.vue'
+import AuthModal from '@/components/AuthModal.vue'
 </script>

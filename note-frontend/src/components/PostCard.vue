@@ -7,10 +7,11 @@
     <div class="relative aspect-[3/4] overflow-hidden rounded-xl">
       <!-- 图片 -->
       <img
-        :src="post.images || 'https://via.placeholder.com/400'"
+        :src="post.images"
         :alt="post.title"
         class="w-full h-full object-cover"
         loading="lazy"
+        v-image-error="{ type: 'image' }"
       />
 
       <!-- 图片加载状态 -->
@@ -48,6 +49,7 @@
               :src="post.authorAvatar"
               :alt="post.authorName"
               class="w-full h-full object-cover"
+              v-image-error="{ type: 'avatar' }"
             />
             <span v-else class="w-full h-full flex items-center justify-center text-gray-600 text-[10px]">
               {{ post.authorName?.charAt(0).toUpperCase() }}
@@ -91,19 +93,23 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useLikeStore } from '@/stores/like'
 import { post as apiPost } from '@/utils/request'
 import { ElMessage } from 'element-plus'
 import type { Post } from '@/types'
 
 interface Props {
   post: Post
+  isLiked?: boolean
 }
 
 const props = defineProps<Props>()
+const emit = defineEmits(['click', 'like'])
 const router = useRouter()
 const authStore = useAuthStore()
+const likeStore = useLikeStore()
 const isLoading = ref(false)
-const isLiked = ref(false)
+const isLiked = computed(() => props.isLiked || likeStore.isPostLiked(props.post.id))
 
 // 格式化点赞数
 const formatLikeCount = (count?: number | null) => {
@@ -116,7 +122,7 @@ const formatLikeCount = (count?: number | null) => {
 
 // 处理卡片点击（跳转到帖子详情）
 const handleCardClick = () => {
-  router.push(`/post/${props.post.id}`)
+  emit('click', props.post)
 }
 
 // 处理点赞
@@ -133,24 +139,27 @@ const handleLike = async (e: Event) => {
     isLoading.value = true
 
     // 切换点赞状态
-    isLiked.value = !isLiked.value
+    const newLikedState = !isLiked.value
 
     // 调用点赞 API
     await apiPost(`/post/${props.post.id}/like`)
 
     // 更新本地点赞数
-    if (isLiked.value) {
+    if (newLikedState) {
       props.post.likesCount = (props.post.likesCount || 0) + 1
       props.post.likeCount = (props.post.likeCount || 0) + 1
+      likeStore.addLikedPost(props.post.id)
       ElMessage.success('点赞成功！')
     } else {
       props.post.likesCount = Math.max(0, (props.post.likesCount || 0) - 1)
       props.post.likeCount = Math.max(0, (props.post.likeCount || 0) - 1)
+      likeStore.removeLikedPost(props.post.id)
       ElMessage.success('取消点赞')
     }
+
+    // 通知父组件
+    emit('like', props.post.id, newLikedState)
   } catch (error: any) {
-    // 恢复点赞状态
-    isLiked.value = !isLiked.value
     ElMessage.error(error.message || '操作失败，请稍后重试')
   } finally {
     isLoading.value = false

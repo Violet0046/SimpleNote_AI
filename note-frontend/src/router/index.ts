@@ -23,11 +23,7 @@ const router = createRouter({
           name: 'profile',
           component: () => import('../views/UserProfileView.vue'),
         },
-        {
-          path: 'post/:id',
-          name: 'post',
-          component: () => import('../views/PostDetailView.vue'),
-        },
+        // post 详情现在使用模态框，不再需要路由
         {
           path: 'about',
           name: 'about',

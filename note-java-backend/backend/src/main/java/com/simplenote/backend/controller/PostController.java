@@ -117,4 +117,14 @@ public class PostController {
         PageBean<PostVO> pb = postService.listWithPage(pageNum, pageSize);
         return Result.success(pb);
     }
+
+    // 获取单篇帖子详情
+    @GetMapping("/{id}")
+    public Result<PostVO> getDetail(@PathVariable Integer id) {
+        PostVO postVO = postService.getPostDetailById(id); // 请在Service层实现这个调用
+        if (postVO == null) {
+            return Result.error("帖子不存在或已被删除");
+        }
+        return Result.success(postVO);
+    }
 }

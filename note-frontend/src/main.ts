@@ -7,6 +7,7 @@ import App from './App.vue'
 import router from './router'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import { useAuthStore } from './stores/auth'
+import imageErrorHandler from './directives/imageErrorHandler'
 
 const app = createApp(App)
 
@@ -16,6 +17,9 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 app.use(createPinia())
 app.use(router)
+
+// 注册全局指令
+app.directive('image-error', imageErrorHandler)
 
 const appInstance = app.mount('#app')
 

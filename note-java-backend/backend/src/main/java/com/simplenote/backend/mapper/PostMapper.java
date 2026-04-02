@@ -19,7 +19,7 @@ public interface PostMapper {
 
     @Select("select * from post where is_deleted = 0 order by create_time desc") 
     List<Post> list();
-
+   //查询所有未删除的帖子，返回PostVO对象
     @Select("SELECT p.*, " +
             "u.nickname AS authorName, " +
             "u.avatar AS authorAvatar, " + 
@@ -63,4 +63,14 @@ public interface PostMapper {
     // 软删除自己的笔记
     @Update("UPDATE post SET is_deleted = 1 WHERE id = #{id} AND user_id = #{userId}")
     int softDelete(Integer id, Integer userId);
+
+    // 获取帖子详情
+    @Select("SELECT p.*, " +
+        "u.nickname AS authorName, " +
+        "u.avatar AS authorAvatar, " +
+        "p.likes_count AS likeCount " +
+        "FROM post p " +
+        "LEFT JOIN user u ON p.user_id = u.id " +
+        "WHERE p.id = #{id} AND p.is_deleted = 0")
+    PostVO getPostDetailById(Integer id);
 }

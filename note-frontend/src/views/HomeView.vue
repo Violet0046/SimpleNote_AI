@@ -14,8 +14,11 @@
           v-for="post in posts"
           :key="post.id"
           :post="post"
+          :is-liked="likeStore.isPostLiked(post.id)"
+          @click="openPostDetail(post)"
+          @like="handleLike"
           class="mb-4"
-        />
+        ></PostCard>
       </div>
 
       <!-- 加载状态 -->
@@ -44,12 +47,15 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useLikeStore } from '@/stores/like'
 import { get, post } from '@/utils/request'
 import { ElMessage } from 'element-plus'
 import PostCard from '@/components/PostCard.vue'
+import PostDetailModal from '@/components/PostDetailModal.vue'
 import type { Post, PostListResponse, PaginationParams } from '@/types'
 
 const authStore = useAuthStore()
+const likeStore = useLikeStore()
 
 // 数据相关
 const posts = ref<Post[]>([])
@@ -57,6 +63,15 @@ const loading = ref(false)
 const hasMore = ref(true)
 const currentPage = ref(1)
 const pageSize = ref(15)
+
+// 弹窗相关
+const selectedPost = ref<Post | null>(null)
+const showModal = ref(false)
+
+// 初始化点赞数据
+onMounted(() => {
+  likeStore.loadFromLocalStorage()
+})
 
 // Intersection Observer 用于无限滚动
 const loadMoreTrigger = ref<HTMLElement>()
@@ -107,8 +122,7 @@ const setupInfiniteScroll = () => {
 
   observer = new IntersectionObserver(
     (entries) => {
-      const entry = entries[0]
-      if (entry.isIntersecting && hasMore.value && !loading.value) {
+      if (entries.length > 0 && entries[0] && entries[0].isIntersecting && hasMore.value && !loading.value) {
         fetchPosts(true)
       }
     },
@@ -139,6 +153,32 @@ onMounted(() => {
 onUnmounted(() => {
   cleanupInfiniteScroll()
 })
+
+// 打开帖子详情
+const openPostDetail = (post: Post) => {
+  selectedPost.value = post
+  showModal.value = true
+}
+
+// 关闭弹窗
+const closePostDetail = () => {
+  showModal.value = false
+  selectedPost.value = null
+}
+
+// 处理点赞
+const handleLike = (postId: number, isLiked: boolean) => {
+  if (isLiked) {
+    likeStore.addLikedPost(postId)
+  } else {
+    likeStore.removeLikedPost(postId)
+  }
+}
+
+// 处理弹窗内的点赞
+const handleModalLike = (postId: number) => {
+  handleLike(postId, !likeStore.isPostLiked(postId))
+}
 
 // 手动刷新（可以下拉刷新）
 const refresh = () => {

@@ -23,4 +23,6 @@ public interface PostService {
     int softDelete(Integer id, Integer userId);
 
     PageBean<PostVO> listWithPage(Integer pageNum, Integer pageSize);
+
+    PostVO getPostDetailById(Integer id);
 }

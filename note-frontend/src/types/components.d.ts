@@ -12,7 +12,6 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AuthModal: typeof import('./../components/AuthModal.vue')['default']
-    ElIcon: typeof import('element-plus/es')['ElIcon']
     HelloWorld: typeof import('./../components/HelloWorld.vue')['default']
     IconCommunity: typeof import('./../components/icons/IconCommunity.vue')['default']
     IconDocumentation: typeof import('./../components/icons/IconDocumentation.vue')['default']
@@ -20,6 +19,7 @@ declare module 'vue' {
     IconSupport: typeof import('./../components/icons/IconSupport.vue')['default']
     IconTooling: typeof import('./../components/icons/IconTooling.vue')['default']
     PostCard: typeof import('./../components/PostCard.vue')['default']
+    PostDetailModal: typeof import('./../components/PostDetailModal.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     TheWelcome: typeof import('./../components/TheWelcome.vue')['default']

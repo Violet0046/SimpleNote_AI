@@ -99,4 +99,10 @@ public class PostServiceImpl implements PostService {
         // 4. 封装进咱们自己的 PageBean 返回给 Controller
         return new PageBean<>(pageInfo.getTotal(), pageInfo.getList());
     }
+
+    @Override
+    public PostVO getPostDetailById(Integer id) {
+        // 直接调用 Mapper 层我们刚刚加的那条 SQL
+        return postMapper.getPostDetailById(id);
+    }
 }

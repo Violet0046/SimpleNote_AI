@@ -4,7 +4,8 @@
       "Bash(npm install:*)",
       "Bash(npm run:*)",
       "Bash(pkill -f \"vite\")",
-      "Bash(taskkill /F /IM node.exe)"
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(sed:*)"
     ]
   }
 }

@@ -257,3 +257,23 @@ Content-Type: image/jpeg
   "data": "http://localhost:8080/uploads/77d841f4-ec7b-4699-b72f-694aaf268868.jpg"
 }
 
+### 模拟用户点进了第三篇帖子（假设 postId=3），查看帖子详情
+GET http://localhost:8080/post/1
+Authorization:
+
+{
+  "code": 1,
+  "msg": "操作成功",
+  "data": {
+    "id": 1,
+    "userId": 1,
+    "title": "claude code源码泄露",
+    "content": "已被python重构，学起来吧",
+    "images": "http://dummyimage.com/200x200",
+    "likesCount": 4,
+    "createTime": "2026-04-01T14:57:00",
+    "authorName": "新用户_0",
+    "authorAvatar": "http://localhost:8080/1.jpg",
+    "likeCount": 4
+  }
+}

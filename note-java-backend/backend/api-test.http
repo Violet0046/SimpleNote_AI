@@ -78,3 +78,7 @@ Authorization:
 
 ### 模拟游客点进了第一篇帖子（假设 postId=1），查看评论区
 GET http://localhost:8080/comment/list?postId=1
+
+### 模拟用户点进了第三篇帖子（假设 postId=3），查看帖子详情
+GET http://localhost:8080/post/4
+Authorization:

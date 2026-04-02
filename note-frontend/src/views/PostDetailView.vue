@@ -25,9 +25,10 @@
         <!-- 图片区域 -->
         <div class="relative aspect-[3/4] overflow-hidden">
           <img
-            :src="post.images || 'https://via.placeholder.com/800'"
+            :src="post.images"
             :alt="post.title"
             class="w-full h-full object-cover"
+            v-image-error="{ type: 'image' }"
           />
         </div>
 
@@ -52,6 +53,7 @@
                     :src="post.authorAvatar"
                     :alt="post.authorName"
                     class="w-full h-full object-cover"
+                    v-image-error="{ type: 'avatar' }"
                   />
                   <span
                     v-else
@@ -101,7 +103,7 @@
                   d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
                 />
               </svg>
-              <span>{{ formatLikeCount(post.likesCount || post.likeCount) }}</span>
+              <span>{{ formatLikeCount(post.likesCount ?? post.likeCount ?? 0) }}</span>
             </button>
 
             <button
@@ -123,7 +125,7 @@
           <!-- 标签 -->
           <div v-if="post.tags && post.tags.length > 0" class="mt-6 flex flex-wrap gap-2">
             <span
-              v-for="tag in post.tags.split(',')"
+              v-for="tag in post.tags?.split(',') || []"
               :key="tag"
               class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm"
             >
@@ -146,6 +148,7 @@
                     :src="authStore.getUserAvatar"
                     alt="用户头像"
                     class="w-full h-full object-cover"
+                    v-image-error="{ type: 'avatar' }"
                   />
                   <span
                     v-else
@@ -195,9 +198,10 @@
               >
                 <div class="w-10 h-10 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
                   <img
-                    :src="comment.authorAvatar || 'https://via.placeholder.com/40'"
+                    :src="comment.authorAvatar"
                     :alt="comment.authorName"
                     class="w-full h-full object-cover"
+                    v-image-error="{ type: 'avatar', size: '40' }"
                   />
                 </div>
                 <div class="flex-1">
@@ -218,9 +222,10 @@
                     >
                       <div class="w-8 h-8 rounded-full bg-gray-300 overflow-hidden flex-shrink-0">
                         <img
-                          :src="reply.authorAvatar || 'https://via.placeholder.com/40'"
+                          :src="reply.authorAvatar"
                           :alt="reply.authorName"
                           class="w-full h-full object-cover"
+                          v-image-error="{ type: 'avatar', size: '40' }"
                         />
                       </div>
                       <div class="flex-1">
@@ -331,14 +336,15 @@ const fetchComments = async () => {
 }
 
 // 格式化点赞数
-const formatLikeCount = (count: number) => {
-  if (count >= 10000) {
-    return (count / 10000).toFixed(1) + 'w'
+const formatLikeCount = (count: number | null | undefined) => {
+  const value = count ?? 0
+  if (value >= 10000) {
+    return (value / 10000).toFixed(1) + 'w'
   }
-  if (count >= 1000) {
-    return (count / 1000).toFixed(1) + 'k'
+  if (value >= 1000) {
+    return (value / 1000).toFixed(1) + 'k'
   }
-  return count.toString()
+  return value.toString()
 }
 
 // 格式化日期
