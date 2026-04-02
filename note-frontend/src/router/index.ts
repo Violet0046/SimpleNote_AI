@@ -9,18 +9,18 @@ const router = createRouter({
       component: () => import('../views/HomeView.vue')
     },
     {
-      path: 'user/:id',
+      path: '/user/:id',
       name: 'user',
       component: () => import('../views/UserView.vue')
     },
     {
-      path: 'user/profile',
+      path: '/user/profile',
       name: 'profile',
       component: () => import('../views/UserProfileView.vue')
     },
     // post 详情现在使用模态框，不再需要路由
     {
-      path: 'about',
+      path: '/about',
       name: 'about',
       component: () => import('../views/AboutView.vue')
     },
