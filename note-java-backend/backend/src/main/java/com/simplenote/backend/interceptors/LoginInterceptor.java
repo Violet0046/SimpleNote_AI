@@ -17,6 +17,7 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
+        System.out.println("【保安拦截检查】当前请求路径：" + request.getRequestURI());
         // OPTIONS：浏览器预检请求
         if ("OPTIONS".equals(request.getMethod())) {
         return true;

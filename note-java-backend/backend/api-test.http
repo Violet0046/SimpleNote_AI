@@ -1,0 +1,80 @@
+### 测试获取帖子列表
+GET http://localhost:8080/post/list
+
+### 注册一下账号
+POST http://localhost:8080/user/register
+Content-Type: application/x-www-form-urlencoded
+
+username=6&password=1234
+
+### 测试登录 (获取 Token)
+POST http://localhost:8080/user/login
+Content-Type: application/x-www-form-urlencoded
+
+username=3&password=1234
+
+### 测试点赞/取消赞接口
+POST http://localhost:8080/post/3/like
+Authorization: 
+
+### 测试文件上传大 Boss (必须带上登录的 Token)
+POST http://localhost:8080/upload
+Authorization: 
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="3840x2160.jpg"
+Content-Type: image/jpeg
+
+< ./3840x2160.jpg
+--WebAppBoundary--
+
+### 1. 进主页：拉取面子数据（统计信息）
+GET http://localhost:8080/user/info/detail
+Authorization: 
+
+### 2. 进主页（默认）：拉取我的笔记列表
+GET http://localhost:8080/post/list/own
+Authorization: 
+
+### 3. 点击切换标签：拉取我赞过的笔记
+GET http://localhost:8080/post/list/liked
+Authorization: 
+
+### 1. 发一条主评论 (给 postId=1 的笔记发评论)
+POST http://localhost:8080/comment/add
+Authorization: 
+Content-Type: application/json
+
+{
+  "postId": 1,
+  "content": "你拍的这张照片太有感觉了！"
+}
+
+### 2. 回复刚刚的主评论 (假设刚刚生成的主评论 ID=1)
+POST http://localhost:8080/comment/add
+Authorization: 
+Content-Type: application/json
+
+{
+  "postId": 1,
+  "content": "确实好看！",
+  "parentId": 1,
+  "replyToUserId": 1
+}
+
+### 3. 获取完美的评论树！
+GET http://localhost:8080/comment/list?postId=1
+Authorization: 
+Content-Type: application/json
+
+### 模拟刚打开App（点击刷新）- 获取第1页，每页3条
+GET http://localhost:8080/post/list/page?pageNum=1&pageSize=3
+Authorization: 
+
+### 模拟用户往下拉到底部 - 获取第2页，每页3条
+GET http://localhost:8080/post/list/page?pageNum=2&pageSize=3
+Authorization: 
+
+### 模拟游客点进了第一篇帖子（假设 postId=1），查看评论区
+GET http://localhost:8080/comment/list?postId=1
