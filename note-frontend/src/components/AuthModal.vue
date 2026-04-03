@@ -252,6 +252,9 @@ const handleLogin = async () => {
         authStore.setUserInfo(userResponse.data)
         ElMessage.success('登录成功！')
         emit('close')
+        setTimeout(() => {
+          window.location.reload()
+        }, 500)
       } else {
         ElMessage.error('获取用户信息失败')
       }

@@ -8,6 +8,7 @@ import App from './App.vue'
 import router from './router'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import { useAuthStore } from './stores/auth'
+import { useLikeStore } from './stores/like'
 import imageErrorHandler from './directives/imageErrorHandler'
 
 const app = createApp(App)
@@ -28,4 +29,6 @@ app.mount('#app')
 const authStore = useAuthStore()
 if (authStore.token) {
   authStore.fetchUserInfo()
+  const likeStore = useLikeStore()
+  likeStore.fetchUserLikedIds()
 }

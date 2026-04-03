@@ -51,9 +51,6 @@ const imageErrorHandler: Directive = {
       size || (type === 'avatar' ? '100%' : '100%')
     )
 
-    // 设置默认图片
-    el.src = defaultImage
-
     // 监听错误事件
     const handleError = () => {
       el.src = defaultImage

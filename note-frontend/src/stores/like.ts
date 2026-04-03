@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { get } from '@/utils/request'
 
 export const useLikeStore = defineStore('like', {
   state: () => ({
@@ -11,6 +12,22 @@ export const useLikeStore = defineStore('like', {
   },
 
   actions: {
+    // 从后端拉取当前用户所有点赞过的 ID
+    async fetchUserLikedIds() {
+      try {
+        // 注意这里根据你的实际后端返回结构可能需要微调，通常是 res.data
+        const res = await get<any>('/post/liked/ids')
+        if (res.code === 1) {
+          // 将后端返回的数组 [3, 5, 12] 转换成 Set 集合
+          this.likedPosts = new Set(res.data)
+          // 顺便更新到本地缓存
+          this.saveToLocalStorage()
+        }
+      } catch (error) {
+        console.error('获取后端点赞列表失败:', error)
+      }
+    },
+
     // 添加点赞
     addLikedPost(postId: number) {
       this.likedPosts.add(postId)
@@ -63,7 +80,7 @@ export const useLikeStore = defineStore('like', {
       }
     },
 
-    // 清空数据
+    // 清空数据 (退出登录时调用这个，或者用咱们之前教的直接刷新页面)
     clear() {
       this.likedPosts.clear()
       this.saveToLocalStorage()

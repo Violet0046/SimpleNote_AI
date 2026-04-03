@@ -11,7 +11,7 @@ username=7&password=1234
 POST http://localhost:8080/user/login
 Content-Type: application/x-www-form-urlencoded
 
-username=3&password=1234
+username=0&password=1234
 
 ### 测试点赞/取消赞接口
 POST http://localhost:8080/post/3/like
@@ -82,3 +82,7 @@ GET http://localhost:8080/comment/list?postId=1
 ### 模拟用户点进了第三篇帖子（假设 postId=3），查看帖子详情
 GET http://localhost:8080/post/4
 Authorization:
+
+###拿到登录人信息
+GET http://localhost:8080/user/info/detail
+Authorization:eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwidXNlcm5hbWUiOiIxIiwiZXhwIjoxNzc1MjA5NDM2fQ.b-qfGe1-Rqo9yxmpfHDWnyPVHj32EZ1YLd17SS8SfU0

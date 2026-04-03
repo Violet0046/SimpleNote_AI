@@ -37,6 +37,17 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public List<PostVO> listWithAuthor() {
+        List<PostVO> list = postMapper.listWithAuthor();
+        for (PostVO vo : list) {
+        // 1. 处理封面图：如果有逗号，只截取第一张图片作为封面
+        String images = vo.getImages();
+        if (images != null && images.contains(",")) {
+            vo.setImages(images.split(",")[0]); 
+        }
+        
+        // 2. 清空长文本内容，节省网络带宽 (反正列表页不显示正文)
+        vo.setContent(null); 
+    }
         return postMapper.listWithAuthor();
     }
 
@@ -104,5 +115,12 @@ public class PostServiceImpl implements PostService {
     public PostVO getPostDetailById(Integer id) {
         // 直接调用 Mapper 层我们刚刚加的那条 SQL
         return postMapper.getPostDetailById(id);
+    }
+
+    @Override
+    public List<Integer> getLikedPostIds() {
+        Map<String, Object> map = ThreadLocalUtil.get();
+        Integer userId = (Integer) map.get("id");
+        return userLikesMapper.listLikedPostIds(userId);
     }
 }

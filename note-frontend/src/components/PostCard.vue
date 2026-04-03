@@ -8,9 +8,11 @@
     <div class="relative aspect-[3/4] overflow-hidden rounded-lg">
       <!-- 图片 -->
       <img
-        :src="post.images"
+        :src="post.images ? post.images.split(',')[0] : ''"
         :alt="post.title"
-        class="w-full h-full object-cover"
+        class="w-full h-full object-cover transition-all duration-700 ease-out"
+        :class="isImageLoaded ? 'blur-0 scale-100' : 'blur-xl scale-110'"
+        @load="isImageLoaded = true"
         loading="lazy"
         v-image-error="{ type: 'image' }"
       />
@@ -118,7 +120,8 @@ const emit = defineEmits(['click', 'like'])
 const likeStore = useLikeStore()
 const isLoading = ref(false)
 const isLiked = computed(() => props.isLiked || likeStore.isPostLiked(props.post.id))
-
+// 增加一个响应式变量，记录图片是否已经加载完毕
+const isImageLoaded = ref(false)
 // 格式化点赞数
 const formatLikeCount = (count?: number | null) => {
   if (count == null) return '0'

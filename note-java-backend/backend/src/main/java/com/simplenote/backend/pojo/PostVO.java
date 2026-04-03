@@ -11,5 +11,8 @@ public class PostVO extends Post {
     // 额外扩展前端需要的展示字段
     private String authorName;   // 作者名字
     private String authorAvatar; // 作者头像
-    private Integer likeCount;   // 点赞数 (先预留这个字段，暂时返回 0)
+    private Integer likeCount;   // 点赞数
+    private String title;         // 帖子标题
+    private String images;        // 第一张配图
+
 }

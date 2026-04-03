@@ -25,7 +25,8 @@ public class WebConfig implements WebMvcConfigurer {
                 "/post/{id}", //帖子详情页
                 "/**/*.jpg",
                 "/**/*.png",        
-                "/**/*.jpeg" ,       
+                "/**/*.jpeg",   
+                "/**/*.gif",    
                 "/uploads/**"); //图片访问
     }
 

@@ -66,6 +66,16 @@ body {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
+
+/* 隐藏所有浏览器的默认滚动条，但保留滚动功能 */
+::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+* {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
 /* 按钮样式 */
 .btn {
   padding: 8px 16px;

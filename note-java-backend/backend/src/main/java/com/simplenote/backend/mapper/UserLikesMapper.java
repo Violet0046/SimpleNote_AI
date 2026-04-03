@@ -1,5 +1,7 @@
 package com.simplenote.backend.mapper;
 
+import java.util.List;
+
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
@@ -20,4 +22,8 @@ public interface UserLikesMapper {
     // 3. 删除点赞记录
     @Delete("DELETE FROM user_likes WHERE user_id = #{userId} AND post_id = #{postId}")
     void removeLike(@Param("userId") Integer userId, @Param("postId") Integer postId);
+
+    // 查询当前用户所有点赞过的帖子 ID 列表
+    @Select("SELECT post_id FROM user_likes WHERE user_id = #{userId}")
+    List<Integer> listLikedPostIds(Integer userId);
 }

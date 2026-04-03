@@ -127,4 +127,10 @@ public class PostController {
         }
         return Result.success(postVO);
     }
+
+    @GetMapping("/liked/ids")
+    public Result<List<Integer>> getLikedPostIds() {
+        List<Integer> ids = postService.getLikedPostIds();
+        return Result.success(ids);
+    }
 }

@@ -8,7 +8,7 @@ import com.simplenote.backend.pojo.PostVO;
 
 public interface PostService {
     void add(Post post);
-
+    //这个后续删掉，改为点进单个帖子详情页的功能
     List<Post> list();
 
     List<PostVO> listWithAuthor();
@@ -25,4 +25,7 @@ public interface PostService {
     PageBean<PostVO> listWithPage(Integer pageNum, Integer pageSize);
 
     PostVO getPostDetailById(Integer id);
+
+    // 获取当前用户点赞过的帖子 ID 列表
+    List<Integer> getLikedPostIds();
 }
