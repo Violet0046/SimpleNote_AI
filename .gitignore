@@ -3,7 +3,7 @@ target/
 *.class
 .mvn/wrapper/maven-wrapper.jar
 *.jpg
-
+*.png
 # Python
 __pycache__/
 *.py[cod]
