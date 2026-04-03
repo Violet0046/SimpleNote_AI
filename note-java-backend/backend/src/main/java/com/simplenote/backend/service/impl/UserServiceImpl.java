@@ -44,4 +44,9 @@ public class UserServiceImpl implements UserService {
         
         return userDetailVO;
     }
+
+    @Override
+    public UserDetailVO getUserDetailById(Integer id) {
+        return userMapper.getUserDetailById(id);
+    }
 }

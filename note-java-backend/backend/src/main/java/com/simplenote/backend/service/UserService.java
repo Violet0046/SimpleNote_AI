@@ -12,4 +12,7 @@ public interface UserService {
 
     // 获取用户主页详细信息
     UserDetailVO getUserDetailInfo(Integer userId);
+
+    // 根据用户ID获取用户信息
+    UserDetailVO getUserDetailById(Integer id);
 }

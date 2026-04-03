@@ -86,3 +86,6 @@ Authorization:
 ###拿到登录人信息
 GET http://localhost:8080/user/info/detail
 Authorization:eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwidXNlcm5hbWUiOiIxIiwiZXhwIjoxNzc1MjA5NDM2fQ.b-qfGe1-Rqo9yxmpfHDWnyPVHj32EZ1YLd17SS8SfU0
+
+### 根据用户ID分页查询帖子
+GET http://localhost:8080/post/list/user?userId=2&pageNum=1&pageSize=5

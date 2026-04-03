@@ -26,7 +26,8 @@ public class WebConfig implements WebMvcConfigurer {
                 "/**/*.jpg",
                 "/**/*.png",        
                 "/**/*.jpeg",   
-                "/**/*.gif",    
+                "/**/*.gif", 
+                "/post/list/user", //进别人的主页看帖子列表
                 "/uploads/**"); //图片访问
     }
 

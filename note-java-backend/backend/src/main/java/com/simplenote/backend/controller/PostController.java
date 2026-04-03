@@ -58,7 +58,7 @@ public class PostController {
 
         return Result.success("发布成功，内容正在审核中...");
     }
-
+    // 这个接口后续可以删掉，改为点进单个帖子详情页的功能
     @GetMapping("/list")
     public Result<List<PostVO>> list() {
         List<PostVO> posts = postService.listWithAuthor();
@@ -127,10 +127,21 @@ public class PostController {
         }
         return Result.success(postVO);
     }
-
+    // 获取当前用户点赞过的帖子 ID 列表
     @GetMapping("/liked/ids")
     public Result<List<Integer>> getLikedPostIds() {
         List<Integer> ids = postService.getLikedPostIds();
         return Result.success(ids);
+    }
+    // 根据用户ID分页查询帖子
+    @GetMapping("/list/user")
+    public Result<PageBean<PostVO>> getUserPosts(
+            @RequestParam Integer userId,
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "15") Integer pageSize) {
+        
+        // 这个方法需要在 PostService 中实现
+        PageBean<PostVO> pageBean = postService.pageQueryByUser(userId, pageNum, pageSize);
+        return Result.success(pageBean);
     }
 }

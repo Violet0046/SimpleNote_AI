@@ -28,4 +28,7 @@ public interface PostService {
 
     // 获取当前用户点赞过的帖子 ID 列表
     List<Integer> getLikedPostIds();
+
+    // 根据用户ID分页查询帖子
+    PageBean<PostVO> pageQueryByUser(Integer userId, Integer pageNum, Integer pageSize);
 }

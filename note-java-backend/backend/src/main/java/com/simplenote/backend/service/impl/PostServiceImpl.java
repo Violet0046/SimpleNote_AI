@@ -123,4 +123,19 @@ public class PostServiceImpl implements PostService {
         Integer userId = (Integer) map.get("id");
         return userLikesMapper.listLikedPostIds(userId);
     }
+
+    @Override
+    public PageBean<PostVO> pageQueryByUser(Integer userId, Integer pageNum, Integer pageSize) {
+        // 1. 开启分页拦截
+        PageHelper.startPage(pageNum, pageSize);
+
+        // 2. 调用刚才写好的 Mapper 查询数据
+        List<PostVO> list = postMapper.listByUserId(userId);
+
+        // 3. 丢给 PageInfo 解析出总条数等分页信息
+        PageInfo<PostVO> pageInfo = new PageInfo<>(list);
+
+        // 4. 封装成 PageBean 返回给 Controller
+        return new PageBean<>(pageInfo.getTotal(), pageInfo.getList());
+    }
 }

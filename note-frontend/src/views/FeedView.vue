@@ -69,8 +69,11 @@ const updateColCount = () => {
 const waterfallColumns = computed(() => {
   const cols: Post[][] = Array.from({ length: colCount.value }, () => [])
   posts.value.forEach((post, index) => {
-    // 轮询发牌算法：0号帖子给0列，1号给1列，5号又给0列...
-    cols[index % colCount.value].push(post)
+    // 🌟 计算安全的列索引，并确保该列存在后再推入数据
+    const colIndex = index % colCount.value
+    if (cols[colIndex]) {
+      cols[colIndex].push(post)
+    }
   })
   return cols
 })

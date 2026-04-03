@@ -73,4 +73,15 @@ public interface PostMapper {
         "LEFT JOIN user u ON p.user_id = u.id " +
         "WHERE p.id = #{id} AND p.is_deleted = 0")
     PostVO getPostDetailById(Integer id);
+
+    // 查询指定用户的所有未删除帖子（用于他人主页）
+    @Select("SELECT p.*, " +
+            "u.nickname AS authorName, " +
+            "u.avatar AS authorAvatar, " +
+            "p.likes_count AS likeCount " +
+            "FROM post p " +
+            "LEFT JOIN user u ON p.user_id = u.id " +
+            "WHERE p.user_id = #{userId} AND p.is_deleted = 0 " +
+            "ORDER BY p.create_time DESC")
+    List<PostVO> listByUserId(Integer userId);
 }

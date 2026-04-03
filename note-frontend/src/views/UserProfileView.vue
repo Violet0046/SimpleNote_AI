@@ -49,16 +49,22 @@
         <svg class="animate-spin h-8 w-8 text-[#FF2442]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
       </div>
 
-      <div v-if="userPosts.length > 0" class="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-[20px] w-full">
-        <PostCard
-          v-for="post in userPosts"
-          :key="`${post.id}-${refreshKey}`"
-          :post="post"
-          :is-liked="likeStore.isPostLiked(post.id)"
-          @click="(postObj, rect) => openPostDetail(postObj, rect)"
-          @like="handleLike"
-          class="break-inside-avoid inline-block w-full mb-[20px]"
-        />
+      <div v-else-if="userPosts.length > 0" class="flex gap-[20px] items-start w-full">
+        <div 
+          v-for="(colPosts, colIndex) in waterfallColumns" 
+          :key="colIndex"
+          class="flex-1 flex flex-col gap-[20px]"
+        >
+          <PostCard
+            v-for="post in colPosts"
+            :key="`${post.id}-${refreshKey}`"
+            :post="post"
+            :is-liked="likeStore.isPostLiked(post.id)"
+            @click="(postObj, rect) => openPostDetail(postObj, rect)"
+            @like="handleLike"
+            class="w-full"
+          />
+        </div>
       </div>
 
       <div v-else class="flex flex-col items-center justify-center mt-[100px] opacity-70">
@@ -82,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useLikeStore } from '@/stores/like'
 import { get } from '@/utils/request'
@@ -110,7 +116,9 @@ const tabs = [
   { key: 'posts', name: '笔记' },
   { key: 'liked', name: '赞过' }
 ]
-const activeTab = ref('posts')
+
+// 优先从本地浏览器存储中读取
+const activeTab = ref(sessionStorage.getItem('profileActiveTab') || 'posts')
 
 // 分页与数据状态
 const userPosts = ref<Post[]>([])
@@ -118,7 +126,8 @@ const loading = ref(false)
 const hasMore = ref(true)
 const currentPage = ref(1)
 const pageSize = ref(15)
-const refreshKey = ref(0)
+const refreshKey = ref(0) 
+
 // 弹窗状态
 const showModal = ref(false)
 const selectedPost = ref<Post | null>(null)
@@ -127,6 +136,29 @@ const triggerRect = ref<DOMRect | null>(null)
 // 触底加载监听器
 const loadMoreTrigger = ref<HTMLElement>()
 let observer: IntersectionObserver | null = null
+
+// 瀑布流分发算法核心逻辑
+const colCount = ref(5)
+
+const updateColCount = () => {
+  const width = window.innerWidth
+  if (width < 768) colCount.value = 2
+  else if (width < 1024) colCount.value = 3
+  else if (width < 1280) colCount.value = 4
+  else colCount.value = 5
+}
+
+// 把帖子按照 "横向优先级" 安全地塞进数组里
+const waterfallColumns = computed(() => {
+  const cols: Post[][] = Array.from({ length: colCount.value }, () => [])
+  userPosts.value.forEach((post, index) => {
+    const colIndex = index % colCount.value
+    if (cols[colIndex]) {
+      cols[colIndex].push(post)
+    }
+  })
+  return cols
+})
 
 // 1. 获取用户信息
 const fetchUserInfo = async () => {
@@ -174,10 +206,11 @@ const fetchUserPosts = async (isLoadMore = false) => {
   }
 }
 
-// 切换 Tab
+// 切换 Tab 时，把用户当前的选择存入 sessionStorage
 const switchTab = (tabKey: string) => {
   if (activeTab.value === tabKey) return
   activeTab.value = tabKey
+  sessionStorage.setItem('profileActiveTab', tabKey)
   currentPage.value = 1
   hasMore.value = true
   userPosts.value = []
@@ -205,7 +238,7 @@ const cleanupInfiniteScroll = () => {
 }
 
 // 弹窗与点赞交互逻辑
-const openPostDetail = (post: Post, rect: DOMRect) => {
+const openPostDetail = (post: Post, rect: DOMRect | null) => {
   selectedPost.value = post
   triggerRect.value = rect
   showModal.value = true
@@ -233,18 +266,20 @@ const handleModalLike = (postId: number) => {
 }
 
 onMounted(() => {
+  updateColCount()
+  window.addEventListener('resize', updateColCount)
   fetchUserInfo()
   fetchUserPosts()
   setupInfiniteScroll()
 })
 
 onUnmounted(() => {
+  window.removeEventListener('resize', updateColCount)
   cleanupInfiniteScroll()
 })
 </script>
 
 <style scoped>
-/* 隐藏局部滚动条辅助类 */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
