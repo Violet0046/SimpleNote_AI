@@ -1,5 +1,5 @@
 <template>
-  <main class="flex-1 ml-[35px] flex flex-col bg-white h-screen overflow-y-auto scroll-smooth no-scrollbar relative">
+  <main class="flex-1 flex flex-col bg-white h-screen overflow-y-auto scroll-smooth no-scrollbar relative">
     
     <div class="sticky top-0 z-50 bg-white pt-[20px] pb-[10px] flex justify-center w-full">
       <div class="w-[480px] xl:w-[520px] 2xl:w-[580px] h-[54px] rounded-full bg-[#F7F7F7] border-none outline-none ring-0 shadow-none flex items-center px-4">
@@ -44,20 +44,20 @@
       </div>
     </div>
 
-    <div class="w-full bg-white px-6 pt-[20px] pb-[60px]">
+    <div class="w-full bg-white px-[6px] pt-[20px] pb-[60px]">
       <div v-if="loading" class="flex justify-center mt-10">
         <svg class="animate-spin h-8 w-8 text-[#FF2442]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
       </div>
 
-      <div v-else-if="userPosts.length > 0" class="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-[24px] w-full">
+      <div v-if="posts.length > 0" class="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-[20px] w-full">
         <PostCard
-          v-for="post in userPosts"
-          :key="post.id"
+          v-for="post in posts"
+          :key="`${post.id}-${refreshKey}`"
           :post="post"
           :is-liked="likeStore.isPostLiked(post.id)"
-          @click="(post, triggerRect) => openPostDetail(post, triggerRect)"
+          @click="(postObj, rect) => openPostDetail(postObj, rect)"
           @like="handleLike"
-          class="break-inside-avoid mb-[24px] inline-block w-full" 
+          class="break-inside-avoid inline-block w-full mb-[20px]"
         />
       </div>
 
@@ -141,7 +141,7 @@ const fetchUserInfo = async () => {
   }
 }
 
-// 🌟 2. 获取用户帖子 (修复点赞列表不显示问题：恢复了 params 分页参数)
+// 2. 获取用户帖子
 const fetchUserPosts = async (isLoadMore = false) => {
   if (loading.value || (!isLoadMore && userPosts.value.length > 0)) return
   loading.value = true
@@ -149,7 +149,6 @@ const fetchUserPosts = async (isLoadMore = false) => {
   try {
     let url = activeTab.value === 'posts' ? '/post/list/own' : '/post/list/liked'
     
-    // 强制带上分页参数，防止后端拦截
     const params = {
       pageNum: currentPage.value,
       pageSize: pageSize.value
@@ -158,7 +157,6 @@ const fetchUserPosts = async (isLoadMore = false) => {
     const response = await get<any>(url, params)
     
     if (response.code === 1) {
-      // 兼容后端返回格式 (有的接口包在 items 里，有的是直接数组)
       const newPosts = response.data.items || response.data || []
       
       if (isLoadMore) {
@@ -177,7 +175,7 @@ const fetchUserPosts = async (isLoadMore = false) => {
   }
 }
 
-// 切换 Tab (重置分页并清空数据)
+// 切换 Tab
 const switchTab = (tabKey: string) => {
   if (activeTab.value === tabKey) return
   activeTab.value = tabKey
@@ -207,7 +205,7 @@ const cleanupInfiniteScroll = () => {
   }
 }
 
-// 弹窗与点赞交互逻辑 (与 FeedView 保持一致)
+// 弹窗与点赞交互逻辑
 const openPostDetail = (post: Post, rect: DOMRect) => {
   selectedPost.value = post
   triggerRect.value = rect

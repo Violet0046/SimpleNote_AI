@@ -14,27 +14,28 @@
           <nav class="flex flex-col space-y-[8px]">
             <router-link
               to="/"
+              @click="handleDiscoverClick"
               class="flex items-center pl-[24px] gap-[16px] h-[56px] w-[272px] mx-auto rounded-full hover:bg-[#F7F7F7] text-lg font-medium transition-colors"
               :class="$route.path === '/' ? 'text-[#FF2442] bg-[#F7F7F7]' : 'text-gray-800'"
             >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <span>发现</span>
             </router-link>
 
             <router-link to="/live" class="flex items-center pl-[24px] gap-[16px] h-[56px] w-[272px] mx-auto rounded-full hover:bg-[#F7F7F7] text-lg font-medium text-gray-800 transition-colors">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
               <span>直播</span>
             </router-link>
             
             <router-link to="/publish" class="flex items-center pl-[24px] gap-[16px] h-[56px] w-[272px] mx-auto rounded-full hover:bg-[#F7F7F7] text-lg font-medium text-gray-800 transition-colors">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
               <span>发布</span>
             </router-link>
             
             <router-link to="/notifications" class="flex items-center pl-[24px] gap-[16px] h-[56px] w-[272px] mx-auto rounded-full hover:bg-[#F7F7F7] text-lg font-medium text-gray-800 transition-colors">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
               <span>通知</span>
             </router-link>
 
@@ -44,9 +45,9 @@
                 class="flex items-center pl-[24px] gap-[16px] h-[56px] w-[272px] mx-auto rounded-full hover:bg-[#F7F7F7] text-lg font-medium transition-colors"
                 :class="$route.path === '/profile' ? 'text-[#FF2442] bg-[#F7F7F7]' : 'text-gray-800'"
               >
-                <div class="w-6 h-6 rounded-full overflow-hidden flex-shrink-0 bg-gray-200">
+                <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-200 shadow-sm">
                   <img v-if="authStore.userInfo?.avatar" :src="authStore.userInfo.avatar" alt="avatar" class="w-full h-full object-cover" v-image-error="{ type: 'avatar' }" />
-                  <span v-else class="w-full h-full flex items-center justify-center text-gray-600 text-[10px]">{{ authStore.userInfo?.nickname?.charAt(0).toUpperCase() || 'U' }}</span>
+                  <span v-else class="w-full h-full flex items-center justify-center text-gray-500 text-[12px] font-bold">{{ authStore.userInfo?.nickname?.charAt(0).toUpperCase() || 'U' }}</span>
                 </div>
                 <span>我</span>
               </router-link>
@@ -73,26 +74,47 @@
               </div>
             </transition>
             <button @click.stop="showMoreMenu = !showMoreMenu" class="flex items-center pl-[24px] gap-[16px] h-[56px] w-[272px] mx-auto rounded-full hover:bg-[#F7F7F7] text-lg font-medium text-gray-800 transition-colors">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
               <span>更多</span>
             </button>
           </div>
         </div>
       </aside>
 
-      <router-view></router-view>
+      <router-view v-slot="{ Component, route }">
+        <keep-alive>
+          <component :is="Component" v-if="route.path === '/'" :key="'feed'" />
+        </keep-alive>
+        <component :is="Component" v-if="route.path !== '/'" :key="route.path" />
+      </router-view>
       
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, provide } from 'vue'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { ElMessage } from 'element-plus'
-import { useRouter } from 'vue-router'
 const authStore = useAuthStore()
+const route = useRoute()
 
+// 建立通道：把刷新信号提供给 FeedView
+const refreshDiscoverTrigger = ref(0)
+provide('refreshDiscoverTrigger', refreshDiscoverTrigger)
+
+// 处理点击发现按钮
+const handleDiscoverClick = (e: MouseEvent) => {
+  if (route.path === '/') {
+    // 如果当前【已经在】发现页，阻止原本的跳转行为
+    e.preventDefault()
+    // 数字+1，触发子组件 FeedView 的监听器，执行下拉刷新动画
+    refreshDiscoverTrigger.value++ 
+  }
+  // 如果不在发现页 (比如在 /profile)，什么都不做，让它自然地 router 跳转回 '/'，
+  // 并且因为有 keep-alive，它会瞬间恢复成之前看过的样子！
+}
 // 菜单与深浅模式状态
 const showMoreMenu = ref(false)
 const isDarkMode = ref(false)

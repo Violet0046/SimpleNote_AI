@@ -1,33 +1,30 @@
 <template>
   <div
     :data-post-id="post.id"
-    class="group relative cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-lg mb-4 break-inside-avoid"
+    class="group relative cursor-pointer mb-5 break-inside-avoid w-full transition-transform duration-300 hover:scale-[1.02]"
     @click="handleCardClick"
   >
-    <!-- 图片容器 -->
-    <div class="relative aspect-[3/4] overflow-hidden rounded-lg">
-      <!-- 图片 -->
+    <div class="relative w-full overflow-hidden rounded-2xl bg-gray-100">
+      
       <img
         :src="post.images ? post.images.split(',')[0] : ''"
         :alt="post.title"
-        class="w-full h-full object-cover transition-all duration-700 ease-out"
+        class="w-full h-auto block object-cover transition-all duration-700 ease-out"
         :class="isImageLoaded ? 'blur-0 scale-100' : 'blur-xl scale-110'"
         @load="isImageLoaded = true"
         loading="lazy"
         v-image-error="{ type: 'image' }"
       />
 
-      <!-- 视频角标 -->
       <div
         v-if="post.isVideo"
-        class="absolute top-2 right-2 w-8 h-8 bg-black bg-opacity-50 rounded-full flex items-center justify-center"
+        class="absolute top-3 right-3 w-7 h-7 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center"
       >
         <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
           <path d="M8 5v14l11-7z"/>
         </svg>
       </div>
 
-      <!-- 图片加载状态 -->
       <div v-if="isLoading" class="absolute inset-0 bg-gray-200 animate-pulse">
         <div class="w-full h-full bg-gradient-to-br from-[#ff2442] to-[#ff6b6b] flex items-center justify-center">
           <span class="text-white text-lg">图片</span>
@@ -35,26 +32,22 @@
       </div>
     </div>
 
-    <!-- 内容区域 -->
-    <div class="mt-2 px-1">
-      <!-- 标题（最多两行） -->
+    <div class="mt-3 px-1 pb-1">
       <h3
-        class="text-sm font-medium text-gray-900 mb-1 line-clamp-2 leading-tight"
+        class="text-[15px] font-medium text-gray-900 mb-2 line-clamp-2 leading-snug"
         :title="post.title"
       >
         {{ post.title }}
       </h3>
 
-      <!-- 作者信息和互动 -->
       <div class="flex items-center justify-between">
-        <!-- 作者头像和昵称 -->
         <router-link
           :to="`/user/${post.userId}`"
-          class="flex items-center space-x-1 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+          class="flex items-center space-x-1.5 text-xs text-gray-500 hover:text-gray-800 transition-colors"
           @click.stop
         >
           <div
-            class="w-6 h-6 rounded-full overflow-hidden bg-gray-300 flex-shrink-0"
+            class="w-[22px] h-[22px] rounded-full overflow-hidden bg-gray-200 flex-shrink-0 border border-black/5"
             :title="post.authorName"
           >
             <img
@@ -64,20 +57,19 @@
               class="w-full h-full object-cover"
               v-image-error="{ type: 'avatar' }"
             />
-            <span v-else class="w-full h-full flex items-center justify-center text-gray-600 text-[10px]">
+            <span v-else class="w-full h-full flex items-center justify-center text-gray-500 text-[10px]">
               {{ post.authorName?.charAt(0).toUpperCase() }}
             </span>
           </div>
-          <span class="truncate max-w-16">{{ post.authorName }}</span>
+          <span class="truncate max-w-[100px]">{{ post.authorName }}</span>
         </router-link>
 
-        <!-- 点赞 -->
         <button
           @click.stop="handleLike"
           class="flex items-center space-x-1 text-gray-500 hover:text-[#FF2442] transition-colors group-hover:text-[#FF2442]"
         >
           <svg
-            class="w-4 h-4"
+            class="w-[15px] h-[15px]"
             :class="{ 'fill-current text-[#FF2442]': isLiked }"
             fill="none"
             stroke="currentColor"
@@ -91,7 +83,7 @@
             />
           </svg>
           <span
-            class="text-xs"
+            class="text-[13px] font-medium"
             :class="{ 'text-[#FF2442]': isLiked }"
           >
             {{ formatLikeCount(post.likesCount ?? post.likeCount) }}
@@ -103,6 +95,7 @@
 </template>
 
 <script setup lang="ts">
+// 🌟 这里的逻辑一字没动！完全保留你的原版逻辑！
 import { computed, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useLikeStore } from '@/stores/like'
@@ -120,8 +113,10 @@ const emit = defineEmits(['click', 'like'])
 const likeStore = useLikeStore()
 const isLoading = ref(false)
 const isLiked = computed(() => props.isLiked || likeStore.isPostLiked(props.post.id))
+
 // 增加一个响应式变量，记录图片是否已经加载完毕
 const isImageLoaded = ref(false)
+
 // 格式化点赞数
 const formatLikeCount = (count?: number | null) => {
   if (count == null) return '0'
@@ -185,15 +180,7 @@ const handleLike = async (e: Event) => {
 </script>
 
 <style scoped>
-/* 卡片阴影和过渡效果 */
-.group {
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  transition: all 0.3s ease;
-}
-
-.group:hover {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
+/* 🌟 这里删除了所有的 .group 阴影样式，彻底去掉硬边框效果 */
 
 /* 瀑布流项目间距优化 */
 .break-inside-avoid {
