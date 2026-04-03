@@ -87,7 +87,9 @@ const isExpanded = ref(false)
 const modalStyle = ref({ top: '0px', left: '0px', width: '0px', height: '0px', opacity: '0', borderRadius: '16px' })
 const currentImageIndex = ref(0)
 
-const firstImage = computed(() => props.post?.images ? String(props.post.images).split(',')[0].trim() : '')
+const firstImage = computed(() => {
+  return props.post?.images?.split(',')[0]?.trim() || ''
+})
 const imageList = computed(() => props.post?.images ? String(props.post.images).split(',').map(i => i.trim()).filter(Boolean) : [])
 const tagList = computed(() => props.post?.tags ? String(props.post.tags).split(',').map(t => t.trim()).filter(Boolean) : [])
 

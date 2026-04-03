@@ -15,16 +15,24 @@
         <span class="text-sm text-gray-500 font-medium">正在刷新...</span>
       </div>
 
-      <div v-if="posts.length > 0" class="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-[20px] w-full">
-        <PostCard
-          v-for="post in posts"
-          :key="`${post.id}-${refreshKey}`"
-          :post="post"
-          :is-liked="likeStore.isPostLiked(post.id)"
-          @click="(postObj, rect) => openPostDetail(postObj, rect)"
-          @like="handleLike"
-          class="break-inside-avoid inline-block w-full mb-[20px]"
-        />
+      <div v-if="posts.length > 0" class="flex gap-[20px] items-start w-full">
+        
+        <div 
+          v-for="(colPosts, colIndex) in waterfallColumns" 
+          :key="colIndex"
+          class="flex-1 flex flex-col gap-[20px]"
+        >
+          <PostCard
+            v-for="post in colPosts"
+            :key="`${post.id}-${refreshKey}`"
+            :post="post"
+            :is-liked="likeStore.isPostLiked(post.id)"
+            @click="(postObj, rect) => openPostDetail(postObj, rect)"
+            @like="handleLike"
+            class="w-full"
+          />
+        </div>
+
       </div>
 
       <div v-if="loading" class="text-center py-10"><span class="text-gray-500">加载中...</span></div>
@@ -32,25 +40,40 @@
     </div>
 
     <PostDetailModal
-      v-if="selectedPost"
       :post="selectedPost"
       :visible="showModal"
       :trigger-rect="triggerRect"
       @close="closePostDetail"
-      @like-toggle="handleModalLike(selectedPost.id)"
+      @like-toggle="selectedPost ? handleModalLike(selectedPost.id) : null"
     />
   </main>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, inject, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, inject, watch } from 'vue'
 import { useLikeStore } from '@/stores/like'
 import { get } from '@/utils/request'
 import { ElMessage } from 'element-plus'
 import PostCard from '@/components/PostCard.vue'
 import PostDetailModal from '@/components/PostDetailModal.vue'
 import type { Post, PostListResponse } from '@/types'
-
+const colCount = ref(5)
+const updateColCount = () => {
+  const width = window.innerWidth
+  if (width < 768) colCount.value = 2       // 手机
+  else if (width < 1024) colCount.value = 3 // 平板
+  else if (width < 1280) colCount.value = 4 // 窄屏电脑
+  else colCount.value = 5                   // 宽屏电脑
+}
+// 我们把 posts 按顺序依次发牌给 5 个列，绝对不会出现中间空洞
+const waterfallColumns = computed(() => {
+  const cols: Post[][] = Array.from({ length: colCount.value }, () => [])
+  posts.value.forEach((post, index) => {
+    // 轮询发牌算法：0号帖子给0列，1号给1列，5号又给0列...
+    cols[index % colCount.value].push(post)
+  })
+  return cols
+})
 const likeStore = useLikeStore()
 
 const posts = ref<Post[]>([])
@@ -105,8 +128,16 @@ const setupInfiniteScroll = () => {
   observer.observe(loadMoreTrigger.value)
 }
 
-onMounted(() => { fetchPosts(); setupInfiniteScroll() })
-onUnmounted(() => { if (observer) observer.disconnect() })
+onMounted(() => {
+  updateColCount()
+  window.addEventListener('resize', updateColCount)
+  fetchPosts()
+  setupInfiniteScroll()
+})
+onUnmounted(() => {
+  window.removeEventListener('resize', updateColCount)
+  if (observer) observer.disconnect()
+})
 
 // 🌟 弹窗开关核心逻辑 (加入了安全校验和延迟卸载)
 const openPostDetail = (postObj: Post, rect: DOMRect | null) => {
