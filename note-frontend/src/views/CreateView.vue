@@ -2,11 +2,20 @@
   <div class="min-h-screen bg-[#FAFAFA] flex flex-col">
     <header class="bg-white h-16 px-6 flex items-center justify-between border-b border-gray-100 shadow-sm shrink-0">
       <div class="flex items-center gap-2 cursor-pointer" @click="router.push('/')">
-        <img src="@/assets/logo.svg" class="w-8 h-8" alt="Logo" />
-        <span class="text-lg font-bold text-gray-900">创作者中心</span>
+        <span class="text-lg font-bold text-[#FF2442]">创作者中心</span>
       </div>
-      <div class="flex items-center gap-4">
-        <img :src="authStore.userInfo?.avatar || 'http://localhost:8080/1.jpg'" class="w-8 h-8 rounded-full object-cover border border-gray-200" />
+
+      <div class="flex items-center">
+        <div class="flex flex-col items-end">
+          <div class="text-lg font-bold">
+            <span class="text-gray-900">{{ authStore.userInfo?.nickname || authStore.getUsername }}</span>
+            <span class="text-[#FF2442] ml-2">正在捕捉灵感...</span>
+          </div>
+          
+          <span class="text-[10px] text-[#FF2442] opacity-80 font-medium tracking-widest uppercase mt-0.5">
+            Creative Mode
+          </span>
+        </div>
       </div>
     </header>
 
@@ -20,7 +29,6 @@
       </aside>
 
       <main class="flex-1 overflow-y-auto p-6 md:p-10 flex justify-center">
-        
         <div class="w-full max-w-[1000px] bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[600px]">
           
           <div v-if="step === 1" class="flex-1 flex flex-col">
@@ -61,8 +69,7 @@
             </div>
           </div>
 
-          <div v-else class="flex-1 flex flex-col md:flex-row h-full relative">
-            
+          <div v-else-if="step === 2" class="flex-1 flex flex-col md:flex-row h-full relative">
             <div v-if="isUploading || isPublishing" class="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center">
               <svg class="animate-spin h-10 w-10 text-[#FF2442] mb-3" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
               <span class="text-gray-700 font-medium">{{ isUploading ? '正在努力上传文件...' : '笔记发布中...' }}</span>
@@ -123,8 +130,39 @@
                 </button>
               </div>
             </div>
-
           </div>
+
+          <div v-else-if="step === 3" class="flex-1 flex items-center justify-center p-6 md:p-10 bg-white relative">
+            <div class="w-[400px] h-[300px] border border-gray-100 rounded-xl shadow-inner flex flex-col items-center justify-center animate-fade-in bg-white p-6 relative">
+              <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-5 shrink-0">
+                <svg class="w-8 h-8 text-[#FF2442]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+
+              <h2 class="text-xl font-bold text-gray-900 mb-2">发布成功</h2>
+              
+              <p class="text-gray-500 mb-6 text-[14px]">
+                你的笔记已成功发布，<span class="text-[#FF2442] font-bold mx-1">{{ countdown }}</span> 秒后自动重置...
+              </p>
+
+              <div class="flex gap-4">
+                <button
+                  @click="goToHome"
+                  class="px-5 py-2.5 border border-gray-200 text-gray-700 font-medium rounded-full text-[13px] hover:bg-gray-50 transition-colors"
+                >
+                  回首页
+                </button>
+                <button
+                  @click="resetUpload"
+                  class="px-5 py-2.5 bg-[#FF2442] text-white font-medium rounded-full text-[13px] hover:bg-red-600 transition-colors shadow-sm shadow-red-200"
+                >
+                  继续创作
+                </button>
+              </div>
+            </div>
+          </div>
+
         </div>
       </main>
     </div>
@@ -132,7 +170,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { post } from '@/utils/request'
@@ -141,7 +179,7 @@ import { ElMessage } from 'element-plus'
 const router = useRouter()
 const authStore = useAuthStore()
 
-// 状态机: 1=选择文件, 2=编辑发布
+// 状态机: 1=选择文件, 2=编辑发布, 3=发布成功倒计时
 const step = ref(1)
 const publishType = ref<'video' | 'image'>('video')
 
@@ -154,6 +192,10 @@ const postForm = ref({
   title: '',
   content: ''
 })
+
+// 倒计时状态
+const countdown = ref(5)
+let timer: number | null = null
 
 // 🌟 原生 Fetch 极速上传引擎 (完美适配多文件，自带 Token)
 const uploadFileToServer = async (file: File): Promise<string> => {
@@ -195,7 +237,6 @@ const handleFileSelect = async (event: Event) => {
   step.value = 2 // 瞬间切到编辑页面
 
   try {
-    // 🌟 修复方案：使用 Array.from 将 FileList 转换为纯 File 数组进行循环
     const fileList = Array.from(files)
     for (const file of fileList) {
       const url = await uploadFileToServer(file)
@@ -218,11 +259,18 @@ const removeImage = (index: number) => {
   }
 }
 
+// 提取出来的重置方法，可以在取消、倒计时结束、点击“继续创作”时通用
 const resetUpload = () => {
+  if (timer) clearInterval(timer)
   step.value = 1
   uploadedMedia.value = []
   postForm.value.title = ''
   postForm.value.content = ''
+}
+
+const goToHome = () => {
+  if (timer) clearInterval(timer)
+  router.push('/')
 }
 
 // 终极发布提交
@@ -240,12 +288,16 @@ const handlePublish = async () => {
 
     const res = await post('/post/add', payload)
     if (res.code === 1) {
-      ElMessage.success('笔记发布成功！')
-      // 发布成功后，关闭当前新开的创作者网页，或者跳回主页
-      setTimeout(() => {
-        window.close() // 尝试关闭当前新开的标签页
-        // 如果浏览器不让关，就降级回退到个人主页
-        router.push('/profile') 
+      // 进入成功页面
+      step.value = 3
+      countdown.value = 5
+      
+      if (timer) clearInterval(timer)
+      timer = window.setInterval(() => {
+        countdown.value--
+        if (countdown.value <= 0) {
+          resetUpload() // 倒计时结束自动重置为创作首页
+        }
       }, 1000)
     } else {
       ElMessage.error(res.msg || '发布失败')
@@ -256,9 +308,30 @@ const handlePublish = async () => {
     isPublishing.value = false
   }
 }
+
+// 离开页面时记得销毁计时器，避免内存泄漏
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+})
 </script>
 
 <style scoped>
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* 成功界面的渐显动画 */
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
 </style>

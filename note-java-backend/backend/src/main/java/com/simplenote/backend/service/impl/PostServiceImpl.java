@@ -33,8 +33,7 @@ public class PostServiceImpl implements PostService {
             if (images != null && images.contains(",")) {
                 vo.setImages(images.split(",")[0]); 
             }
-            // 2. 清空长文本内容，节省网络带宽 (反正列表页只看图和标题)
-            vo.setContent(null); 
+            // vo.setContent(null); 不再清空内容，前端需要在展示时做截断处理！后端只负责提供完整数据。
         }
     }
 

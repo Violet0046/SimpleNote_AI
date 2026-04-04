@@ -5,7 +5,6 @@ import com.simplenote.backend.pojo.Result;
 import com.simplenote.backend.pojo.UserDetailVO;
 import com.simplenote.backend.service.FollowService;
 import com.simplenote.backend.utils.JwtUtils;
-import com.simplenote.backend.utils.ThreadLocalUtil;
 
 import jakarta.servlet.http.HttpServletRequest;
 

@@ -23,6 +23,9 @@ const router = createRouter({
           name: 'user',
           component: () => import('../views/UserView.vue')
         },
+        { path: 'create', 
+          name: 'create', 
+          component: () => import('../views/CreateView.vue') },
         {
           path: 'live',
           name: 'live',
