@@ -30,7 +30,9 @@ public class WebConfig implements WebMvcConfigurer {
                         "/**/*.png",        
                         "/**/*.jpeg",   
                         "/**/*.gif",        
-                        "/error"            // 错误页
+                        "/follow/following/*",// 进别人的主页看关注列表
+                        "/follow/followers/*",// 进别人的主页看粉丝列表
+                        "/error"              // 错误页
                 );
     }
 

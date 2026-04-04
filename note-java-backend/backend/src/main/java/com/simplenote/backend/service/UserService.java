@@ -12,4 +12,6 @@ public interface UserService {
 
     // 根据用户ID获取用户信息
     UserDetailVO getUserDetailById(Integer id);
+    // 修改个人资料
+    void updateInfo(User user);
 }

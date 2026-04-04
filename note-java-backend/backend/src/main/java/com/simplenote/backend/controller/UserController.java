@@ -99,4 +99,16 @@ public class UserController {
         UserDetailVO userDetailVO = userService.getUserDetailById(id);
         return Result.success(userDetailVO);
     }
+
+    @PostMapping("/update")
+    public Result<String> update(@RequestBody User user) {
+        // 1. 获取当前登录用户 ID，防止用户恶意修改别人的 ID
+        Map<String, Object> map = ThreadLocalUtil.get();
+        Integer myId = (Integer) map.get("id");
+        user.setId(myId);
+
+        // 2. 更新资料
+        userService.updateInfo(user);
+        return Result.success("资料更新成功！");
+    }
 }

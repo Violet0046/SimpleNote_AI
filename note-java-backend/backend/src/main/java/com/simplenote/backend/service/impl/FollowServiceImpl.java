@@ -1,11 +1,14 @@
 package com.simplenote.backend.service.impl;
 
 import com.simplenote.backend.mapper.FollowMapper;
+import com.simplenote.backend.mapper.UserMapper;
+import com.simplenote.backend.pojo.UserDetailVO;
 import com.simplenote.backend.service.FollowService;
 import com.simplenote.backend.utils.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -13,7 +16,8 @@ public class FollowServiceImpl implements FollowService {
 
     @Autowired
     private FollowMapper followMapper;
-
+    @Autowired
+    private UserMapper userMapper;
     @Override
     public String toggleFollow(Integer followedId) {
         // 1. 获取当前登录用户的 ID
@@ -33,5 +37,15 @@ public class FollowServiceImpl implements FollowService {
             followMapper.follow(myId, followedId);
             return "关注成功";
         }
+    }
+
+    @Override
+    public List<UserDetailVO> getFollowingList(Integer userId) {
+        return userMapper.getFollowingList(userId);
+    }
+
+    @Override
+    public List<UserDetailVO> getFollowersList(Integer userId) {
+        return userMapper.getFollowersList(userId);
     }
 }

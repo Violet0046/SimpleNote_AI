@@ -43,4 +43,9 @@ public class UserServiceImpl implements UserService {
         
         return userDetailVO;
     }
+    
+    @Override
+    public void updateInfo(User user) {
+        userMapper.update(user);
+    }
 }
