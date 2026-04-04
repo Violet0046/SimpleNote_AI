@@ -12,4 +12,8 @@ public class UserDetailVO {
     private Integer followingCount; // 关注数
     private Integer followersCount; // 粉丝数
     private Integer likesCount;    // 获赞总数
+
+    // 当前登录用户与该用户的动态关系
+    private Boolean isFollowing; // 我是否关注了他
+    private Boolean isFollower;  // 他是否关注了我 (用于判断互粉)
 }

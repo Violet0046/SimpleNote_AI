@@ -4,13 +4,25 @@
       <div v-if="visible" class="fixed inset-0 z-[9998] bg-black/60 transition-opacity" @click="handleClose"></div>
     </Transition>
 
+    <Transition name="fade" appear>
+      <button 
+        v-if="visible" 
+        @click="handleClose" 
+        class="fixed top-6 left-6 z-[10000] w-12 h-12 border border-white/20 bg-black/20 text-white hover:bg-white/20 rounded-full flex items-center justify-center backdrop-blur-md transition-all shadow-lg cursor-pointer"
+      >
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </Transition>
+
     <div
       v-if="visible && postDetail"
-      class="fixed z-[9999] overflow-hidden shadow-2xl transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] flex bg-white dark:bg-[#121212]"
+      class="fixed z-[9999] overflow-hidden shadow-2xl transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] flex bg-white dark:bg-gray-900"
       :style="modalStyle"
       @click.stop
     >
-      <div class="flex-1 relative flex items-center justify-center overflow-hidden bg-[#F8F8F8] dark:bg-[#0a0a0a]">
+      <div class="flex-1 relative flex items-center justify-center overflow-hidden bg-[#F8F8F8] dark:bg-black">
         
         <div class="absolute inset-0 bg-cover bg-center blur-[50px] opacity-50 transform scale-110 dark:opacity-30" :style="{ backgroundImage: `url(${firstImage})` }"></div>
 
@@ -36,13 +48,9 @@
             <div v-for="(_, idx) in imageList" :key="idx" class="w-2 h-2 rounded-full transition-all" :class="currentImageIndex === idx ? 'bg-red-500 scale-110' : 'bg-gray-300'"></div>
           </div>
         </div>
+        </div>
 
-        <button @click="handleClose" class="absolute top-5 left-5 w-10 h-10 bg-white/50 dark:bg-black/50 text-gray-800 dark:text-gray-200 hover:bg-white dark:hover:bg-black/70 rounded-full flex items-center justify-center backdrop-blur-md transition-colors shadow-sm z-20">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-        </button>
-      </div>
-
-      <div class="w-[360px] lg:w-[400px] flex-shrink-0 flex flex-col h-full border-l border-gray-100 dark:border-gray-800 transition-opacity duration-300 bg-white dark:bg-[#1A1A1A]" :class="isExpanded ? 'opacity-100' : 'opacity-0'">
+      <div class="w-[360px] lg:w-[400px] flex-shrink-0 flex flex-col h-full border-l border-gray-100 dark:border-gray-800 transition-opacity duration-300 bg-white dark:bg-gray-900" :class="isExpanded ? 'opacity-100' : 'opacity-0'">
         
         <div class="h-[76px] px-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between shrink-0">
           <div class="flex items-center space-x-3 cursor-pointer">
@@ -57,7 +65,7 @@
             v-if="isFollowing !== null && postDetail?.userId !== authStore.userInfo?.id"
             @click="toggleFollow" 
             class="px-5 py-1.5 rounded-full font-semibold text-[13px] transition-colors flex-shrink-0"
-            :class="isFollowing ? 'bg-[#F2F2F2] dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700' : 'bg-[#FF2442] text-white hover:bg-red-600'"
+            :class="isFollowing ? 'bg-gray-100 dark:bg-gray-800 text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700' : 'bg-[#FF2442] text-white hover:bg-red-600'"
           >
             {{ isFollowing ? '已关注' : '关注' }}
           </button>
@@ -173,7 +181,7 @@
           </div>
         </div>
 
-        <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-800 shrink-0 flex items-center gap-4 relative bg-white dark:bg-[#1A1A1A]">
+        <div class="px-6 py-4 border-t border-gray-100 dark:border-gray-800 shrink-0 flex items-center gap-4 relative bg-white dark:bg-gray-900">
           
           <Transition name="fade">
             <div v-if="replyingTo" class="absolute -top-8 left-6 px-3 py-1 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-t-lg shadow-sm flex items-center gap-2 text-[12px] z-10 text-gray-600 dark:text-gray-300">
@@ -182,13 +190,13 @@
             </div>
           </Transition>
 
-          <div class="flex-1 bg-[#F5F5F5] dark:bg-[#2A2A2A] rounded-full px-4 py-2 flex items-center transition-all duration-200">
+          <div class="flex-1 bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2 flex items-center transition-all duration-200">
             <input 
               v-model="commentText"
               ref="commentInputRef"
               type="text" 
               :placeholder="replyingTo ? '写下你的回复...' : '说点什么...'" 
-              class="bg-transparent outline-none text-[14px] w-full text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+              class="w-full !bg-transparent outline-none text-[14px] text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
               @keyup.enter="handleSendComment"
             />
           </div>

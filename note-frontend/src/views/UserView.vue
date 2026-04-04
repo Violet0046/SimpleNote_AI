@@ -13,14 +13,14 @@
         <div class="w-[140px] h-[140px] rounded-full overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-200">
           <img :src="userInfo.avatar || 'http://localhost:8080/1.jpg'" class="w-full h-full object-cover" />
         </div>
-        <div class="flex flex-col gap-[10px]">
+        <div class="flex flex-col gap-[10px] flex-1">
           <div class="flex items-center flex-wrap gap-x-20 gap-y-3 w-full">
             <h1 class="text-[28px] font-semibold text-gray-900 max-w-[280px] truncate" :title="userInfo.nickname">
               {{ userInfo.nickname }}
             </h1>
             
             <button 
-              v-if="isFollowing !== null"
+              v-if="isFollowing !== null && targetUserId !== authStore.userInfo?.id"
               @click="toggleFollow" 
               class="px-6 py-1.5 rounded-full font-semibold text-[14px] transition-colors flex-shrink-0"
               :class="isFollowing ? 'bg-[#F2F2F2] text-gray-500 hover:bg-gray-200' : 'bg-[#FF2442] text-white hover:bg-red-600'"
@@ -40,10 +40,23 @@
             </div>
           </div>
           <p class="text-[14px] text-gray-700 mt-1">{{ userInfo.intro || '还没有简介哦~' }}</p>
-          <div class="flex items-center gap-5 mt-2 text-[14px]">
-            <div class="cursor-pointer hover:opacity-80"><span class="font-semibold text-gray-900 mr-1">{{ userInfo.followingCount || 0 }}</span><span class="text-gray-500">关注</span></div>
-            <div class="cursor-pointer hover:opacity-80"><span class="font-semibold text-gray-900 mr-1">{{ userInfo.followersCount || 0 }}</span><span class="text-gray-500">粉丝</span></div>
-            <div class="cursor-pointer hover:opacity-80"><span class="font-semibold text-gray-900 mr-1">{{ userInfo.likesCount || 0 }}</span><span class="text-gray-500">获赞</span></div>
+          
+          <div class="flex gap-6 mt-2 text-[14px]">
+            <div class="cursor-pointer transition-colors duration-200" 
+                 :class="activeTab === 'following' ? 'text-[#FF2442] font-bold' : 'text-gray-600 hover:text-black'"
+                 @click="switchTab('following')">
+              <span class="font-semibold mr-1" :class="activeTab === 'following' ? 'text-[#FF2442]' : 'text-gray-900'">{{ userInfo.followingCount || 0 }}</span>关注
+            </div>
+            
+            <div class="cursor-pointer transition-colors duration-200"
+                 :class="activeTab === 'followers' ? 'text-[#FF2442] font-bold' : 'text-gray-600 hover:text-black'"
+                 @click="switchTab('followers')">
+              <span class="font-semibold mr-1" :class="activeTab === 'followers' ? 'text-[#FF2442]' : 'text-gray-900'">{{ userInfo.followersCount || 0 }}</span>粉丝
+            </div>
+            
+            <div class="text-gray-600">
+              <span class="font-semibold text-gray-900 mr-1">{{ userInfo.likesCount || 0 }}</span>获赞
+            </div>
           </div>
         </div>
       </div>
@@ -51,41 +64,89 @@
 
     <div class="sticky top-[84px] z-40 bg-white w-full flex justify-center border-b border-gray-100 pt-[10px]">
       <div class="flex gap-12 px-4 h-[48px]">
-        <button class="relative h-full px-2 text-[16px] font-semibold text-gray-900 transition-colors">
+        <button @click="switchTab('posts')" class="relative h-full px-2 text-[16px] font-semibold transition-colors" :class="activeTab === 'posts' ? 'text-gray-900' : 'text-gray-500'">
           笔记
+          <div v-show="activeTab === 'posts'" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[3px] bg-[#FF2442] rounded-full"></div>
+        </button>
+
+        <button v-show="activeTab === 'following'" class="relative h-full px-2 text-[16px] font-semibold text-gray-900 transition-colors">
+          关注
+          <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[3px] bg-[#FF2442] rounded-full"></div>
+        </button>
+
+        <button v-show="activeTab === 'followers'" class="relative h-full px-2 text-[16px] font-semibold text-gray-900 transition-colors">
+          粉丝
           <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[3px] bg-[#FF2442] rounded-full"></div>
         </button>
       </div>
     </div>
 
     <div class="w-full bg-white px-[6px] pt-[20px] pb-[60px]">
-      <div v-if="loading" class="flex justify-center mt-10">
-        <svg class="animate-spin h-8 w-8 text-[#FF2442]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+      
+      <div v-if="activeTab === 'posts'">
+        <div v-if="loading" class="flex justify-center mt-10">
+          <svg class="animate-spin h-8 w-8 text-[#FF2442]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        </div>
+
+        <div v-else-if="userPosts.length > 0" class="flex gap-[20px] items-start w-full">
+          <div 
+            v-for="(colPosts, colIndex) in waterfallColumns" 
+            :key="colIndex"
+            class="flex-1 flex flex-col gap-[20px]"
+          >
+            <PostCard
+              v-for="post in colPosts"
+              :key="`${post.id}-${refreshKey}`"
+              :post="post"
+              :is-liked="likeStore.isPostLiked(post.id)"
+              @click="(postObj, rect) => openPostDetail(postObj, rect)"
+              @like="handleLike"
+              class="w-full"
+            />
+          </div>
+        </div>
+
+        <div v-else class="flex flex-col items-center justify-center mt-[100px] opacity-70">
+          <span class="text-[14px] text-gray-500">TA还没有发布任何内容哦</span>
+        </div>
+        
+        <div v-if="hasMore && !loading" ref="loadMoreTrigger" class="h-20"></div>
       </div>
 
-      <div v-else-if="userPosts.length > 0" class="flex gap-[20px] items-start w-full">
-        <div 
-          v-for="(colPosts, colIndex) in waterfallColumns" 
-          :key="colIndex"
-          class="flex-1 flex flex-col gap-[20px]"
-        >
-          <PostCard
-            v-for="post in colPosts"
-            :key="`${post.id}-${refreshKey}`"
-            :post="post"
-            :is-liked="likeStore.isPostLiked(post.id)"
-            @click="(postObj, rect) => openPostDetail(postObj, rect)"
-            @like="handleLike"
-            class="w-full"
-          />
+      <div v-else-if="activeTab === 'following' || activeTab === 'followers'" class="max-w-2xl mx-auto py-2">
+        <div class="space-y-4">
+          <div v-for="user in userList" :key="user.id" class="flex items-center justify-between p-4 bg-white rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md">
+            
+            <div class="flex items-center gap-4 cursor-pointer" @click="router.push(`/user/${user.id}`)">
+              <img :src="user.avatar || 'http://localhost:8080/1.jpg'" class="w-12 h-12 rounded-full object-cover border border-gray-100" />
+              <div class="flex flex-col">
+                <span class="text-[15px] font-bold text-gray-900">{{ user.nickname }}</span>
+                <span class="text-[13px] text-gray-400 mt-0.5 truncate w-[180px] sm:w-[250px]">
+                  {{ user.intro || '这个人很懒，什么都没写~' }}
+                </span>
+              </div>
+            </div>
+
+            <button 
+              v-if="user.id !== authStore.userInfo?.id"
+              @click="handleListFollow(user)"
+              class="px-5 py-1.5 rounded-full text-[13px] font-medium transition-colors"
+              :class="getFollowBtnInfo(user).class"
+            >
+              {{ getFollowBtnInfo(user).text }}
+            </button>
+          </div>
+        </div>
+
+        <div class="py-10 text-center">
+          <button v-if="hasMoreUsers" @click="loadMoreUsers" class="px-6 py-2 rounded-full border border-gray-200 text-gray-500 text-sm hover:bg-gray-50 transition-colors">
+            {{ isLoadingUsers ? '加载中...' : '加载更多' }}
+          </button>
+          <span v-else-if="userList.length > 0" class="text-sm text-gray-400">没有更多了~</span>
+          <span v-else class="text-sm text-gray-400">列表空空如也</span>
         </div>
       </div>
 
-      <div v-else class="flex flex-col items-center justify-center mt-[100px] opacity-70">
-        <span class="text-[14px] text-gray-500">TA还没有发布任何内容哦</span>
-      </div>
-      
-      <div v-if="hasMore && !loading" ref="loadMoreTrigger" class="h-20"></div>
     </div>
 
     <PostDetailModal
@@ -108,22 +169,7 @@ import { ElMessage } from 'element-plus'
 import PostCard from '@/components/PostCard.vue'
 import PostDetailModal from '@/components/PostDetailModal.vue'
 import type { Post, UserInfo } from '@/types'
-// 专门查询关注状态的方法
-const checkFollowStatus = async () => {
-  // 如果游客没登录，就不用查了，肯定是未关注状态
-  if (!authStore.isLoggedIn) {
-    isFollowing.value = false
-    return
-  }
-  try {
-    const response = await get<boolean>(`/follow/status/${targetUserId.value}`)
-    if (response.code === 1) {
-      isFollowing.value = response.data // 把后端的 true/false 赋给按钮
-    }
-  } catch (error) {
-    console.error('获取关注状态失败')
-  }
-}
+
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
@@ -144,10 +190,107 @@ const userInfo = ref<UserInfo>({
   likesCount: 0
 })
 
-// 关注状态 (目前由前端接管逻辑，默认为 false)
+// 关注状态
 const isFollowing = ref<boolean | null>(null)
 
-// 分页与数据状态
+// 🌟 核心新增：当前选中的标签页 ('posts', 'following', 'followers')
+const activeTab = ref('posts')
+
+// =========== 关系链列表逻辑 ===========
+const userList = ref<any[]>([])
+const userListPage = ref(1)
+const hasMoreUsers = ref(true)
+const isLoadingUsers = ref(false)
+
+const fetchUserList = async (reset = false) => {
+  if (reset) {
+    userListPage.value = 1
+    userList.value = []
+    hasMoreUsers.value = true
+  }
+  
+  if (!hasMoreUsers.value || isLoadingUsers.value) return
+  isLoadingUsers.value = true
+
+  try {
+    const endpoint = activeTab.value === 'following' ? 'following' : 'followers'
+    const res = await get<any>(`/follow/${endpoint}/${targetUserId.value}`, {
+      pageNum: userListPage.value,
+      pageSize: 20
+    })
+    
+    if (res.code === 1) {
+      // 无论后端返回的是 PageBean 还是普通 List，统统拿下！
+      let newItems = []
+      if (res.data && Array.isArray(res.data.items)) {
+        newItems = res.data.items // 兼容 PageBean 格式
+      } else if (Array.isArray(res.data)) {
+        newItems = res.data       // 兼容 List 格式
+      }
+      
+      userList.value.push(...newItems)
+      hasMoreUsers.value = newItems.length === 20
+    }
+  } catch (e) {
+    console.error('获取列表失败')
+  } finally {
+    isLoadingUsers.value = false
+  }
+}
+
+const loadMoreUsers = () => {
+  const isSelf = authStore.userInfo?.id === Number(targetUserId.value)
+  if (!isSelf && userListPage.value >= 5) {
+    ElMessage.info('保护用户隐私，仅展示部分列表哦')
+    hasMoreUsers.value = false
+    return
+  }
+  userListPage.value++
+  fetchUserList()
+}
+
+const switchTab = (tab: string) => {
+  activeTab.value = tab
+  if (tab === 'following' || tab === 'followers') {
+    fetchUserList(true)
+  }
+}
+
+const getFollowBtnInfo = (user: any) => {
+  if (user.isFollowing && user.isFollower) return { text: '互粉', class: 'bg-gray-100 text-gray-500' }
+  if (user.isFollowing && !user.isFollower) return { text: '已关注', class: 'bg-gray-100 text-gray-500' }
+  if (!user.isFollowing && user.isFollower) return { text: '回关', class: 'bg-[#FF2442] text-white' }
+  return { text: '关注', class: 'bg-[#FF2442] text-white' }
+}
+
+const handleListFollow = async (user: any) => {
+  if (!authStore.isLoggedIn) return ElMessage.warning('请先登录哦')
+  try {
+    const res = await post(`/follow/${user.id}`)
+    if (res.code === 1) {
+      user.isFollowing = !user.isFollowing
+    }
+  } catch (e) {
+    ElMessage.error('操作失败')
+  }
+}
+
+const checkFollowStatus = async () => {
+  if (!authStore.isLoggedIn) {
+    isFollowing.value = false
+    return
+  }
+  try {
+    const response = await get<boolean>(`/follow/status/${targetUserId.value}`)
+    if (response.code === 1) {
+      isFollowing.value = response.data 
+    }
+  } catch (error) {
+    console.error('获取关注状态失败')
+  }
+}
+
+// =========== 笔记列表逻辑 ===========
 const userPosts = ref<Post[]>([])
 const loading = ref(false)
 const hasMore = ref(true)
@@ -155,16 +298,13 @@ const currentPage = ref(1)
 const pageSize = ref(15)
 const refreshKey = ref(0) 
 
-// 弹窗状态
 const showModal = ref(false)
 const selectedPost = ref<Post | null>(null)
 const triggerRect = ref<DOMRect | null>(null)
 
-// 触底加载监听器
 const loadMoreTrigger = ref<HTMLElement>()
 let observer: IntersectionObserver | null = null
 
-// 瀑布流逻辑
 const colCount = ref(5)
 const updateColCount = () => {
   const width = window.innerWidth
@@ -185,20 +325,15 @@ const waterfallColumns = computed(() => {
   return cols
 })
 
-// 🌟 1. 获取他人信息
 const fetchUserInfo = async () => {
   try {
-    // 拦截：如果是自己看自己，跳回自己的主页
     if (authStore.userInfo?.id === targetUserId.value) {
       router.replace('/profile')
       return
     }
-
     const response = await get<any>(`/user/info/${targetUserId.value}`)
     if (response.code === 1) {
       userInfo.value = response.data
-      // 注：因为后端 UserDetailVO 还没包含 isFollowing 字段，这里我们先默认 false。
-      // 后续如果后端补上了，可以直接 isFollowing.value = response.data.isFollowing
     } else {
       ElMessage.error('用户不存在')
     }
@@ -207,7 +342,6 @@ const fetchUserInfo = async () => {
   }
 }
 
-// 🌟 2. 关注/取消关注逻辑
 const toggleFollow = async () => {
   if (!authStore.isLoggedIn) {
     authStore.showLoginModal()
@@ -217,7 +351,6 @@ const toggleFollow = async () => {
     const res = await post(`/follow/${targetUserId.value}`)
     if (res.code === 1) {
       isFollowing.value = !isFollowing.value
-      // 动态修改页面的粉丝数体验更棒
       if (isFollowing.value) {
         userInfo.value.followersCount! += 1
       } else {
@@ -231,7 +364,6 @@ const toggleFollow = async () => {
   }
 }
 
-// 🌟 3. 获取他人的帖子 (请求 /post/list/user 接口)
 const fetchUserPosts = async (isLoadMore = false) => {
   if (loading.value || (!isLoadMore && userPosts.value.length > 0)) return
   loading.value = true
@@ -260,15 +392,13 @@ const fetchUserPosts = async (isLoadMore = false) => {
   }
 }
 
-// 监听路由参数变化 (如果是从一个人的主页点到另一个人的主页)
 watch(() => route.params.id, (newId) => {
   if (newId && route.name === 'user') {
     currentPage.value = 1
     userPosts.value = []
     hasMore.value = true
-    
-    // 切换到别人主页时，先重置为“未知状态”
     isFollowing.value = null 
+    activeTab.value = 'posts' // 切人时重置回笔记
     
     fetchUserInfo()
     fetchUserPosts()
@@ -276,11 +406,11 @@ watch(() => route.params.id, (newId) => {
   }
 })
 
-// 无限滚动绑定
 const setupInfiniteScroll = () => {
   if (!loadMoreTrigger.value) return
   observer = new IntersectionObserver((entries) => {
-    if (entries[0]?.isIntersecting && hasMore.value && !loading.value) {
+    // 只有在处于“笔记”标签页时，才触发无限滚动
+    if (entries[0]?.isIntersecting && hasMore.value && !loading.value && activeTab.value === 'posts') {
       fetchUserPosts(true)
     }
   }, { rootMargin: '100px', threshold: 0.1 })
@@ -326,8 +456,12 @@ onMounted(() => {
   window.addEventListener('resize', updateColCount)
   fetchUserInfo()
   fetchUserPosts()
-  checkFollowStatus() // 第一次进入页面时，查一次状态
-  setupInfiniteScroll()
+  checkFollowStatus() 
+  
+  // 必须延迟一下挂载监听器，确保 DOM 已渲染
+  setTimeout(() => {
+    setupInfiniteScroll()
+  }, 500)
 })
 
 onUnmounted(() => {

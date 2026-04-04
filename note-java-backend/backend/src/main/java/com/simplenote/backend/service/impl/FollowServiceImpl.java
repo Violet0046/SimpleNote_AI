@@ -1,7 +1,10 @@
 package com.simplenote.backend.service.impl;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.simplenote.backend.mapper.FollowMapper;
 import com.simplenote.backend.mapper.UserMapper;
+import com.simplenote.backend.pojo.PageBean;
 import com.simplenote.backend.pojo.UserDetailVO;
 import com.simplenote.backend.service.FollowService;
 import com.simplenote.backend.utils.ThreadLocalUtil;
@@ -40,18 +43,36 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
-    public List<UserDetailVO> getFollowingList(Integer userId) {
-        return userMapper.getFollowingList(userId);
+    public PageBean<UserDetailVO> getFollowingList(Integer userId, Integer pageNum, Integer pageSize) {
+        Integer myId = getCurrentUserId();
+        PageHelper.startPage(pageNum, pageSize);
+        List<UserDetailVO> list = userMapper.getFollowingList(userId, myId);
+        PageInfo<UserDetailVO> pageInfo = new PageInfo<>(list);
+        return new PageBean<>(pageInfo.getTotal(), list);
     }
 
     @Override
-    public List<UserDetailVO> getFollowersList(Integer userId) {
-        return userMapper.getFollowersList(userId);
+    public PageBean<UserDetailVO> getFollowersList(Integer userId, Integer pageNum, Integer pageSize) {
+        Integer myId = getCurrentUserId();
+        PageHelper.startPage(pageNum, pageSize);
+        List<UserDetailVO> list = userMapper.getFollowersList(userId, myId);
+        PageInfo<UserDetailVO> pageInfo = new PageInfo<>(list);
+        return new PageBean<>(pageInfo.getTotal(), list);
     }
 
     @Override
     public boolean isFollowing(Integer followerId, Integer followedId) {
         Integer count = followMapper.checkFollowStatus(followerId, followedId);
         return count != null && count > 0;
+    }
+
+    private Integer getCurrentUserId() {
+        try {
+            Map<String, Object> map = ThreadLocalUtil.get();
+            if (map != null && map.get("id") != null) {
+                return (Integer) map.get("id");
+            }
+        } catch (Exception e) {}
+        return 0; 
     }
 }
