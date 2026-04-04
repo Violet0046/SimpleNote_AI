@@ -20,6 +20,7 @@
             </h1>
             
             <button 
+              v-if="isFollowing !== null"
               @click="toggleFollow" 
               class="px-6 py-1.5 rounded-full font-semibold text-[14px] transition-colors flex-shrink-0"
               :class="isFollowing ? 'bg-[#F2F2F2] text-gray-500 hover:bg-gray-200' : 'bg-[#FF2442] text-white hover:bg-red-600'"
@@ -107,7 +108,22 @@ import { ElMessage } from 'element-plus'
 import PostCard from '@/components/PostCard.vue'
 import PostDetailModal from '@/components/PostDetailModal.vue'
 import type { Post, UserInfo } from '@/types'
-
+// 专门查询关注状态的方法
+const checkFollowStatus = async () => {
+  // 如果游客没登录，就不用查了，肯定是未关注状态
+  if (!authStore.isLoggedIn) {
+    isFollowing.value = false
+    return
+  }
+  try {
+    const response = await get<boolean>(`/follow/status/${targetUserId.value}`)
+    if (response.code === 1) {
+      isFollowing.value = response.data // 把后端的 true/false 赋给按钮
+    }
+  } catch (error) {
+    console.error('获取关注状态失败')
+  }
+}
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
@@ -129,7 +145,7 @@ const userInfo = ref<UserInfo>({
 })
 
 // 关注状态 (目前由前端接管逻辑，默认为 false)
-const isFollowing = ref(false)
+const isFollowing = ref<boolean | null>(null)
 
 // 分页与数据状态
 const userPosts = ref<Post[]>([])
@@ -250,9 +266,13 @@ watch(() => route.params.id, (newId) => {
     currentPage.value = 1
     userPosts.value = []
     hasMore.value = true
-    isFollowing.value = false
+    
+    // 切换到别人主页时，先重置为“未知状态”
+    isFollowing.value = null 
+    
     fetchUserInfo()
     fetchUserPosts()
+    checkFollowStatus()
   }
 })
 
@@ -306,6 +326,7 @@ onMounted(() => {
   window.addEventListener('resize', updateColCount)
   fetchUserInfo()
   fetchUserPosts()
+  checkFollowStatus() // 第一次进入页面时，查一次状态
   setupInfiniteScroll()
 })
 

@@ -45,4 +45,22 @@ public class CommentController {
             return Result.error(e.getMessage());
         }
     }
+
+    // 展开更多回复 (倍增式分页)
+    @GetMapping("/replies")
+    public Result<PageBean<CommentVO>> replies(
+            @RequestParam Long parentId,
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize
+    ) {
+        PageBean<CommentVO> page = commentService.getRepliesPage(parentId, pageNum, pageSize);
+        return Result.success(page);
+    }
+
+    // 评论点赞/取消
+    @PostMapping("/like/{id}")
+    public Result<String> likeComment(@PathVariable Long id) {
+        commentService.toggleCommentLike(id);
+        return Result.success("操作成功");
+    }
 }

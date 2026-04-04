@@ -53,22 +53,25 @@ public class CommentServiceImpl implements CommentService {
     // 评论树分页拉取
     @Override
     public PageBean<CommentVO> getCommentTreePage(Integer postId, Integer pageNum, Integer pageSize, Integer sortType) {
-        
-        // 开启分页，只拦截一级评论的查询
-        PageHelper.startPage(pageNum, pageSize);
-        List<CommentVO> rootComments = commentMapper.findRootComments(postId, sortType);
+        Integer myId = getCurrentUserId();
+        // 🌟 1. 查出这个帖子是谁发的
+        Integer postAuthorId = commentMapper.getPostAuthorId(postId); 
 
-        // 遍历当前页的这一小撮一级评论
+        PageHelper.startPage(pageNum, pageSize);
+        List<CommentVO> rootComments = commentMapper.findRootComments(postId, sortType, myId);
+
         for (CommentVO root : rootComments) {
-            
-            // 脱敏：如果一级评论被删除了，替换文字
             if (root.getIsDeleted() != null && root.getIsDeleted() == 1) {
                 root.setContent("该评论已被删除");
             }
 
-            // 去数据库拉取该评论的【前3条子评论】作为预览
-            List<CommentVO> previewChildren = commentMapper.findPreviewChildComments(root.getId());
-            
+            // 🌟 2. 动态计算神评门槛：根评论赞数的 25%
+            double threshold = (root.getLikesCount() == null ? 0 : root.getLikesCount()) * 0.25;
+
+            // 🌟 3. 极其严苛的限制：只查【最多 1 条】满足条件的子评论！
+            PageHelper.startPage(1, 1, false); 
+            List<CommentVO> previewChildren = commentMapper.findQualifiedPreviewChild(root.getId(), myId, postAuthorId, threshold);
+
             for (CommentVO child : previewChildren) {
                 if (child.getIsDeleted() != null && child.getIsDeleted() == 1) {
                     child.setContent("该评论已被删除");
@@ -76,14 +79,45 @@ public class CommentServiceImpl implements CommentService {
             }
             root.setReplies(previewChildren);
 
-            // 统计总共有多少条子评论，告诉前端
-            // 前端逻辑：如果 childCount > 3，就显示 "展开剩余的 (childCount - 3) 条回复" 按钮
             Integer childCount = commentMapper.countChildComments(root.getId());
             root.setChildCount(childCount);
         }
 
-        // 封装成分页对象返回
         PageInfo<CommentVO> pageInfo = new PageInfo<>(rootComments);
         return new PageBean<>(pageInfo.getTotal(), rootComments);
+    }
+
+    // 获取当前用户 ID (游客为 0)
+    private Integer getCurrentUserId() {
+        try {
+            Map<String, Object> map = ThreadLocalUtil.get();
+            if (map != null && map.get("id") != null) {
+                return (Integer) map.get("id");
+            }
+        } catch (Exception e) {}
+        return 0; // 0代表未登录
+    }
+
+    // 专门分页获取子评论的 Service
+    public PageBean<CommentVO> getRepliesPage(Long parentId, Integer pageNum, Integer pageSize) {
+        PageHelper.startPage(pageNum, pageSize);
+        List<CommentVO> replies = commentMapper.findChildComments(parentId, getCurrentUserId());
+        PageInfo<CommentVO> pageInfo = new PageInfo<>(replies);
+        return new PageBean<>(pageInfo.getTotal(), replies);
+    }
+
+    // 处理点赞逻辑的 Service
+    public void toggleCommentLike(Long commentId) {
+        Integer userId = getCurrentUserId();
+        if (userId == 0) throw new RuntimeException("请先登录");
+
+        int count = commentMapper.checkLikeStatus(commentId, userId);
+        if (count > 0) { // 已点赞 -> 取消
+            commentMapper.removeLike(commentId, userId);
+            commentMapper.updateLikesCount(commentId, -1);
+        } else { // 未点赞 -> 增加
+            commentMapper.addLike(commentId, userId);
+            commentMapper.updateLikesCount(commentId, 1);
+        }
     }
 }

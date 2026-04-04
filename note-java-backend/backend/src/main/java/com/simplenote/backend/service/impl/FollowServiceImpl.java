@@ -48,4 +48,10 @@ public class FollowServiceImpl implements FollowService {
     public List<UserDetailVO> getFollowersList(Integer userId) {
         return userMapper.getFollowersList(userId);
     }
+
+    @Override
+    public boolean isFollowing(Integer followerId, Integer followedId) {
+        Integer count = followMapper.checkFollowStatus(followerId, followedId);
+        return count != null && count > 0;
+    }
 }

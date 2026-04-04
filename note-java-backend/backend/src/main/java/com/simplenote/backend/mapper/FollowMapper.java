@@ -16,4 +16,7 @@ public interface FollowMapper {
     // 3. 取消关注操作
     @Delete("DELETE FROM follow_user WHERE follower_id = #{followerId} AND followed_id = #{followedId}")
     void unfollow(@Param("followerId") Integer followerId, @Param("followedId") Integer followedId);
+    // 查询是否已经关注
+    @Select("SELECT COUNT(*) FROM follow_user WHERE follower_id = #{followerId} AND followed_id = #{followedId}")
+    Integer checkFollowStatus(@Param("followerId") Integer followerId, @Param("followedId") Integer followedId);
 }

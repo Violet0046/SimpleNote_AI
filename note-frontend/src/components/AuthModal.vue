@@ -118,17 +118,17 @@
                 </button>
                 <button 
                   type="button"
-                  @click="registerForm.gender = 2"
+                  @click="registerForm.gender = 0"
                   class="flex-1 py-2 rounded-xl text-[13px] font-medium transition-all duration-200"
-                  :class="registerForm.gender === 2 ? 'bg-[#FFECF0] text-[#FF4D85] ring-1 ring-[#FF4D85]' : 'bg-[#F7F7F7] text-gray-500 hover:bg-gray-100'"
+                  :class="registerForm.gender === 0 ? 'bg-[#FFECF0] text-[#FF4D85] ring-1 ring-[#FF4D85]' : 'bg-[#F7F7F7] text-gray-500 hover:bg-gray-100'"
                 >
                   ♀ 女生
                 </button>
                 <button 
                   type="button"
-                  @click="registerForm.gender = 0"
+                  @click="registerForm.gender = 2"
                   class="flex-1 py-2 rounded-xl text-[13px] font-medium transition-all duration-200"
-                  :class="registerForm.gender === 0 ? 'bg-gray-800 text-white ring-1 ring-gray-800' : 'bg-[#F7F7F7] text-gray-500 hover:bg-gray-100'"
+                  :class="registerForm.gender === 2 ? 'bg-gray-800 text-white ring-1 ring-gray-800' : 'bg-[#F7F7F7] text-gray-500 hover:bg-gray-100'"
                 >
                   保密
                 </button>
@@ -224,7 +224,7 @@ const registerForm = reactive<RegisterRequest & { confirmPassword: string; nickn
   password: '',
   confirmPassword: '',
   nickname: '',
-  gender: 0,
+  gender: 2,  // 默认保密
   avatarUrl: ''
 })
 

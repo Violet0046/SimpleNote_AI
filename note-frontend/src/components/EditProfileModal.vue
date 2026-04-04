@@ -51,17 +51,17 @@
               </button>
               <button 
                 type="button"
-                @click="form.gender = 2"
+                @click="form.gender = 0"
                 class="flex-1 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-200"
-                :class="form.gender === 2 ? 'bg-[#FFECF0] text-[#FF4D85] ring-1 ring-[#FF4D85]' : 'bg-[#F7F7F7] text-gray-500 hover:bg-gray-100'"
+                :class="form.gender === 0 ? 'bg-[#FFECF0] text-[#FF4D85] ring-1 ring-[#FF4D85]' : 'bg-[#F7F7F7] text-gray-500 hover:bg-gray-100'"
               >
                 ♀ 女生
               </button>
               <button 
                 type="button"
-                @click="form.gender = 0"
+                @click="form.gender = 2"
                 class="flex-1 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-200"
-                :class="form.gender === 0 ? 'bg-gray-800 text-white ring-1 ring-gray-800' : 'bg-[#F7F7F7] text-gray-500 hover:bg-gray-100'"
+                :class="form.gender === 2 ? 'bg-gray-800 text-white ring-1 ring-gray-800' : 'bg-[#F7F7F7] text-gray-500 hover:bg-gray-100'"
               >
                 保密
               </button>
@@ -136,10 +136,15 @@ const form = reactive({
 // 当弹窗打开时，把当前的用户信息回显到表单里
 watch(() => props.visible, (newVal) => {
   if (newVal) {
+    // 1. 昵称和简介直接回显，如果没有就给空字符串
     form.nickname = props.userInfo.nickname || ''
-    form.gender = props.userInfo.gender || 0
     form.intro = props.userInfo.intro || ''
     form.avatar = props.userInfo.avatar || ''
+    
+    // 2. 性别精准回显！
+    // 使用 ?? 操作符，防止后端传来的 gender 为 null 或 undefined 时报错
+    // 强制转为 Number 类型，确保和下方模板里的 === 1 / === 2 完美匹配
+    form.gender = Number(props.userInfo.gender ?? 0)
   }
 })
 

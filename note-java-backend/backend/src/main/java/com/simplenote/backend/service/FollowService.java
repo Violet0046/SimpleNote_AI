@@ -10,4 +10,7 @@ public interface FollowService {
 
     List<UserDetailVO> getFollowingList(Integer userId);
     List<UserDetailVO> getFollowersList(Integer userId);
+
+    // 检查关注状态
+    boolean isFollowing(Integer followerId, Integer followedId);
 }

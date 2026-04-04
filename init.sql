@@ -82,3 +82,14 @@ ALTER TABLE `post` ADD COLUMN `ip_location` VARCHAR(50) DEFAULT '未知' COMMENT
 -- 让每条评论都定格发布时的 IP
 ALTER TABLE `comment` ADD COLUMN `ip_location` VARCHAR(50) DEFAULT '未知' COMMENT '评论时的IP属地';
 
+-- 给 comment 表加上点赞统计字段
+ALTER TABLE comment ADD COLUMN likes_count INT DEFAULT 0;
+
+-- 创建独立的评论点赞表
+CREATE TABLE comment_like (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    comment_id BIGINT NOT NULL,
+    user_id INT NOT NULL,
+    create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uk_comment_user (comment_id, user_id)
+);

@@ -30,4 +30,7 @@ public class CommentVO {
     
     // 存放这条根评论下的前 3 条子评论预览
     private List<CommentVO> replies;  
+
+    private Integer likesCount;   // 评论的点赞数
+    private Integer isLiked;      // 当前登录用户是否点赞了这条评论（0 或 1）
 }
