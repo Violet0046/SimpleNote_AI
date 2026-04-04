@@ -48,4 +48,15 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedHeaders("*")
                 .allowCredentials(true);
     }
+
+    // 配置静态资源映射规则
+    @Override
+    public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
+        // 获取与 FileUploadController 中一致的当前项目目录
+        String uploadPath = System.getProperty("user.dir") + "/uploads/";
+        
+        // 关键映射：把网络请求的 /uploads/** 映射到本地 file: 物理路径
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:" + uploadPath);
+    }
 }
