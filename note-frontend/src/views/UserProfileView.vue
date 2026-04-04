@@ -226,18 +226,18 @@ const fetchUserList = async (reset = false) => {
     })
     
     if (res.code === 1) {
-      let newItems = []
+      // 🌟 修复 1：明确告诉 TS 这是一个 any 类型的数组
+      let newItems: any[] = [] 
       if (res.data && Array.isArray(res.data.items)) {
         newItems = res.data.items 
       } else if (Array.isArray(res.data)) {
         newItems = res.data       
       }
       
-      // 🌟 核心防爆修复：暴力抹平前后端布尔值差异 (防止一直是“关注”)
-      // 兼容 true/false、1/0，以及 Jackson JSON 自动去掉了 'is' 前缀变成 'following' 的各种情况
-      newItems = newItems.map(u => {
-        const following = u.isFollowing === true || u.isFollowing === 1 || u.following === true || u.following === 1
-        const follower = u.isFollower === true || u.isFollower === 1 || u.follower === true || u.follower === 1
+      // 🌟 修复 2：给参数 u 显式加上 (u: any)，彻底消灭报错！
+      newItems = newItems.map((u: any) => {
+        const following = u.isFollowing === 1 || u.following === 1 || u.isFollowing === true || u.following === true
+        const follower = u.isFollower === 1 || u.follower === 1 || u.isFollower === true || u.follower === true
         return { ...u, isFollowing: following, isFollower: follower }
       })
       

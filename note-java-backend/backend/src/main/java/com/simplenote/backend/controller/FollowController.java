@@ -46,9 +46,18 @@ public class FollowController {
 
     @GetMapping("/status/{id}")
     public Result<Boolean> getFollowStatus(@PathVariable("id") Integer targetId) {
-        Map<String, Object> map = ThreadLocalUtil.get();
-        Integer myId = (Integer) map.get("id");
-        boolean isFollowing = followService.isFollowing(myId, targetId);
-        return Result.success(isFollowing);
+        try {
+            Map<String, Object> map = ThreadLocalUtil.get();
+            // 如果没登录，直接返回 false，这样前端按钮就会立刻显示“关注”
+            if (map == null || map.get("id") == null) {
+                return Result.success(false);
+            }
+            Integer myId = (Integer) map.get("id");
+            boolean isFollowing = followService.isFollowing(myId, targetId);
+            return Result.success(isFollowing);
+        } catch (Exception e) {
+            // 发生任何异常，都默认当做未关注，保证前端按钮能显示出来
+            return Result.success(false); 
+        }
     }
 }
