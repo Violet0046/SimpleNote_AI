@@ -214,19 +214,27 @@ const fetchUserList = async (reset = false) => {
 
   try {
     const endpoint = activeTab.value === 'following' ? 'following' : 'followers'
-    const res = await get<any>(`/follow/${endpoint}/${targetUserId.value}`, {
+    // 获取列表
+    const res = await get<any>(`/follow/${endpoint}/${authStore.userInfo?.id}`, {
       pageNum: userListPage.value,
       pageSize: 20
     })
     
     if (res.code === 1) {
-      // 无论后端返回的是 PageBean 还是普通 List，统统拿下！
       let newItems = []
       if (res.data && Array.isArray(res.data.items)) {
-        newItems = res.data.items // 兼容 PageBean 格式
+        newItems = res.data.items 
       } else if (Array.isArray(res.data)) {
-        newItems = res.data       // 兼容 List 格式
+        newItems = res.data       
       }
+      
+      // 🌟 终极防爆层：暴力抹平前后端数据差异
+      // 识别后端传来的 1 统统转为 true，0 转为 false
+      newItems = newItems.map(u => {
+        const following = u.isFollowing === 1 || u.isFollowing === true || u.following === 1 || u.following === true
+        const follower = u.isFollower === 1 || u.isFollower === true || u.follower === 1 || u.follower === true
+        return { ...u, isFollowing: following, isFollower: follower }
+      })
       
       userList.value.push(...newItems)
       hasMoreUsers.value = newItems.length === 20

@@ -44,23 +44,21 @@ public interface UserMapper {
             "WHERE id=#{id}")
     void update(User user);
 
-    // 1. 获取关注列表 (带上当前登录用户的双向关系探查)
+   // 1. 获取关注列表 (核心修复：AS is_following 和 AS is_follower)
     @Select("SELECT u.id, u.nickname, u.avatar, u.intro, " +
-            "(SELECT COUNT(*) FROM follow_user fu1 WHERE fu1.follower_id = #{myId} AND fu1.followed_id = u.id) > 0 AS is_following, " +
-            "(SELECT COUNT(*) FROM follow_user fu2 WHERE fu2.follower_id = u.id AND fu2.followed_id = #{myId}) > 0 AS is_follower " +
+            "IF((SELECT COUNT(*) FROM follow_user fu1 WHERE fu1.follower_id = #{myId} AND fu1.followed_id = u.id) > 0, 1, 0) AS is_following, " +
+            "IF((SELECT COUNT(*) FROM follow_user fu2 WHERE fu2.follower_id = u.id AND fu2.followed_id = #{myId}) > 0, 1, 0) AS is_follower " +
             "FROM user u " +
             "JOIN follow_user fu ON u.id = fu.followed_id " +
-            "WHERE fu.follower_id = #{userId} " +
-            "ORDER BY fu.create_time DESC")
+            "WHERE fu.follower_id = #{userId}")
     List<UserDetailVO> getFollowingList(@Param("userId") Integer userId, @Param("myId") Integer myId);
 
-    // 2. 获取粉丝列表 (带上当前登录用户的双向关系探查)
+    // 2. 获取粉丝列表 (核心修复：AS is_following 和 AS is_follower)
     @Select("SELECT u.id, u.nickname, u.avatar, u.intro, " +
-            "(SELECT COUNT(*) FROM follow_user fu1 WHERE fu1.follower_id = #{myId} AND fu1.followed_id = u.id) > 0 AS is_following, " +
-            "(SELECT COUNT(*) FROM follow_user fu2 WHERE fu2.follower_id = u.id AND fu2.followed_id = #{myId}) > 0 AS is_follower " +
+            "IF((SELECT COUNT(*) FROM follow_user fu1 WHERE fu1.follower_id = #{myId} AND fu1.followed_id = u.id) > 0, 1, 0) AS is_following, " +
+            "IF((SELECT COUNT(*) FROM follow_user fu2 WHERE fu2.follower_id = u.id AND fu2.followed_id = #{myId}) > 0, 1, 0) AS is_follower " +
             "FROM user u " +
             "JOIN follow_user fu ON u.id = fu.follower_id " +
-            "WHERE fu.followed_id = #{userId} " +
-            "ORDER BY fu.create_time DESC")
+            "WHERE fu.followed_id = #{userId}")
     List<UserDetailVO> getFollowersList(@Param("userId") Integer userId, @Param("myId") Integer myId);
 }
