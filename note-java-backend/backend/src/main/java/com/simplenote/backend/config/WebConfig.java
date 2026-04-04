@@ -25,6 +25,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/post/list/user",  // 进别人的主页看帖子列表
                         "/post/detail/*",   // 帖子详情页 (注意配合 Controller 把路径改为 /post/detail/{id})
                         "/comment/list",    // 游客看帖子下的评论
+                        "/upload",
                         "/uploads/**",      // 图片文件访问放行
                         "/**/*.jpg",        // 默认头像等静态资源放行
                         "/**/*.png",        
@@ -36,11 +37,12 @@ public class WebConfig implements WebMvcConfigurer {
                 );
     }
 
-    @Override
+   @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 核心配置：当访问路径以 /uploads/ 开头时
-        // 去物理路径 file:D:/simplenote_uploads/ 下面找文件
+        // 将网络路径映射到项目真实物理路径
+        String uploadPath = "file:" + System.getProperty("user.dir") + "/uploads/";
+        
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:D:/simplenote_uploads/");
+                .addResourceLocations(uploadPath);
     }
 }

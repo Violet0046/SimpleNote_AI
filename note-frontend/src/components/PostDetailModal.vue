@@ -80,7 +80,7 @@ const props = defineProps({
   triggerRect: { type: Object as PropType<DOMRect | null>, default: null }
 })
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'like-toggle'])
 
 const postDetail = ref<Post | null>(null)
 const isExpanded = ref(false)
