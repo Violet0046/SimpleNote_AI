@@ -14,5 +14,4 @@ public class PostVO extends Post {
     private Integer likeCount;   // 点赞数
     private String title;         // 帖子标题
     private String images;        // 第一张配图
-
 }

@@ -6,12 +6,9 @@ public interface UserService {
     // 根据用户名查询用户
     User findByUsername(String username);
     // 用户注册
-    void register(String username, String password, String nickname, String avatarUrl);
+    void register(String username, String password, String nickname, Integer gender, String avatarUrl);
     // 用户登录
     User login(String username, String password);
-
-    // 获取用户主页详细信息
-    UserDetailVO getUserDetailInfo(Integer userId);
 
     // 根据用户ID获取用户信息
     UserDetailVO getUserDetailById(Integer id);

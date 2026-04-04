@@ -16,7 +16,7 @@ public interface UserLikesMapper {
     int checkUserLike(@Param("userId") Integer userId, @Param("postId") Integer postId);
 
     // 2. 添加点赞记录
-    @Insert("INSERT INTO user_likes(user_id, post_id) VALUES(#{userId}, #{postId})")
+    @Insert("INSERT INTO user_likes(user_id, post_id, create_time) VALUES(#{userId}, #{postId}, now())")
     void addLike(@Param("userId") Integer userId, @Param("postId") Integer postId);
 
     // 3. 删除点赞记录

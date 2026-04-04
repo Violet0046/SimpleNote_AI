@@ -11,7 +11,8 @@ public class CommentVO {
     private String authorName;        // 评论人昵称
     private String authorAvatar;      // 评论人头像
     private String content;           // 评论内容
-    private String ipLocation;
+    private String ipLocation;        // IP 属地
+    
     // 供后端分组使用
     private Long parentId;
     
@@ -24,6 +25,9 @@ public class CommentVO {
     
     private LocalDateTime createTime; // 评论时间
     
-    // 存放这条根评论下的所有子评论（二级平铺）
+    // 统计该一级评论下到底有多少条子评论 (用于前端展示 "展开剩余 X 条回复")
+    private Integer childCount;
+    
+    // 存放这条根评论下的前 3 条子评论预览
     private List<CommentVO> replies;  
 }

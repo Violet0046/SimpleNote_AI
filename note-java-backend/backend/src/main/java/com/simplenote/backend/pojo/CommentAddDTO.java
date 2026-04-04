@@ -1,6 +1,6 @@
 package com.simplenote.backend.pojo;
 import lombok.Data;
-
+// 评论添加DTO类
 @Data
 public class CommentAddDTO {
     private Integer postId;          // 评论的哪篇笔记

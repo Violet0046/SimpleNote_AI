@@ -1,18 +1,19 @@
 package com.simplenote.backend.service.impl;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.simplenote.backend.mapper.CommentMapper;
 import com.simplenote.backend.pojo.Comment;
 import com.simplenote.backend.pojo.CommentAddDTO;
 import com.simplenote.backend.pojo.CommentVO;
+import com.simplenote.backend.pojo.PageBean;
 import com.simplenote.backend.service.CommentService;
 import com.simplenote.backend.utils.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class CommentServiceImpl implements CommentService {
@@ -22,59 +23,67 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public void addComment(CommentAddDTO dto) {
-        // 1. 拿到当前登录人的 ID
         Map<String, Object> map = ThreadLocalUtil.get();
         Integer userId = (Integer) map.get("id");
 
-        // 2. 把 DTO 转换成能存入数据库的 Comment 实体类
         Comment comment = new Comment();
         comment.setPostId(dto.getPostId());
         comment.setUserId(userId);
         comment.setContent(dto.getContent());
-        // 容错处理：如果前端没传 parentId，默认为 0（一级评论）
         comment.setParentId(dto.getParentId() == null ? 0L : dto.getParentId());
         comment.setReplyToUserId(dto.getReplyToUserId());
-        
-        // 3. 封印历史快照 IP (这里先默认写死陕西，真实的商业项目会通过解析 HttpServletRequest 里的真实网络 IP 获得)
         comment.setIpLocation("陕西"); 
 
-        // 4. 存入数据库
         commentMapper.insert(comment);
     }
 
     @Override
-    public List<CommentVO> getCommentTree(Integer postId) {
-        List<CommentVO> allComments = commentMapper.findAllByPostId(postId);
+    public void deleteComment(Long id) {
+        // 1. 获取当前登录人
+        Map<String, Object> map = ThreadLocalUtil.get();
+        Integer userId = (Integer) map.get("id");
 
-        // 1. 软删除脱敏处理：屏蔽被删除的评论内容
-        for (CommentVO comment : allComments) {
-            if (comment.getIsDeleted() != null && comment.getIsDeleted() == 1) {
-                comment.setContent("该评论已被删除");
-            }
+        // 2. 调用 Mapper 执行逻辑删除
+        int row = commentMapper.softDelete(id, userId);
+        if (row == 0) {
+            throw new RuntimeException("删除失败或无权删除");
         }
+    }
+    
+    // 评论树分页拉取
+    @Override
+    public PageBean<CommentVO> getCommentTreePage(Integer postId, Integer pageNum, Integer pageSize, Integer sortType) {
+        
+        // 开启分页，只拦截一级评论的查询
+        PageHelper.startPage(pageNum, pageSize);
+        List<CommentVO> rootComments = commentMapper.findRootComments(postId, sortType);
 
-        // 2. 准备两个桶分拣数据
-        List<CommentVO> rootComments = new ArrayList<>();
-        List<CommentVO> childComments = new ArrayList<>();
-
-        for (CommentVO comment : allComments) {
-            if (comment.getParentId() == null || comment.getParentId() == 0L) {
-                rootComments.add(comment);
-            } else {
-                childComments.add(comment);
-            }
-        }
-
-        // 3. 把子评论按其父 ID 进行分组 (Java 8 Stream 极速处理)
-        Map<Long, List<CommentVO>> childrenMap = childComments.stream()
-                .collect(Collectors.groupingBy(CommentVO::getParentId));
-
-        // 4. 将子评论列表组装回一级评论中
+        // 遍历当前页的这一小撮一级评论
         for (CommentVO root : rootComments) {
-            List<CommentVO> replies = childrenMap.getOrDefault(root.getId(), new ArrayList<>());
-            root.setReplies(replies);
+            
+            // 脱敏：如果一级评论被删除了，替换文字
+            if (root.getIsDeleted() != null && root.getIsDeleted() == 1) {
+                root.setContent("该评论已被删除");
+            }
+
+            // 去数据库拉取该评论的【前3条子评论】作为预览
+            List<CommentVO> previewChildren = commentMapper.findPreviewChildComments(root.getId());
+            
+            for (CommentVO child : previewChildren) {
+                if (child.getIsDeleted() != null && child.getIsDeleted() == 1) {
+                    child.setContent("该评论已被删除");
+                }
+            }
+            root.setReplies(previewChildren);
+
+            // 统计总共有多少条子评论，告诉前端
+            // 前端逻辑：如果 childCount > 3，就显示 "展开剩余的 (childCount - 3) 条回复" 按钮
+            Integer childCount = commentMapper.countChildComments(root.getId());
+            root.setChildCount(childCount);
         }
 
-        return rootComments;
+        // 封装成分页对象返回
+        PageInfo<CommentVO> pageInfo = new PageInfo<>(rootComments);
+        return new PageBean<>(pageInfo.getTotal(), rootComments);
     }
 }

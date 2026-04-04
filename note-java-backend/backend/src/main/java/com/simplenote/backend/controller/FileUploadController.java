@@ -15,7 +15,6 @@ import java.util.UUID;
 public class FileUploadController {
 
     // 定义一个你电脑上的绝对路径，专门用来存上传的图片
-    // Windows，可以是 "D:/simplenote_uploads/" （注意路径最后要有一个斜杠）
     private static final String UPLOAD_DIR = "D:/simplenote_uploads/";
 
     @PostMapping("/upload")
@@ -30,14 +29,17 @@ public class FileUploadController {
         if (originalFilename == null || originalFilename.isEmpty()) {
             return Result.error("上传失败：文件名无效");
         }
-        
-        // 3. 提取文件后缀名 (比如 ".jpg" 或 ".png")
-        // originalFilename.substring(...) 会截取从最后一个点开始到末尾的字符串
-        String extension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
+        // 3. 验证文件后缀名是否合法（只允许图片格式）
+        int lastDotIndex = originalFilename.lastIndexOf(".");
+        if (lastDotIndex == -1) {
+            return Result.error("上传失败：文件没有后缀名");
+        }
+        String extension = originalFilename.substring(lastDotIndex).toLowerCase();
         List<String> allowedExtensions = Arrays.asList(".jpg", ".jpeg", ".png", ".gif", ".webp");
         if (!allowedExtensions.contains(extension)) {
-            return Result.error("上传失败：请上传图片");
+            return Result.error("上传失败：仅支持 jpg, jpeg, png, gif, webp 格式的图片");
         }
+
         // 4. 生成全网唯一的 UUID 文件名 (防止张三和李四都传了 1.jpg 导致相互覆盖)
         String newFileName = UUID.randomUUID().toString() + extension;
 
@@ -52,7 +54,6 @@ public class FileUploadController {
         file.transferTo(destFile);
 
         // 7. 拼装出这张图片的网络访问 URL (假设你的后端跑在 8080 端口)
-        // ⚠️ 注意这里的 "/uploads/" 是一个虚拟路径，我们下一步去配置它
         String imageUrl = "http://localhost:8080/uploads/" + newFileName;
 
         // 8. 把这个完美的 URL 还给前端！

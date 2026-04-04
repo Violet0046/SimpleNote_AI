@@ -23,7 +23,20 @@ public class PostServiceImpl implements PostService {
     private PostMapper postMapper;
 
     @Autowired
-    private UserLikesMapper userLikesMapper; // 注入刚才写的 Mapper
+    private UserLikesMapper userLikesMapper;
+
+    // 私有统一处理方法，专门给各种列表做数据瘦身！
+    private void processPostList(List<PostVO> list) {
+        for (PostVO vo : list) {
+            // 1. 处理封面图：如果有逗号，只截取第一张图片作为封面
+            String images = vo.getImages();
+            if (images != null && images.contains(",")) {
+                vo.setImages(images.split(",")[0]); 
+            }
+            // 2. 清空长文本内容，节省网络带宽 (反正列表页只看图和标题)
+            vo.setContent(null); 
+        }
+    }
 
     @Override
     public void add(Post post) {
@@ -31,89 +44,79 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<Post> list() {
-        return postMapper.list();
+    public List<PostVO> listWithAuthor() {
+        List<PostVO> list = postMapper.listWithAuthor();
+        processPostList(list); // 调用瘦身逻辑
+        return list; // 返回处理过的数据，而不是再去查一遍数据库！
     }
 
     @Override
-    public List<PostVO> listWithAuthor() {
+    public PageBean<PostVO> listWithPage(Integer pageNum, Integer pageSize) {
+        PageHelper.startPage(pageNum, pageSize);
         List<PostVO> list = postMapper.listWithAuthor();
-        for (PostVO vo : list) {
-        // 1. 处理封面图：如果有逗号，只截取第一张图片作为封面
-        String images = vo.getImages();
-        if (images != null && images.contains(",")) {
-            vo.setImages(images.split(",")[0]); 
-        }
         
-        // 2. 清空长文本内容，节省网络带宽 (反正列表页不显示正文)
-        vo.setContent(null); 
-    }
-        return postMapper.listWithAuthor();
+        processPostList(list); // 让分页列表也享受瘦身优化！
+
+        PageInfo<PostVO> pageInfo = new PageInfo<>(list);
+        return new PageBean<>(pageInfo.getTotal(), pageInfo.getList());
     }
 
-    @Transactional  //保证中间表和帖子表的数据一致性
+    @Override
+    public PageBean<PostVO> pageQueryByUser(Integer userId, Integer pageNum, Integer pageSize) {
+        PageHelper.startPage(pageNum, pageSize);
+        // 统一调用合并后的接口！
+        List<PostVO> list = postMapper.listByUserId(userId); 
+        
+        processPostList(list); // 让个人主页的列表也享受瘦身优化！
+
+        PageInfo<PostVO> pageInfo = new PageInfo<>(list);
+        return new PageBean<>(pageInfo.getTotal(), pageInfo.getList());
+    }
+
+    @Transactional  
     @Override
     public void toggleLike(Integer postId) {
         Post post = postMapper.findById(postId);
         if (post == null) {
             throw new RuntimeException("点赞失败：该帖子已被删除或不存在！");
         }
-        // 1. 获取当前登录用户的 ID 
+        
         Map<String, Object> map = ThreadLocalUtil.get();
         Integer userId = (Integer) map.get("id");
-
-        // 2. 检查该用户是否已经点过赞
         int count = userLikesMapper.checkUserLike(userId, postId);
 
         if (count > 0) {
-            // 如果已经点过赞 -> 执行【取消赞】逻辑
-            userLikesMapper.removeLike(userId, postId); // 删中间表
-            postMapper.decrementLikes(postId);          // 帖子总赞数 -1
+            userLikesMapper.removeLike(userId, postId);
+            postMapper.decrementLikes(postId);
         } else {
-            // 如果还没点过赞 -> 执行【点赞】逻辑
-            userLikesMapper.addLike(userId, postId);    // 加中间表
-            postMapper.incrementLikes(postId);          // 帖子总赞数 +1
+            userLikesMapper.addLike(userId, postId);
+            postMapper.incrementLikes(postId);
         }
     }
 
     @Override
-    public List<PostVO> listOwn(Integer userId) {
-        return postMapper.listOwn(userId);
-    }
-
-    @Override
-    public List<PostVO> listLiked(Integer userId) {
-        return postMapper.listLiked(userId);
-    }
-
-    @Override
-    public int softDelete(Integer id, Integer userId) {
-        // 在真实的复杂业务里，这里还可以加一些额外逻辑
-        // 比如：判断这个帖子是不是精华帖，如果是就不让删；或者删帖前记录一下日志
-        // 现在咱们直接调用 mapper
-        return postMapper.softDelete(id, userId);
-    }
-
-    @Override
-    public PageBean<PostVO> listWithPage(Integer pageNum, Integer pageSize) {
-        // 1. 开启分页魔法！(只对紧跟着它的下一条 SQL 生效)
+    public PageBean<PostVO> listLiked(Integer userId, Integer pageNum, Integer pageSize) {
+        // 1. 开启分页拦截
         PageHelper.startPage(pageNum, pageSize);
-
-        // 2. 直接调用你之前的 Mapper，不需要改任何 SQL！
-        // PageHelper 会在底层自动拦截这句调用，给原本的 SQL 加上 LIMIT offset, size
-        // 并且它还会自动帮你再发一条 SELECT COUNT(*) 查出总条数！
-        List<PostVO> list = postMapper.listWithAuthor();
-
-        // 3. 把查出来的 list 丢进 PageInfo 这个解析器里，它能提取出 total 总数
+        
+        // 2. 查数据库（SQL 完全不用改，PageHelper 会自动加 Limit）
+        List<PostVO> list = postMapper.listLiked(userId);
+        
+        // 3. 数据瘦身优化（截取首图，清空长文本）
+        processPostList(list); 
+        
+        // 4. 封装成分页对象返回
         PageInfo<PostVO> pageInfo = new PageInfo<>(list);
-
-        // 4. 封装进咱们自己的 PageBean 返回给 Controller
         return new PageBean<>(pageInfo.getTotal(), pageInfo.getList());
     }
 
     @Override
+    public int softDelete(Integer id, Integer userId) {
+        return postMapper.softDelete(id, userId);
+    }
+
+    @Override
     public PostVO getPostDetailById(Integer id) {
-        // 直接调用 Mapper 层我们刚刚加的那条 SQL
         return postMapper.getPostDetailById(id);
     }
 
@@ -122,20 +125,5 @@ public class PostServiceImpl implements PostService {
         Map<String, Object> map = ThreadLocalUtil.get();
         Integer userId = (Integer) map.get("id");
         return userLikesMapper.listLikedPostIds(userId);
-    }
-
-    @Override
-    public PageBean<PostVO> pageQueryByUser(Integer userId, Integer pageNum, Integer pageSize) {
-        // 1. 开启分页拦截
-        PageHelper.startPage(pageNum, pageSize);
-
-        // 2. 调用刚才写好的 Mapper 查询数据
-        List<PostVO> list = postMapper.listByUserId(userId);
-
-        // 3. 丢给 PageInfo 解析出总条数等分页信息
-        PageInfo<PostVO> pageInfo = new PageInfo<>(list);
-
-        // 4. 封装成 PageBean 返回给 Controller
-        return new PageBean<>(pageInfo.getTotal(), pageInfo.getList());
     }
 }

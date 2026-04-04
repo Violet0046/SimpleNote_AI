@@ -15,11 +15,12 @@ public interface UserMapper {
     User findByUsername(String username);
 
     // 2. 插入新用户（注册）
-    @Insert("insert into user(username, password, nickname, avatar, create_time, update_time) " +
-            "values(#{username}, #{password}, #{nickname}, #{avatarUrl}, now(), now())")
+    @Insert("insert into user(username, password, nickname, avatar, gender, create_time, update_time) " +
+            "values(#{username}, #{password}, #{nickname}, #{avatarUrl}, #{gender}, now(), now())")
     void add(@Param("username") String username, 
              @Param("password") String password, 
              @Param("nickname") String nickname, 
+             @Param("gender") Integer gender,
              @Param("avatarUrl") String avatarUrl);
     // 3. 根据用户名和密码查询用户（登录）
     @Select("select * from user where username=#{username} and password=#{password}")

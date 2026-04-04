@@ -11,13 +11,10 @@ import jakarta.validation.constraints.Pattern;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/user")
@@ -26,24 +23,38 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    // 注册接口：接收账号、密码、性别，昵称和头像URL
     @PostMapping("/register")
-    public Result<String> register(@Pattern(regexp = "^\\S{1,20}$") String username, 
-                                   @Pattern(regexp = "^\\S{4,20}$") String password) {
+    public Result<String> register(
+            @Pattern(regexp = "^\\S{1,20}$") String username, 
+            @Pattern(regexp = "^\\S{4,20}$") String password,
+            @RequestParam(defaultValue = "0") Integer gender,
+            @RequestParam(required = false) String nickname,
+            @RequestParam(required = false) String avatarUrl) {
+        
         // 1. 检查账号是否被注册
         User u = userService.findByUsername(username);
         
         if (u == null) {
-            // 2. 账号没被占用，准备注册！
+            // 2. 处理头像：如果前端传了头像就用前端的；如果没传，就随机给个默认的兜底
+            String finalAvatarUrl;
+            if (avatarUrl != null && !avatarUrl.trim().isEmpty()) {
+                finalAvatarUrl = avatarUrl;
+            } else {
+                int randomNum = new Random().nextInt(7) + 1; 
+                finalAvatarUrl = "http://localhost:8080/" + randomNum + ".jpg";
+            }
             
-            // 随机分配 1~5 号头像 (假设你在 static 文件夹放了 5 张图)
-            int randomNum = new java.util.Random().nextInt(7) + 1; 
-            String randomAvatarUrl = "http://localhost:8080/" + randomNum + ".png";
-            
-            // 生成默认昵称 (比如：小红薯_1357)
-            String randomNickname = "小红薯_" + (new java.util.Random().nextInt(9000) + 1000);
+            // 3. 处理昵称：如果前端传了昵称就用前端的；如果没传，随机兜底
+            String finalNickname;
+            if (nickname != null && !nickname.trim().isEmpty()) {
+                finalNickname = nickname;
+            } else {
+                finalNickname = "小红薯_" + (new Random().nextInt(9000) + 1000);
+            }
 
-            // 3. 调用 Service 层进行注册 (注意！这里你需要修改一下 userService.register 的参数，把这两个新字段传进去)
-            userService.register(username, password, randomNickname, randomAvatarUrl);
+            // 4. 调用 Service 层进行注册
+            userService.register(username, password, finalNickname, gender, finalAvatarUrl);
             
             return Result.success("注册成功！");
         } else {
@@ -76,13 +87,13 @@ public class UserController {
         Map<String, Object> map = ThreadLocalUtil.get();
         Integer userId = (Integer) map.get("id");
 
-        // 2. 去 Service 层拿聚合好的数据
-        UserDetailVO detailVO = userService.getUserDetailInfo(userId);
+        // 调用统一合并后的 getUserDetailById 方法
+        UserDetailVO detailVO = userService.getUserDetailById(userId);
 
-        // 3. 完美返回给前端！
         return Result.success(detailVO);
     }
 
+    // 获取他人主页详细信息
     @GetMapping("/info/{id}")
     public Result<UserDetailVO> getUserInfoById(@PathVariable Integer id) {
         UserDetailVO userDetailVO = userService.getUserDetailById(id);

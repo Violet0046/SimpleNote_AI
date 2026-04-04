@@ -7,28 +7,23 @@ import com.simplenote.backend.pojo.Post;
 import com.simplenote.backend.pojo.PostVO;
 
 public interface PostService {
+    // 发布新帖子
     void add(Post post);
-    //这个后续删掉，改为点进单个帖子详情页的功能
-    List<Post> list();
-
+    // 查询帖子列表（包含作者信息）
     List<PostVO> listWithAuthor();
-
+    // 分页查询帖子列表（包含作者信息）
+    PageBean<PostVO> listWithPage(Integer pageNum, Integer pageSize);
+    // 根据用户ID分页查询帖子
+    PageBean<PostVO> pageQueryByUser(Integer userId, Integer pageNum, Integer pageSize);
     // 点赞或取消点赞 (Toggle逻辑)
     void toggleLike(Integer postId);
-
-    List<PostVO> listOwn(Integer userId);
-    List<PostVO> listLiked(Integer userId);
+    // 获取用户点赞的帖子列表
+    PageBean<PostVO> listLiked(Integer userId, Integer pageNum, Integer pageSize);
 
     // 软删除笔记
     int softDelete(Integer id, Integer userId);
-
-    PageBean<PostVO> listWithPage(Integer pageNum, Integer pageSize);
-
+    // 获取笔记详情（包含作者信息和评论列表）
     PostVO getPostDetailById(Integer id);
-
-    // 获取当前用户点赞过的帖子 ID 列表
+    // 获取用户点赞的帖子ID列表
     List<Integer> getLikedPostIds();
-
-    // 根据用户ID分页查询帖子
-    PageBean<PostVO> pageQueryByUser(Integer userId, Integer pageNum, Integer pageSize);
 }

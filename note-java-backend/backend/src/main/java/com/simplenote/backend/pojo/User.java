@@ -12,6 +12,6 @@ public class User {
     private String username;      // 账号
     private String password;      // 密码
     private String nickname;      // 昵称
-    private String avatar;        // 头像链接
+    private String avatar;        // 头像
     private LocalDateTime createTime; // 注册时间
 }

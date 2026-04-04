@@ -1,15 +1,16 @@
 package com.simplenote.backend.config;
 
+import com.simplenote.backend.interceptors.LoginInterceptor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.NonNull;
-import com.simplenote.backend.interceptors.LoginInterceptor;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
+    
     @Autowired
     private LoginInterceptor loginInterceptor;
 
@@ -17,27 +18,27 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(@NonNull InterceptorRegistry registry) {
         registry.addInterceptor(loginInterceptor)
                 .excludePathPatterns(
-                "/user/login",//放行登录
-                "/user/register", //注册
-                "/post/list/page", //帖子列表
-                "/comment/list",    //游客看帖子下的评论
-                "/error", //错误页
-                "/post/{id}", //帖子详情页
-                "/**/*.jpg",
-                "/**/*.png",        
-                "/**/*.jpeg",   
-                "/**/*.gif", 
-                "/post/list/user", //进别人的主页看帖子列表
-                "/uploads/**"); //图片访问
+                        "/user/login",      // 放行登录
+                        "/user/register",   // 注册
+                        "/user/info/*",     // 查看他人主页基本信息
+                        "/post/list/page",  // 发现页帖子列表
+                        "/post/list/user",  // 进别人的主页看帖子列表
+                        "/post/detail/*",   // 帖子详情页 (注意配合 Controller 把路径改为 /post/detail/{id})
+                        "/comment/list",    // 游客看帖子下的评论
+                        "/uploads/**",      // 图片文件访问放行
+                        "/**/*.jpg",        // 默认头像等静态资源放行
+                        "/**/*.png",        
+                        "/**/*.jpeg",   
+                        "/**/*.gif",        
+                        "/error"            // 错误页
+                );
     }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 当访问网络路径 /uploads/** 时...
+        // 核心配置：当访问路径以 /uploads/ 开头时
+        // 去物理路径 file:D:/simplenote_uploads/ 下面找文件
         registry.addResourceHandler("/uploads/**")
-                // ...就把请求映射到本地物理路径 D:/simplenote_uploads/ 下面去！
-                // 注意：如果是 Windows，路径前面要加 file: 
-                // 如果你上面用的不是 D 盘，这里记得跟着改哦！
                 .addResourceLocations("file:D:/simplenote_uploads/");
     }
 }
