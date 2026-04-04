@@ -286,7 +286,7 @@ import { get } from '@/utils/request'
 import { post as doPost } from '@/utils/request'
 import { ElMessage } from 'element-plus'
 import type { Post, Comment } from '@/types'
-
+const emit = defineEmits(['close', 'like-toggle'])
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
@@ -307,7 +307,7 @@ const replyToComment = ref<Comment | null>(null)
 // 获取帖子详情
 const fetchPost = async () => {
   try {
-    const response = await get<Post>(`/post/${route.params.id}`)
+    const response = await get<Post>(`/post/detail/${route.params.id}`)
     if (response.code === 1) {
       post.value = response.data
       // 检查是否已点赞
@@ -325,9 +325,13 @@ const fetchPost = async () => {
 // 获取评论列表
 const fetchComments = async () => {
   try {
-    const response = await get<Comment[]>(`/comment/${route.params.id}`)
+    const response = await get<any>('/comment/list', { 
+      postId: route.params.id,
+      pageNum: 1,
+      pageSize: 10 
+    })
     if (response.code === 1) {
-      comments.value = response.data
+      comments.value = response.data.items
     } else {
       ElMessage.error(response.msg || '获取评论失败')
     }

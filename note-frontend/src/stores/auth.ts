@@ -31,7 +31,7 @@ export const useAuthStore = defineStore('auth', {
       if (!this.token) return
 
       try {
-        const response = await get('/user/info/detail')
+        const response = await get('/user/me')
         if (response.code === 1) {
           this.setUserInfo(response.data)
         }

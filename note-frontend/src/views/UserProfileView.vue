@@ -163,7 +163,7 @@ const waterfallColumns = computed(() => {
 // 1. 获取用户信息
 const fetchUserInfo = async () => {
   try {
-    const response = await get<any>('/user/info/detail')
+    const response = await get<any>('/user/me')
     if (response.code === 1) {
       userInfo.value = response.data
     }

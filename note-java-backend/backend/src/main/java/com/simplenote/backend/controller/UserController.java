@@ -81,13 +81,13 @@ public class UserController {
     }
 
     // 获取当前登录用户的个人主页详细信息
-    @GetMapping("/info/detail")
+    @GetMapping("/me")
     public Result<UserDetailVO> userDetailInfo() {
         // 1. 从保安 (ThreadLocal) 那里拿到当前登录的人是谁
         Map<String, Object> map = ThreadLocalUtil.get();
         Integer userId = (Integer) map.get("id");
 
-        // 调用统一合并后的 getUserDetailById 方法
+        // 2. 去 Service 层拿聚合好的数据
         UserDetailVO detailVO = userService.getUserDetailById(userId);
 
         return Result.success(detailVO);

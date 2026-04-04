@@ -3,7 +3,7 @@
     <div class="mx-auto flex w-full max-w-[2130px] px-[30px] 2xl:px-[210px] h-full">
       
       <aside class="w-[320px] flex-shrink-0 h-full flex flex-col bg-white">
-        <div class="flex items-center pl-[44px] mt-[25px]">
+        <div class="flex items-center pl-[50px] mt-[25px]">
           <svg class="w-8 h-8 text-[#FF2442]" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8-8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
           </svg>
