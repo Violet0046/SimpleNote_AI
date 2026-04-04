@@ -53,12 +53,12 @@
       <div class="w-[360px] lg:w-[400px] flex-shrink-0 flex flex-col h-full border-l border-gray-100 dark:border-gray-800 transition-opacity duration-300 bg-white dark:bg-gray-900" :class="isExpanded ? 'opacity-100' : 'opacity-0'">
         
         <div class="h-[76px] px-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between shrink-0">
-          <div class="flex items-center space-x-3 cursor-pointer">
-            <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden border border-gray-200 dark:border-gray-600">
+          <div class="flex items-center space-x-3 cursor-pointer group" @click="goToUserProfile(postDetail?.userId)">
+            <div class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 overflow-hidden border border-gray-200 dark:border-gray-600 transition-transform group-hover:scale-105">
               <img v-if="postDetail?.authorAvatar" :src="postDetail.authorAvatar" class="w-full h-full object-cover" />
               <span v-else class="w-full h-full flex items-center justify-center text-gray-500 font-semibold">{{ postDetail?.authorName?.charAt(0).toUpperCase() }}</span>
             </div>
-            <span class="font-medium text-[15px] text-gray-900 dark:text-gray-100">{{ postDetail?.authorName }}</span>
+            <span class="font-medium text-[15px] text-gray-900 dark:text-gray-100 group-hover:text-blue-500 transition-colors">{{ postDetail?.authorName }}</span>
           </div>
           
           <button 
@@ -106,11 +106,14 @@
               <div v-for="comment in comments" :key="comment.id" class="group">
                 
                 <div class="flex gap-3">
-                  <img :src="comment.authorAvatar || 'http://localhost:8080/1.jpg'" class="w-8 h-8 rounded-full border border-gray-100 dark:border-gray-700 shrink-0 cursor-pointer" />
+                  <img :src="comment.authorAvatar || 'http://localhost:8080/1.jpg'" 
+                       class="w-8 h-8 rounded-full border border-gray-100 dark:border-gray-700 shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
+                       @click="goToUserProfile(comment.userId)" />
                   <div class="flex-1">
-                    
                     <div class="flex items-center gap-1.5">
-                      <p class="text-[13px] text-gray-500 font-medium">{{ comment.authorName }}</p>
+                      <p class="text-[13px] text-gray-500 font-medium cursor-pointer hover:text-blue-500 transition-colors" @click="goToUserProfile(comment.userId)">
+                        {{ comment.authorName }}
+                      </p>
                       <span v-if="comment.userId === postDetail?.userId" class="px-1.5 py-[1px] bg-[#FF2442] text-white text-[10px] font-bold rounded-sm shadow-sm">作者</span>
                     </div>
 
@@ -137,11 +140,14 @@
                 
                 <div v-if="comment.replies && comment.replies.length > 0" class="mt-3 ml-11 space-y-4">
                   <div v-for="sub in comment.replies" :key="sub.id" class="flex gap-2.5 group/sub">
-                    <img :src="sub.authorAvatar || 'http://localhost:8080/1.jpg'" class="w-6 h-6 rounded-full border border-gray-100 dark:border-gray-700 shrink-0 cursor-pointer" />
+                    <img :src="sub.authorAvatar || 'http://localhost:8080/1.jpg'" 
+                         class="w-6 h-6 rounded-full border border-gray-100 dark:border-gray-700 shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
+                         @click="goToUserProfile(sub.userId)" />
                     <div class="flex-1">
-
                       <div class="flex items-center gap-1.5">
-                        <p class="text-[12px] text-gray-500 font-medium">{{ sub.authorName }}</p>
+                        <p class="text-[12px] text-gray-500 font-medium cursor-pointer hover:text-blue-500 transition-colors" @click="goToUserProfile(sub.userId)">
+                          {{ sub.authorName }}
+                        </p>
                         <span v-if="sub.userId === postDetail?.userId" class="px-1.5 py-[1px] bg-[#FF2442] text-white text-[9px] font-bold rounded-sm shadow-sm">作者</span>
                       </div>
 
@@ -228,6 +234,8 @@
 </template>
 
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
+
 import { ref, computed, watch, nextTick } from 'vue'
 import type { PropType } from 'vue'
 import type { Post } from '@/types'
@@ -235,7 +243,14 @@ import { get, post } from '@/utils/request'
 import { useAuthStore } from '@/stores/auth'
 import { useLikeStore } from '@/stores/like'
 import { ElMessage } from 'element-plus'
-
+const router = useRouter()
+const goToUserProfile = (userId?: number) => {
+  if (!userId) return
+  
+  // 哪怕是点自己的头像，也新开一个标签页，保证当前页面的阅读状态不被破坏！
+  const routeUrl = router.resolve(`/user/${userId}`)
+  window.open(routeUrl.href, '_blank')
+}
 const props = defineProps({
   post: { type: Object as PropType<Post | null>, default: null },
   visible: { type: Boolean, default: false },

@@ -89,3 +89,7 @@ Authorization:eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MiwidXNlcm5hbWUiOiIxIiwiZXhwIjoxNzc1M
 
 ### 根据用户ID分页查询帖子
 GET http://localhost:8080/post/list/user?userId=2&pageNum=1&pageSize=5
+
+### 模拟用户点进了第一篇帖子（假设 postId=1），查看帖子详情（包含是否点赞、是否关注作者等状态）
+GET http://localhost:8080/follow/status/1
+Authorization:eyJhbGciOiJIUzI1NiJ9.eyJpZCI6MSwidXNlcm5hbWUiOiIwIiwiZXhwIjoxNzc1Mzc3OTM5fQ.Ipq2f2beDkkTyiqZqlB2LZiZ5tHdyUTT2MQZ1jmY8Kw

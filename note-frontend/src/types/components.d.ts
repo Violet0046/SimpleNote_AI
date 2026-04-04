@@ -21,6 +21,7 @@ declare module 'vue' {
     IconTooling: typeof import('./../components/icons/IconTooling.vue')['default']
     PostCard: typeof import('./../components/PostCard.vue')['default']
     PostDetailModal: typeof import('./../components/PostDetailModal.vue')['default']
+    PublishModal: typeof import('./../components/PublishModal.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     TheWelcome: typeof import('./../components/TheWelcome.vue')['default']

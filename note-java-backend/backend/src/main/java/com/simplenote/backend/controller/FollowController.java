@@ -4,7 +4,11 @@ import com.simplenote.backend.pojo.PageBean;
 import com.simplenote.backend.pojo.Result;
 import com.simplenote.backend.pojo.UserDetailVO;
 import com.simplenote.backend.service.FollowService;
+import com.simplenote.backend.utils.JwtUtils;
 import com.simplenote.backend.utils.ThreadLocalUtil;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -45,19 +49,21 @@ public class FollowController {
     }
 
     @GetMapping("/status/{id}")
-    public Result<Boolean> getFollowStatus(@PathVariable("id") Integer targetId) {
+    public Result<Boolean> getFollowStatus(@PathVariable("id") Integer targetId, HttpServletRequest request) {
         try {
-            Map<String, Object> map = ThreadLocalUtil.get();
-            // 如果没登录，直接返回 false，这样前端按钮就会立刻显示“关注”
-            if (map == null || map.get("id") == null) {
-                return Result.success(false);
+            // 自己动手丰衣足食，直接从 Request Header 里抠出 Authorization
+            String token = request.getHeader("Authorization");
+            if (token != null && !token.isEmpty()) {
+                Map<String, Object> claims = JwtUtils.parseToken(token);
+                Integer myId = (Integer) claims.get("id");
+                
+                // 去数据库查状态
+                boolean isFollowing = followService.isFollowing(myId, targetId);
+                return Result.success(isFollowing);
             }
-            Integer myId = (Integer) map.get("id");
-            boolean isFollowing = followService.isFollowing(myId, targetId);
-            return Result.success(isFollowing);
         } catch (Exception e) {
-            // 发生任何异常，都默认当做未关注，保证前端按钮能显示出来
-            return Result.success(false); 
+            // 如果没登录，或者 Token 过期，一律当做没关注
         }
+        return Result.success(false);
     }
 }

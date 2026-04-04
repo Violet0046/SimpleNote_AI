@@ -37,9 +37,9 @@ public class FileUploadController {
             }
 
             String extension = originalFilename.substring(lastDotIndex).toLowerCase();
-            List<String> allowedExtensions = Arrays.asList(".jpg", ".jpeg", ".png", ".gif", ".webp");
+            List<String> allowedExtensions = Arrays.asList(".jpg", ".jpeg", ".png", ".gif", ".webp", ".mp4", ".mov", ".avi", ".webm");
             if (!allowedExtensions.contains(extension)) {
-                return Result.error("上传失败：仅支持 jpg, jpeg, png, gif, webp 格式的图片");
+                return Result.error("上传失败：仅支持图片(jpg/png)和视频(mp4/mov)格式");
             }
 
             String newFileName = UUID.randomUUID().toString() + extension;

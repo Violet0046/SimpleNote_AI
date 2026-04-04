@@ -124,9 +124,9 @@
           
           <div v-for="user in userList" :key="user.id" class="flex flex-col items-center p-5 bg-white rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md hover:-translate-y-1">
             
-            <img :src="user.avatar || 'http://localhost:8080/1.jpg'" class="w-16 h-16 rounded-full object-cover border border-gray-100 mb-3 cursor-pointer hover:opacity-90" @click="router.push(`/user/${user.id}`)" />
+            <img :src="user.avatar || 'http://localhost:8080/1.jpg'" class="w-16 h-16 rounded-full object-cover border border-gray-100 mb-3 cursor-pointer hover:opacity-90" @click="goToUserProfile(user.id)" />
             
-            <span class="text-[15px] font-bold text-gray-900 w-full text-center truncate cursor-pointer hover:text-blue-600 transition-colors" @click="router.push(`/user/${user.id}`)">
+            <span class="text-[15px] font-bold text-gray-900 w-full text-center truncate cursor-pointer hover:text-blue-600 transition-colors" @click="goToUserProfile(user.id)">
               {{ user.nickname }}
             </span>
             
@@ -258,7 +258,7 @@ const loadMoreUsers = () => {
 
 // 🌟 根据抹平后的状态，展示正确的文案
 const getFollowBtnInfo = (user: any) => {
-  if (user.isFollowing && user.isFollower) return { text: '互粉', class: 'bg-gray-100 text-gray-500 hover:bg-gray-200' }
+  if (user.isFollowing && user.isFollower) return { text: '已互粉', class: 'bg-gray-100 text-gray-500 hover:bg-gray-200' }
   if (user.isFollowing && !user.isFollower) return { text: '已关注', class: 'bg-gray-100 text-gray-500 hover:bg-gray-200' }
   if (!user.isFollowing && user.isFollower) return { text: '回关', class: 'bg-[#FF2442] text-white hover:bg-red-600' }
   return { text: '关注', class: 'bg-[#FF2442] text-white hover:bg-red-600' }
@@ -296,7 +296,12 @@ const triggerRect = ref<DOMRect | null>(null)
 
 const loadMoreTrigger = ref<HTMLElement>()
 let observer: IntersectionObserver | null = null
-
+const goToUserProfile = (userId?: number) => {
+  if (!userId) return
+  // 使用 resolve 解析出完整 URL，然后用 window.open 在新标签页打开
+  const routeUrl = router.resolve(`/user/${userId}`)
+  window.open(routeUrl.href, '_blank')
+}
 const colCount = ref(5)
 const updateColCount = () => {
   const width = window.innerWidth

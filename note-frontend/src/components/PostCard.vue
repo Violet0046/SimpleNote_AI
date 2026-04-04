@@ -41,13 +41,13 @@
       </h3>
 
       <div class="flex items-center justify-between">
-        <router-link
-          :to="`/user/${post.userId}`"
-          class="flex items-center space-x-1.5 text-xs text-gray-500 hover:text-gray-800 transition-colors"
-          @click.stop
+        
+        <div
+          class="flex items-center space-x-1.5 text-xs text-gray-500 hover:text-gray-800 transition-colors cursor-pointer group/author"
+          @click.stop="goToUserProfile(post.userId)"
         >
           <div
-            class="w-[22px] h-[22px] rounded-full overflow-hidden bg-gray-200 flex-shrink-0 border border-black/5"
+            class="w-[22px] h-[22px] rounded-full overflow-hidden bg-gray-200 flex-shrink-0 border border-black/5 transition-transform group-hover/author:scale-110"
             :title="post.authorName"
           >
             <img
@@ -61,8 +61,8 @@
               {{ post.authorName?.charAt(0).toUpperCase() }}
             </span>
           </div>
-          <span class="truncate max-w-[100px]">{{ post.authorName }}</span>
-        </router-link>
+          <span class="truncate max-w-[100px] group-hover/author:text-blue-500 transition-colors">{{ post.authorName }}</span>
+        </div>
 
         <button
           @click.stop="handleLike"
@@ -95,8 +95,8 @@
 </template>
 
 <script setup lang="ts">
-// 🌟 这里的逻辑一字没动！完全保留你的原版逻辑！
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router' // 🌟 引入 useRouter
 import { useAuthStore } from '@/stores/auth'
 import { useLikeStore } from '@/stores/like'
 import { post as apiPost } from '@/utils/request'
@@ -111,11 +111,19 @@ interface Props {
 const props = defineProps<Props>()
 const emit = defineEmits(['click', 'like'])
 const likeStore = useLikeStore()
+const router = useRouter() // 🌟 获取 router 实例
+
 const isLoading = ref(false)
 const isLiked = computed(() => props.isLiked || likeStore.isPostLiked(props.post.id))
-
-// 增加一个响应式变量，记录图片是否已经加载完毕
 const isImageLoaded = ref(false)
+
+// 🌟 新增：新开标签页跳转到主页的方法
+const goToUserProfile = (userId?: number) => {
+  if (!userId) return
+  // 使用 resolve 解析出完整 URL，然后用 window.open 在新标签页打开
+  const routeUrl = router.resolve(`/user/${userId}`)
+  window.open(routeUrl.href, '_blank')
+}
 
 // 格式化点赞数
 const formatLikeCount = (count?: number | null) => {
@@ -126,7 +134,6 @@ const formatLikeCount = (count?: number | null) => {
   return safeCount.toString()
 }
 
-// 获取卡片位置和尺寸
 const getCardRect = (): DOMRect | null => {
   const card = document.querySelector(`[data-post-id="${props.post.id}"]`)
   if (card) {
@@ -135,13 +142,11 @@ const getCardRect = (): DOMRect | null => {
   return null
 }
 
-// 处理卡片点击（跳转到帖子详情）
 const handleCardClick = () => {
   const position = getCardRect()
   emit('click', props.post, position)
 }
 
-// 处理点赞
 const handleLike = async (e: Event) => {
   e.preventDefault()
   e.stopPropagation()
@@ -153,14 +158,9 @@ const handleLike = async (e: Event) => {
 
   try {
     isLoading.value = true
-
-    // 切换点赞状态
     const newLikedState = !isLiked.value
-
-    // 调用点赞 API
     await apiPost(`/post/${props.post.id}/like`)
 
-    // 更新本地点赞数（通过emit通知父组件更新）
     if (newLikedState) {
       likeStore.addLikedPost(props.post.id)
       ElMessage.success('点赞成功！')
@@ -169,7 +169,6 @@ const handleLike = async (e: Event) => {
       ElMessage.success('取消点赞')
     }
 
-    // 通知父组件
     emit('like', props.post.id, newLikedState)
   } catch (error: unknown) {
     ElMessage.error((error as Error).message || '操作失败，请稍后重试')
@@ -180,15 +179,11 @@ const handleLike = async (e: Event) => {
 </script>
 
 <style scoped>
-/* 🌟 这里删除了所有的 .group 阴影样式，彻底去掉硬边框效果 */
-
-/* 瀑布流项目间距优化 */
 .break-inside-avoid {
   break-inside: avoid;
   margin-bottom: 1rem;
 }
 
-/* 图片加载动画 */
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

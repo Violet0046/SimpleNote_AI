@@ -72,9 +72,11 @@
             <!-- 关注按钮 -->
             <button
               v-if="authStore.isLoggedIn && authStore.getUserInfo?.id !== post.userId"
-              class="px-4 py-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+              @click="toggleFollow"
+              class="px-4 py-2 rounded-full transition-colors"
+              :class="isFollowing ? 'bg-gray-100 text-gray-500 hover:bg-gray-200' : 'bg-red-500 text-white hover:bg-red-600'"
             >
-              关注
+              {{ isFollowing ? '已关注' : '关注' }}
             </button>
           </div>
 
@@ -297,6 +299,40 @@ const loading = ref(true)
 const isLiked = ref(false)
 const isSubmitting = ref(false)
 
+const isFollowing = ref(false)
+// 检查关注状态
+const checkFollowStatus = async (authorId: number) => {
+  if (!authStore.isLoggedIn) {
+    isFollowing.value = false
+    return
+  }
+  try {
+    const res = await get<boolean>(`/follow/status/${authorId}`)
+    if (res.code === 1) {
+      isFollowing.value = res.data
+    }
+  } catch (error) {
+    console.error('获取关注状态失败')
+  }
+}
+// 切换关注/取消关注
+const toggleFollow = async () => {
+  if (!authStore.isLoggedIn) {
+    ElMessage.warning('请先登录哦')
+    return
+  }
+  try {
+    // 你的视图文件中已经将 post 请求重命名为了 doPost
+    const res = await doPost(`/follow/${post.value?.userId}`)
+    if (res.code === 1) {
+      isFollowing.value = !isFollowing.value
+    } else {
+      ElMessage.error(res.msg || '操作失败')
+    }
+  } catch (e) {
+    ElMessage.error('操作失败')
+  }
+}
 // 评论相关
 const comments = ref<Comment[]>([])
 const loadingComments = ref(false)
@@ -311,7 +347,13 @@ const fetchPost = async () => {
     if (response.code === 1) {
       post.value = response.data
       // 检查是否已点赞
-      isLiked.value = false // 这里可以根据实际API返回的点赞状态更新
+      isLiked.value = false 
+      
+      // 👉 新增：获取到帖子详情后，根据作者 ID 检查关注状态
+      if (post.value.userId) {
+        checkFollowStatus(post.value.userId)
+      }
+      
     } else {
       ElMessage.error(response.msg || '获取帖子详情失败')
     }

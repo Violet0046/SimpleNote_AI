@@ -4,6 +4,7 @@ import com.simplenote.backend.interceptors.LoginInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -28,24 +29,23 @@ public class WebConfig implements WebMvcConfigurer {
                         "/upload",
                         "/uploads/**",      // 图片文件访问放行
                         "/**/*.jpg",        // 默认头像等静态资源放行
-                        "/**/*.png",        
-                        "/**/*.jpeg",   
-                        "/**/*.gif",        
+                        "/**/*.png",
+                        "/**/*.jpeg",
+                        "/**/*.gif",
                         "/follow/following/*",// 进别人的主页看关注列表
                         "/follow/followers/*",// 进别人的主页看粉丝列表
                         "/follow/following/*",
                         "/follow/followers/*",
-                        "/follow/status/*",
                         "/error"              // 错误页
                 );
     }
 
-   @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 将网络路径映射到项目真实物理路径
-        String uploadPath = "file:" + System.getProperty("user.dir") + "/uploads/";
-        
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations(uploadPath);
+    @Override
+    public void addCorsMappings(@NonNull CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:5173") // 前端开发服务器地址
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 }
