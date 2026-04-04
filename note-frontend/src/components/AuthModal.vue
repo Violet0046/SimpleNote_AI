@@ -78,17 +78,21 @@
 
           <div v-else class="space-y-4">
             
-            <div class="flex justify-center mb-2">
+            <div class="flex flex-col items-center justify-center mb-2">
               <div class="relative group cursor-pointer" @click="triggerFileInput">
-                <div class="w-20 h-20 rounded-full overflow-hidden bg-gray-50 border-2 border-dashed border-gray-300 flex items-center justify-center group-hover:border-red-500 transition-colors">
+                <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center transition-all group-hover:border-red-400 group-hover:shadow-md">
                   <img v-if="registerForm.avatarUrl" :src="registerForm.avatarUrl" class="w-full h-full object-cover" />
                   <div v-else class="flex flex-col items-center text-gray-400">
                     <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     <span class="text-[10px]">传头像</span>
                   </div>
                 </div>
+                <div class="absolute inset-0 bg-black/30 backdrop-blur-[2px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
+                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </div>
                 <input type="file" ref="fileInput" class="hidden" accept="image/jpeg,image/png,image/gif,image/webp" @change="handleFileUpload" />
               </div>
+              <span class="text-[11px] text-gray-400 mt-2">不上传将随机分配默认头像</span>
             </div>
 
             <div>
@@ -96,23 +100,38 @@
               <input
                 v-model="registerForm.nickname"
                 type="text"
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors"
+                class="w-full px-4 py-2.5 bg-[#F7F7F7] border border-transparent rounded-xl focus:bg-white focus:border-red-400 focus:ring-4 focus:ring-red-50 transition-all outline-none text-[14px] text-gray-800 placeholder-gray-400"
                 placeholder="如果不填，将自动生成"
               >
             </div>
 
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-1">性别</label>
-              <div class="flex gap-6 mt-2">
-                <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
-                  <input type="radio" v-model="registerForm.gender" :value="1" class="text-red-500 focus:ring-red-500" /> 男
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
-                  <input type="radio" v-model="registerForm.gender" :value="2" class="text-red-500 focus:ring-red-500" /> 女
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-700">
-                  <input type="radio" v-model="registerForm.gender" :value="0" class="text-red-500 focus:ring-red-500" /> 保密
-                </label>
+              <div class="flex gap-3 mt-1">
+                <button 
+                  type="button"
+                  @click="registerForm.gender = 1"
+                  class="flex-1 py-2 rounded-xl text-[13px] font-medium transition-all duration-200"
+                  :class="registerForm.gender === 1 ? 'bg-[#EBF3FF] text-[#1E90FF] ring-1 ring-[#1E90FF]' : 'bg-[#F7F7F7] text-gray-500 hover:bg-gray-100'"
+                >
+                  ♂ 男生
+                </button>
+                <button 
+                  type="button"
+                  @click="registerForm.gender = 2"
+                  class="flex-1 py-2 rounded-xl text-[13px] font-medium transition-all duration-200"
+                  :class="registerForm.gender === 2 ? 'bg-[#FFECF0] text-[#FF4D85] ring-1 ring-[#FF4D85]' : 'bg-[#F7F7F7] text-gray-500 hover:bg-gray-100'"
+                >
+                  ♀ 女生
+                </button>
+                <button 
+                  type="button"
+                  @click="registerForm.gender = 0"
+                  class="flex-1 py-2 rounded-xl text-[13px] font-medium transition-all duration-200"
+                  :class="registerForm.gender === 0 ? 'bg-gray-800 text-white ring-1 ring-gray-800' : 'bg-[#F7F7F7] text-gray-500 hover:bg-gray-100'"
+                >
+                  保密
+                </button>
               </div>
             </div>
 
@@ -124,7 +143,7 @@
                 v-model="registerForm.username"
                 type="text"
                 required
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors"
+                class="w-full px-4 py-2.5 bg-[#F7F7F7] border border-transparent rounded-xl focus:bg-white focus:border-red-400 focus:ring-4 focus:ring-red-50 transition-all outline-none text-[14px] text-gray-800 placeholder-gray-400"
                 placeholder="用于登录的账号"
               >
             </div>
@@ -134,7 +153,7 @@
                 v-model="registerForm.password"
                 type="password"
                 required
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors"
+                class="w-full px-4 py-2.5 bg-[#F7F7F7] border border-transparent rounded-xl focus:bg-white focus:border-red-400 focus:ring-4 focus:ring-red-50 transition-all outline-none text-[14px] text-gray-800 placeholder-gray-400"
                 placeholder="请输入密码"
               >
             </div>
@@ -144,7 +163,7 @@
                 v-model="registerForm.confirmPassword"
                 type="password"
                 required
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors"
+                class="w-full px-4 py-2.5 bg-[#F7F7F7] border border-transparent rounded-xl focus:bg-white focus:border-red-400 focus:ring-4 focus:ring-red-50 transition-all outline-none text-[14px] text-gray-800 placeholder-gray-400"
                 placeholder="请再次输入密码"
               >
             </div>

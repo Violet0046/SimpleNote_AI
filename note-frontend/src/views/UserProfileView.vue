@@ -14,10 +14,27 @@
           <img :src="userInfo.avatar || 'http://localhost:8080/1.jpg'" class="w-full h-full object-cover" />
         </div>
         <div class="flex flex-col gap-[10px]">
-          <h1 class="text-[28px] font-semibold text-gray-900">{{ userInfo.nickname || authStore.getUsername }}</h1>
+          <div class="flex items-center flex-wrap gap-x-20 gap-y-3 w-full">
+            <h1 class="text-[28px] font-semibold text-gray-900 max-w-[280px] truncate" :title="userInfo.nickname || authStore.getUsername">
+              {{ userInfo.nickname || authStore.getUsername }}
+            </h1>
+            
+            <button 
+              @click="showEditModal = true"
+              class="px-5 py-1.5 rounded-full font-semibold text-[14px] flex-shrink-0 transition-colors border border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
+              编辑资料
+            </button>
+          </div>
           <div class="flex items-center gap-4 text-[13px] text-gray-500">
             <span>小红书号：{{ userInfo.id }}</span>
             <span v-if="userInfo.ipLocation">IP属地：{{ userInfo.ipLocation }}</span>
+            <div v-if="userInfo.gender === 1" class="flex items-center justify-center w-[22px] h-[22px] rounded-full bg-[#EBF3FF] text-[#1E90FF] text-[13px] font-bold">
+              ♂
+            </div>
+            <div v-if="userInfo.gender === 0" class="flex items-center justify-center w-[22px] h-[22px] rounded-full bg-[#FFECF0] text-[#FF4D85] text-[13px] font-bold">
+              ♀
+            </div>
           </div>
           <p class="text-[14px] text-gray-700 mt-1">{{ userInfo.intro || '还没有简介哦~' }}</p>
           <div class="flex items-center gap-5 mt-2 text-[14px]">
@@ -84,6 +101,12 @@
       @close="closePostDetail"
       @like-toggle="selectedPost ? handleModalLike(selectedPost.id) : null"
     />
+    <EditProfileModal 
+      :visible="showEditModal" 
+      :user-info="userInfo"
+      @close="showEditModal = false"
+      @success="fetchUserInfo"
+    />
   </main>
 </template>
 
@@ -92,11 +115,12 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useLikeStore } from '@/stores/like'
 import { get } from '@/utils/request'
+import EditProfileModal from '@/components/EditProfileModal.vue'
 import { ElMessage } from 'element-plus'
 import PostCard from '@/components/PostCard.vue'
 import PostDetailModal from '@/components/PostDetailModal.vue'
 import type { Post, UserInfo } from '@/types'
-
+const showEditModal = ref(false)
 const authStore = useAuthStore()
 const likeStore = useLikeStore()
 

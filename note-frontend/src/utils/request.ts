@@ -97,6 +97,14 @@ export const post = <T = any>(url: string, data?: any): Promise<ApiResponse<T>> 
       }
     }) as Promise<ApiResponse<T>>
   }
+  // 如果是 FormData (文件流上传)，必须换成 multipart/form-data！
+  if (data instanceof FormData) {
+    return request.post(url, data, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    }) as Promise<ApiResponse<T>>
+  }
   return request.post(url, data) as Promise<ApiResponse<T>>
 }
 

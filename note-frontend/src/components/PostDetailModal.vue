@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <Transition name="fade" appear>
-      <div v-if="visible" class="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-sm" @click="handleClose"></div>
+      <div v-if="visible" class="fixed inset-0 z-[9998] bg-black/60" @click="handleClose"></div>
     </Transition>
 
     <div
