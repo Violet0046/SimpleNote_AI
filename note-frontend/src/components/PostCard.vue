@@ -142,8 +142,7 @@ const goToUserProfile = (userId?: number) => {
 const formatLikeCount = (count?: number | null) => {
   if (count == null) return '0'
   const safeCount = Number(count) || 0
-  if (safeCount >= 10000) return (safeCount / 10000).toFixed(1) + 'w'
-  if (safeCount >= 1000) return (safeCount / 1000).toFixed(1) + 'k'
+  if (safeCount >= 10000) return (safeCount / 10000).toFixed(1) + '万'
   return safeCount.toString()
 }
 

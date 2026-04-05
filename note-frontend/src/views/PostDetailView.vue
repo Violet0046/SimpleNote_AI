@@ -244,7 +244,7 @@
               <svg class="w-6 h-6" :fill="likeStore.isPostLiked(postDetail?.id || 0) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
-              <span class="text-[13px] font-medium">{{ postDetail?.likesCount || '赞' }}</span>
+              <span class="text-[13px] font-medium">{{ postDetail?.likesCount ? formatCount(postDetail.likesCount) : '赞' }}</span>
             </div>
           </div>
         </div>
@@ -265,6 +265,15 @@ import { useLikeStore } from '@/stores/like'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
+// 数字格式化函数
+const formatCount = (count: number | string | undefined | null) => {
+  const num = Number(count)
+  if (!num || isNaN(num)) return ''
+  if (num >= 10000) {
+    return (num / 10000).toFixed(1) + '万'
+  }
+  return num.toString()
+}
 const goToUserProfile = (userId?: number) => {
   if (!userId) return
   const routeUrl = router.resolve(`/user/${userId}`)
