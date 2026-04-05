@@ -8,35 +8,40 @@
       </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto bg-white px-[6px] scroll-smooth no-scrollbar pb-[40px]">
+    <div ref="scrollContainer" class="flex-1 overflow-y-auto bg-white px-[6px] no-scrollbar pb-[40px]">
       
       <div class="w-full flex justify-center items-center overflow-hidden transition-all duration-300" :class="isRefreshing ? 'h-[60px] opacity-100' : 'h-0 opacity-0'">
         <svg class="animate-spin -ml-1 mr-3 h-6 w-6 text-[#FF2442]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-        <span class="text-sm text-gray-500 font-medium">正在刷新...</span>
+        <span class="text-sm text-gray-500 font-medium">正在为你推荐...</span>
       </div>
 
-      <div v-if="posts.length > 0" class="flex gap-[20px] items-start w-full">
-        
+      <div v-if="waterfallColumns.length > 0" class="flex gap-[20px] items-start w-full min-h-[101vh]">
         <div 
           v-for="(colPosts, colIndex) in waterfallColumns" 
           :key="colIndex"
+          :ref="(el) => setColumnRef(el, colIndex)"
           class="flex-1 flex flex-col gap-[20px]"
         >
           <PostCard
-            v-for="post in colPosts"
-            :key="`${post.id}-${refreshKey}`"
+            v-for="(post, index) in colPosts"
+            :key="`post_${post.id}_${index}_${refreshKey}`"
             :post="post"
             :is-liked="likeStore.isPostLiked(post.id)"
             @click="(postObj, rect) => openPostDetail(postObj, rect)"
             @like="handleLike"
-            class="w-full"
+            class="w-full animate-fade-in-up"
           />
         </div>
-
       </div>
 
-      <div v-if="loading" class="text-center py-10"><span class="text-gray-500">加载中...</span></div>
-      <div v-if="hasMore && !loading" ref="loadMoreTrigger" class="h-20"></div>
+      <div class="w-full flex flex-col items-center py-8">
+        <div v-if="loading && !isRefreshing" class="flex items-center gap-2 text-gray-400">
+          <svg class="animate-spin h-5 w-5 text-[#FF2442]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          <span class="text-sm font-medium">加载中...</span>
+        </div>
+        <div ref="loadMoreTrigger" class="h-10 w-full bg-transparent" style="pointer-events: none;"></div>
+      </div>
+
     </div>
 
     <PostDetailModal
@@ -50,40 +55,78 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, inject, watch } from 'vue'
+import { ref, onMounted, onUnmounted, inject, watch, nextTick } from 'vue'
 import { useLikeStore } from '@/stores/like'
 import { get } from '@/utils/request'
 import { ElMessage } from 'element-plus'
 import PostCard from '@/components/PostCard.vue'
 import PostDetailModal from '@/components/PostDetailModal.vue'
 import type { Post, PostListResponse } from '@/types'
-const colCount = ref(5)
+
+// 🌟 修复：获取滚动容器的 DOM 引用
+const scrollContainer = ref<HTMLElement | null>(null)
+
+// 列数与容器引用控制
+const colCount = ref(4)
+const waterfallColumns = ref<Post[][]>([[], [], [], []])
+const columnsRef = ref<HTMLElement[]>([]) 
+
+const setColumnRef = (el: any, index: number) => {
+  if (el) columnsRef.value[index] = el as HTMLElement
+}
+
+// 响应式重排布局
 const updateColCount = () => {
   const width = window.innerWidth
-  if (width < 768) colCount.value = 2       // 手机
-  else if (width < 1024) colCount.value = 3 // 平板
-  else if (width < 1280) colCount.value = 4 // 窄屏电脑
-  else colCount.value = 5                   // 宽屏电脑
-}
-// 我们把 posts 按顺序依次发牌给 5 个列，绝对不会出现中间空洞
-const waterfallColumns = computed(() => {
-  const cols: Post[][] = Array.from({ length: colCount.value }, () => [])
-  posts.value.forEach((post, index) => {
-    // 🌟 计算安全的列索引，并确保该列存在后再推入数据
-    const colIndex = index % colCount.value
-    if (cols[colIndex]) {
-      cols[colIndex].push(post)
-    }
-  })
-  return cols
-})
-const likeStore = useLikeStore()
+  let newColCount = 4
+  if (width < 768) newColCount = 2
+  else if (width < 1280) newColCount = 3
+  else newColCount = 4
 
+  if (waterfallColumns.value.length !== newColCount) {
+    colCount.value = newColCount
+    reflowWaterfall()
+  }
+}
+
+// 动态高度贪心分配算法
+const layoutPosts = async (items: Post[]) => {
+  for (const post of items) {
+    await nextTick() 
+    
+    let minIndex = 0
+    let minHeight = columnsRef.value[0]?.offsetHeight || 0
+    
+    for (let i = 1; i < colCount.value; i++) {
+      const h = columnsRef.value[i]?.offsetHeight || 0
+      if (h < minHeight) {
+        minHeight = h
+        minIndex = i
+      }
+    }
+    
+    const targetColumn = waterfallColumns.value[minIndex]
+    if (targetColumn) {
+      targetColumn.push(post)
+    }
+  }
+}
+
+// 重新排版
+const reflowWaterfall = async () => {
+  waterfallColumns.value = Array.from({ length: colCount.value }, () => [])
+  await nextTick()
+  if (posts.value.length > 0) {
+    await layoutPosts(posts.value)
+  }
+}
+
+const likeStore = useLikeStore()
 const posts = ref<Post[]>([])
 const loading = ref(false)
 const hasMore = ref(true)
 const currentPage = ref(1)
-const pageSize = ref(15)
+const pageSize = ref(30)
 const isRefreshing = ref(false)
 const refreshKey = ref(0)
 
@@ -99,26 +142,59 @@ watch(refreshDiscoverTrigger, (newVal) => {
 })
 
 const fetchPosts = async (isLoadMore = false, isForceRefresh = false) => {
-  if (loading.value || (!isLoadMore && !isForceRefresh && posts.value.length > 0)) return
+  if (loading.value) return
   loading.value = true
   try {
     const res = await get<PostListResponse>('/post/list/page', { pageNum: currentPage.value, pageSize: pageSize.value })
     if (res.code === 1) {
-      if (isLoadMore) posts.value.push(...res.data.items)
-      else posts.value = res.data.items
-      hasMore.value = res.data.items.length === pageSize.value
-      currentPage.value++
+      const items = res.data.items || []
+      
+      if (items.length === 0 && posts.value.length === 0) {
+        hasMore.value = false
+        return
+      }
+
+      const randomizedItems = [...items].sort(() => Math.random() - 0.5)
+
+      if (isLoadMore) {
+        posts.value.push(...randomizedItems)
+        await layoutPosts(randomizedItems)
+      } else {
+        posts.value = randomizedItems
+        waterfallColumns.value = Array.from({ length: colCount.value }, () => [])
+        await nextTick()
+        await layoutPosts(randomizedItems)
+      }
+      
+      if (items.length < pageSize.value) {
+        currentPage.value = 1
+        hasMore.value = true 
+      } else {
+        currentPage.value++
+        hasMore.value = true
+      }
     }
-  } finally { loading.value = false }
+  } finally { 
+    loading.value = false 
+  }
 }
 
 const handleForceRefresh = async () => {
+  // 1. 瞬间秒跳回顶部！(将 behavior 从 'smooth' 改为默认的 'auto')
+  if (scrollContainer.value) {
+    scrollContainer.value.scrollTo({ top: 0, behavior: 'auto' })
+  }
+
   isRefreshing.value = true
   currentPage.value = 1
+  hasMore.value = true
+
+  // 2. 删掉之前为了等滚动条而加的 setTimeout，直接瞬间同步拉取数据！
   try {
     await fetchPosts(false, true)
-    refreshKey.value++
+    refreshKey.value++ // 触发新卡片的渐显动画，掩盖瞬间替换的生硬感
   } finally {
+    // 稍微保留 500ms 的动画收尾，防止因为网速太快导致 Loading 圈闪烁一下就没了
     setTimeout(() => { isRefreshing.value = false }, 500)
   }
 }
@@ -126,8 +202,13 @@ const handleForceRefresh = async () => {
 const setupInfiniteScroll = () => {
   if (!loadMoreTrigger.value) return
   observer = new IntersectionObserver((entries) => {
-    if (entries[0]?.isIntersecting && hasMore.value && !loading.value) fetchPosts(true)
-  }, { rootMargin: '100px', threshold: 0.1 })
+    if (entries[0]?.isIntersecting && hasMore.value && !loading.value) {
+      fetchPosts(true)
+    }
+  }, { 
+    rootMargin: '600px',
+    threshold: 0.1 
+  })
   observer.observe(loadMoreTrigger.value)
 }
 
@@ -135,14 +216,14 @@ onMounted(() => {
   updateColCount()
   window.addEventListener('resize', updateColCount)
   fetchPosts()
-  setupInfiniteScroll()
+  setTimeout(() => { setupInfiniteScroll() }, 300)
 })
+
 onUnmounted(() => {
   window.removeEventListener('resize', updateColCount)
   if (observer) observer.disconnect()
 })
 
-// 🌟 弹窗开关核心逻辑 (加入了安全校验和延迟卸载)
 const openPostDetail = (postObj: Post, rect: DOMRect | null) => {
   selectedPost.value = postObj
   triggerRect.value = rect instanceof DOMRect ? rect : null
@@ -151,7 +232,6 @@ const openPostDetail = (postObj: Post, rect: DOMRect | null) => {
 
 const closePostDetail = () => {
   showModal.value = false
-  // 🌟 等待 400ms，让弹窗的缩小动画播完，再彻底清空数据销毁组件！
   setTimeout(() => {
     selectedPost.value = null
     triggerRect.value = null
@@ -161,8 +241,10 @@ const closePostDetail = () => {
 const handleLike = (postId: number, isLiked: boolean) => {
   if (isLiked) likeStore.addLikedPost(postId)
   else likeStore.removeLikedPost(postId)
-  const targetPost = posts.value.find(p => p.id === postId)
-  if (targetPost) targetPost.likesCount = isLiked ? (targetPost.likesCount || 0) + 1 : Math.max(0, (targetPost.likesCount || 0) - 1)
+  
+  posts.value.forEach(p => {
+    if (p.id === postId) p.likesCount = isLiked ? (p.likesCount || 0) + 1 : Math.max(0, (p.likesCount || 0) - 1)
+  })
 }
 
 const handleModalLike = (postId: number) => {
@@ -173,4 +255,18 @@ const handleModalLike = (postId: number) => {
 <style scoped>
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 </style>
