@@ -22,42 +22,55 @@
       :style="modalStyle"
       @click.stop
     >
-      <div class="flex-1 relative flex items-center justify-center overflow-hidden bg-[#F8F8F8] dark:bg-black">
+<div class="flex-1 relative flex items-center justify-center overflow-hidden bg-[#F8F8F8] dark:bg-black">
+      
+      <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <video 
+          v-if="Number(postDetail?.isVideo) === 1"
+          :src="firstImage + '#t=0.1'"
+          preload="auto"
+          muted 
+          playsinline
+          class="absolute inset-0 w-full h-full object-cover blur-[50px] opacity-50 transform scale-110 dark:opacity-30"
+        ></video>
         
-        <div class="absolute inset-0 bg-cover bg-center blur-[50px] opacity-50 transform scale-110 dark:opacity-30" :style="{ backgroundImage: `url(${firstImage})` }"></div>
-        
-        <div v-if="Number(postDetail?.isVideo) === 1" class="relative w-full h-full flex items-center justify-center z-10">
-          <video 
-            :src="firstImage" 
-            controls 
-            autoplay 
-            loop 
-            playsinline 
-            class="max-w-full max-h-full object-contain drop-shadow-lg outline-none"
-          ></video>
+        <div 
+          v-else
+          class="absolute inset-0 bg-cover bg-center blur-[50px] opacity-50 transform scale-110 dark:opacity-30" 
+          :style="{ backgroundImage: `url(${firstImage})` }"
+        ></div>
+      </div>
+      <div v-if="Number(postDetail?.isVideo) === 1" class="relative w-full h-full flex items-center justify-center z-10">
+        <video 
+          :src="firstImage" 
+          controls 
+          autoplay 
+          loop 
+          playsinline 
+          class="max-w-full max-h-full object-contain drop-shadow-lg outline-none"
+        ></video>
+      </div>
+      
+      <div v-else-if="imageList && imageList.length > 0" class="relative w-full h-full overflow-hidden group z-10">
+        <div class="w-full h-full transition-transform duration-300 ease-out flex" :style="{ transform: `translateX(-${currentImageIndex * 100}%)` }">
+          <div v-for="(img, idx) in imageList" :key="idx" class="w-full h-full flex-shrink-0 flex items-center justify-center">
+            <img :src="img" class="max-w-full max-h-full object-contain drop-shadow-lg" />
+          </div>
         </div>
         
-        <div v-else-if="postDetail?.images && !String(postDetail.images).includes(',')" class="relative w-full h-full flex items-center justify-center z-10">
-          <img :src="firstImage" class="max-w-full max-h-full object-contain drop-shadow-lg" />
-        </div>
+        <button v-if="imageList.length > 1" @click="prevImage" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/20 text-white rounded-full flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+        </button>
+        <button v-if="imageList.length > 1" @click="nextImage" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/20 text-white rounded-full flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+        </button>
         
-        <div v-else-if="postDetail?.images && String(postDetail.images).includes(',')" class="relative w-full h-full overflow-hidden group z-10">
-          <div class="w-full h-full transition-transform duration-300 ease-out flex" :style="{ transform: `translateX(-${currentImageIndex * 100}%)` }">
-            <div v-for="(img, idx) in imageList" :key="idx" class="w-full h-full flex-shrink-0 flex items-center justify-center">
-              <img :src="img" class="max-w-full max-h-full object-contain drop-shadow-lg" />
-            </div>
-          </div>
-          <button v-if="imageList.length > 1" @click="prevImage" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/20 text-white rounded-full flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
-          </button>
-          <button v-if="imageList.length > 1" @click="nextImage" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/20 text-white rounded-full flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity">
-            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-          </button>
-          <div v-if="imageList.length > 1" class="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2">
-            <div v-for="(_, idx) in imageList" :key="idx" class="w-2 h-2 rounded-full transition-all" :class="currentImageIndex === idx ? 'bg-red-500 scale-110' : 'bg-gray-300'"></div>
-          </div>
+        <div v-if="imageList.length > 1" class="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2">
+          <div v-for="(_, idx) in imageList" :key="idx" class="w-2 h-2 rounded-full transition-all" :class="currentImageIndex === idx ? 'bg-red-500 scale-110' : 'bg-gray-300'"></div>
         </div>
       </div>
+
+    </div>
       <div class="w-[360px] lg:w-[400px] flex-shrink-0 flex flex-col h-full border-l border-gray-100 dark:border-gray-800 transition-opacity duration-300 bg-white dark:bg-gray-900" :class="isExpanded ? 'opacity-100' : 'opacity-0'">
         
         <div class="h-[76px] px-6 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between shrink-0">
@@ -479,8 +492,7 @@ watch(() => props.visible, async (isVisible) => {
     }
 
     // ================= 核心修复区：弹窗动画判断 =================
-    // 使用 Number() 强转，防止 TS 类型报错和布尔值隐式转换错误
-    if (Number(props.post.isVideo) === 1) {
+    if (props.post.isVideo === 1) {
       setTimeout(() => animateModal(0.75), 50)
     } else {
       const img = new Image()
