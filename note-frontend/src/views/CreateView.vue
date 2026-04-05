@@ -1,18 +1,17 @@
-<template>
-  <div class="min-h-screen bg-[#FAFAFA] flex flex-col">
-    <header class="bg-white h-16 px-6 flex items-center justify-between border-b border-gray-100 shadow-sm shrink-0">
-      <div class="flex items-center gap-2 cursor-pointer" @click="router.push('/')">
-        <span class="text-lg font-bold text-[#FF2442]">创作者中心</span>
-      </div>
+﻿<template>
+  <div class="flex min-h-screen flex-col bg-[#FAFAFA]">
+    <header class="flex h-16 shrink-0 items-center justify-between border-b border-gray-100 bg-white px-6 shadow-sm">
+      <button class="flex items-center gap-2" type="button" @click="goToHome">
+        <span class="text-lg font-bold text-[#FF2442]">{{ COPY.creatorCenter }}</span>
+      </button>
 
       <div class="flex items-center">
         <div class="flex flex-col items-end">
-          <div class="text-lg font-bold">
-            <span class="text-gray-900">{{ authStore.userInfo?.nickname || authStore.getUsername }}</span>
-            <span class="text-[#FF2442] ml-2">正在捕捉灵感...</span>
+          <div class="text-lg font-bold text-gray-900">
+            <span>{{ authStore.userInfo?.nickname || authStore.getUsername }}</span>
+            <span class="ml-2 text-[#FF2442]">{{ COPY.capturingIdeas }}</span>
           </div>
-          
-          <span class="text-[10px] text-[#FF2442] opacity-80 font-medium tracking-widest uppercase mt-0.5">
+          <span class="mt-0.5 text-[10px] font-medium uppercase tracking-widest text-[#FF2442] opacity-80">
             Creative Mode
           </span>
         </div>
@@ -20,149 +19,181 @@
     </header>
 
     <div class="flex flex-1 overflow-hidden">
-      <aside class="w-[200px] bg-white border-r border-gray-100 flex flex-col py-6 shrink-0">
-        <div class="px-6 mb-2 text-xs font-semibold text-gray-400 tracking-wider">创作</div>
-        <div class="mx-3 px-4 py-2.5 bg-[#FFE8EB] text-[#FF2442] rounded-lg font-medium cursor-pointer flex items-center gap-2">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-          发布笔记
+      <aside class="flex w-[200px] shrink-0 flex-col border-r border-gray-100 bg-white py-6">
+        <div class="mb-2 px-6 text-xs font-semibold tracking-wider text-gray-400">{{ COPY.createSection }}</div>
+        <div class="mx-3 flex cursor-pointer items-center gap-2 rounded-lg bg-[#FFE8EB] px-4 py-2.5 font-medium text-[#FF2442]">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          {{ COPY.publishNote }}
         </div>
       </aside>
 
-      <main class="flex-1 overflow-y-auto p-6 md:p-10 flex justify-center">
-        <div class="w-full max-w-[1000px] bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col min-h-[600px]">
-          
-          <div v-if="step === 1" class="flex-1 flex flex-col">
+      <main class="flex flex-1 justify-center overflow-y-auto p-6 md:p-10">
+        <div class="flex min-h-[600px] w-full max-w-[1000px] flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+          <section v-if="step === 1" class="flex flex-1 flex-col">
             <div class="flex justify-center border-b border-gray-100 pt-6">
               <div class="flex gap-12">
-                <button 
+                <button
+                  type="button"
                   class="relative pb-4 text-[16px] font-semibold transition-colors"
                   :class="publishType === 'video' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'"
-                  @click="publishType = 'video'"
+                  @click="setPublishType('video')"
                 >
-                  上传视频
-                  <div v-if="publishType === 'video'" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-[#FF2442] rounded-full"></div>
+                  {{ COPY.videoTab }}
+                  <div v-if="publishType === 'video'" class="absolute bottom-0 left-1/2 h-[3px] w-8 -translate-x-1/2 rounded-full bg-[#FF2442]"></div>
                 </button>
-                <button 
+                <button
+                  type="button"
                   class="relative pb-4 text-[16px] font-semibold transition-colors"
                   :class="publishType === 'image' ? 'text-gray-900' : 'text-gray-500 hover:text-gray-700'"
-                  @click="publishType = 'image'"
+                  @click="setPublishType('image')"
                 >
-                  上传图文
-                  <div v-if="publishType === 'image'" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-[3px] bg-[#FF2442] rounded-full"></div>
+                  {{ COPY.imageTab }}
+                  <div v-if="publishType === 'image'" class="absolute bottom-0 left-1/2 h-[3px] w-8 -translate-x-1/2 rounded-full bg-[#FF2442]"></div>
                 </button>
               </div>
             </div>
 
-            <div class="flex-1 flex items-center justify-center p-10">
-              <label class="w-[400px] h-[300px] border-2 border-dashed border-gray-300 rounded-xl hover:border-[#FF2442] hover:bg-[#FFF5F6] transition-all flex flex-col items-center justify-center cursor-pointer group">
-                <svg class="w-16 h-16 text-gray-300 group-hover:text-[#FF2442] mb-4 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div class="flex flex-1 items-center justify-center p-10">
+              <label class="flex h-[300px] w-[400px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-300 transition-all hover:border-[#FF2442] hover:bg-[#FFF5F6]">
+                <svg class="mb-4 h-16 w-16 text-gray-300 transition-colors group-hover:text-[#FF2442]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
-                <span class="text-[16px] font-medium text-gray-700 group-hover:text-[#FF2442]">
-                  点击或拖拽上传{{ publishType === 'video' ? '视频' : '图片' }}
-                </span>
-                <span class="text-[13px] text-gray-400 mt-2">
-                  {{ publishType === 'video' ? '支持 mp4、mov 格式，最多 1 个' : '支持 jpg、png、webp 格式，最多 18 张' }}
-                </span>
-                <input type="file" class="hidden" :accept="publishType === 'video' ? 'video/*' : 'image/*'" :multiple="publishType === 'image'" @change="handleFileSelect" />
+                <span class="text-[16px] font-medium text-gray-700">{{ uploadPrompt }}</span>
+                <span class="mt-2 text-[13px] text-gray-400">{{ uploadHint }}</span>
+                <input
+                  class="hidden"
+                  type="file"
+                  :accept="inputAccept"
+                  :multiple="publishType === 'image'"
+                  @change="handleFileSelect"
+                />
               </label>
             </div>
-          </div>
+          </section>
 
-          <div v-else-if="step === 2" class="flex-1 flex flex-col md:flex-row h-full relative">
-            <div v-if="isUploading || isPublishing" class="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center">
-              <svg class="animate-spin h-10 w-10 text-[#FF2442] mb-3" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-              <span class="text-gray-700 font-medium">{{ isUploading ? '正在努力上传文件...' : '笔记发布中...' }}</span>
+          <section v-else-if="step === 2" class="relative flex h-full flex-1 flex-col md:flex-row">
+            <div v-if="isUploading || isPublishing" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-white/80 backdrop-blur-sm">
+              <svg class="mb-3 h-10 w-10 animate-spin text-[#FF2442]" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span class="font-medium text-gray-700">{{ busyLabel }}</span>
             </div>
 
-            <div class="w-full md:w-[40%] border-r border-gray-100 bg-[#F8F8F8] p-6 flex flex-col h-[600px] overflow-y-auto">
-              <div class="flex justify-between items-center mb-4">
-                <span class="text-[15px] font-bold text-gray-800">媒体预览</span>
-                <button @click="resetUpload" class="text-[13px] text-gray-500 hover:text-[#FF2442]">重新上传</button>
+            <div class="flex h-[600px] w-full flex-col overflow-y-auto border-r border-gray-100 bg-[#F8F8F8] p-6 md:w-[40%]">
+              <div class="mb-4 flex items-center justify-between">
+                <span class="text-[15px] font-bold text-gray-800">{{ COPY.mediaPreview }}</span>
+                <button class="text-[13px] text-gray-500 hover:text-[#FF2442]" type="button" @click="resetUpload">
+                  {{ COPY.resetUpload }}
+                </button>
               </div>
 
-              <div v-if="publishType === 'video' && uploadedMedia.length > 0" class="w-full rounded-xl overflow-hidden shadow-sm bg-black aspect-[3/4] flex items-center justify-center">
-                <video :src="uploadedMedia[0]" controls class="w-full h-full object-contain"></video>
+              <div v-if="publishType === 'video' && uploadedMedia.length > 0" class="flex aspect-[3/4] w-full items-center justify-center overflow-hidden rounded-xl bg-black shadow-sm">
+                <video :src="uploadedMedia[0]" controls class="h-full w-full object-contain"></video>
               </div>
 
-              <div v-if="publishType === 'image'" class="grid grid-cols-3 gap-2">
-                <div v-for="(img, idx) in uploadedMedia" :key="idx" class="relative aspect-square rounded-lg overflow-hidden group border border-gray-200 bg-white">
-                  <img :src="img" class="w-full h-full object-cover" />
-                  <button @click="removeImage(idx)" class="absolute top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                    ×
+              <div v-else-if="publishType === 'image'" class="grid grid-cols-3 gap-2">
+                <div
+                  v-for="(mediaUrl, index) in uploadedMedia"
+                  :key="`${mediaUrl}_${index}`"
+                  class="group relative aspect-square overflow-hidden rounded-lg border border-gray-200 bg-white"
+                >
+                  <img :src="mediaUrl" class="h-full w-full object-cover" />
+                  <button
+                    class="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition-opacity group-hover:opacity-100"
+                    type="button"
+                    @click="removeImage(index)"
+                  >
+                    x
                   </button>
                 </div>
-                <label v-if="uploadedMedia.length < 18" class="aspect-square rounded-lg border-2 border-dashed border-gray-300 hover:border-gray-400 bg-white flex items-center justify-center cursor-pointer transition-colors">
-                  <svg class="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                  <input type="file" class="hidden" accept="image/*" multiple @change="handleFileSelect" />
+                <label
+                  v-if="uploadedMedia.length < 18"
+                  class="flex aspect-square cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-white transition-colors hover:border-gray-400"
+                >
+                  <svg class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  <input class="hidden" type="file" accept="image/*" multiple @change="handleFileSelect" />
                 </label>
               </div>
             </div>
 
-            <div class="flex-1 p-6 lg:p-10 flex flex-col h-[600px] bg-white">
+            <div class="flex h-[600px] flex-1 flex-col bg-white p-6 lg:p-10">
               <div class="flex-1">
-                <input 
-                  v-model="postForm.title" 
-                  type="text" 
-                  placeholder="填写标题会有更多赞哦~" 
-                  class="w-full text-[20px] font-bold text-gray-900 placeholder-gray-300 border-b border-gray-100 pb-4 mb-6 outline-none focus:border-gray-300 transition-colors"
+                <input
+                  v-model="postForm.title"
+                  type="text"
+                  :placeholder="COPY.titlePlaceholder"
+                  class="mb-6 w-full border-b border-gray-100 pb-4 text-[20px] font-bold text-gray-900 outline-none transition-colors placeholder:text-gray-300 focus:border-gray-300"
                   maxlength="20"
                 />
-                
-                <textarea 
-                  v-model="postForm.content" 
-                  placeholder="添加正文" 
-                  class="w-full h-[200px] text-[15px] text-gray-700 placeholder-gray-400 outline-none resize-none leading-relaxed"
+
+                <textarea
+                  v-model="postForm.content"
+                  :placeholder="COPY.contentPlaceholder"
+                  class="h-[200px] w-full resize-none text-[15px] leading-relaxed text-gray-700 outline-none placeholder:text-gray-400"
                   maxlength="1000"
                 ></textarea>
                 <div class="text-right text-[12px] text-gray-400">{{ postForm.content.length }}/1000</div>
               </div>
 
-              <div class="pt-6 border-t border-gray-50 flex justify-end gap-4 mt-auto">
-                <button @click="resetUpload" class="px-6 py-2.5 rounded-full text-[14px] font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">取消</button>
-                <button 
-                  @click="handlePublish" 
-                  :disabled="isPublishing || !postForm.title.trim() || !postForm.content.trim() || uploadedMedia.length === 0"
-                  class="px-8 py-2.5 rounded-full text-[14px] font-medium text-white transition-all shadow-md"
-                  :class="(postForm.title.trim() && postForm.content.trim() && uploadedMedia.length > 0) ? 'bg-[#FF2442] hover:bg-red-600 hover:shadow-lg hover:-translate-y-0.5' : 'bg-[#FF91A0] cursor-not-allowed shadow-none'"
+              <div class="mt-auto flex justify-end gap-4 border-t border-gray-50 pt-6">
+                <button
+                  class="rounded-full bg-gray-100 px-6 py-2.5 text-[14px] font-medium text-gray-600 transition-colors hover:bg-gray-200"
+                  type="button"
+                  @click="resetUpload"
                 >
-                  发布
+                  {{ COPY.cancel }}
+                </button>
+                <button
+                  class="rounded-full px-8 py-2.5 text-[14px] font-medium text-white transition-all"
+                  :class="canPublish ? 'bg-[#FF2442] shadow-md hover:-translate-y-0.5 hover:bg-red-600 hover:shadow-lg' : 'cursor-not-allowed bg-[#FF91A0] shadow-none'"
+                  :disabled="!canPublish"
+                  type="button"
+                  @click="handlePublish"
+                >
+                  {{ COPY.publish }}
                 </button>
               </div>
             </div>
-          </div>
+          </section>
 
-          <div v-else-if="step === 3" class="flex-1 flex items-center justify-center p-6 md:p-10 bg-white relative">
-            <div class="w-[400px] h-[300px] border border-gray-100 rounded-xl shadow-inner flex flex-col items-center justify-center animate-fade-in bg-white p-6 relative">
-              <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-5 shrink-0">
-                <svg class="w-8 h-8 text-[#FF2442]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <section v-else class="relative flex flex-1 items-center justify-center bg-white p-6 md:p-10">
+            <div class="animate-fade-in relative flex h-[300px] w-[400px] flex-col items-center justify-center rounded-xl border border-gray-100 bg-white p-6 shadow-inner">
+              <div class="mb-5 flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-red-50">
+                <svg class="h-8 w-8 text-[#FF2442]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
               </div>
 
-              <h2 class="text-xl font-bold text-gray-900 mb-2">发布成功</h2>
-              
-              <p class="text-gray-500 mb-6 text-[14px]">
-                你的笔记已成功发布，<span class="text-[#FF2442] font-bold mx-1">{{ countdown }}</span> 秒后自动重置...
+              <h2 class="mb-2 text-xl font-bold text-gray-900">{{ COPY.publishSuccess }}</h2>
+              <p class="mb-6 text-[14px] text-gray-500">
+                {{ COPY.publishSuccessTip }}
+                <span class="mx-1 font-bold text-[#FF2442]">{{ countdown }}</span>
+                {{ COPY.secondsSuffix }}
               </p>
 
               <div class="flex gap-4">
                 <button
+                  class="rounded-full border border-gray-200 px-5 py-2.5 text-[13px] font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                  type="button"
                   @click="goToHome"
-                  class="px-5 py-2.5 border border-gray-200 text-gray-700 font-medium rounded-full text-[13px] hover:bg-gray-50 transition-colors"
                 >
-                  回首页
+                  {{ COPY.backHome }}
                 </button>
                 <button
+                  class="rounded-full bg-[#FF2442] px-5 py-2.5 text-[13px] font-medium text-white shadow-sm shadow-red-200 transition-colors hover:bg-red-600"
+                  type="button"
                   @click="resetUpload"
-                  class="px-5 py-2.5 bg-[#FF2442] text-white font-medium rounded-full text-[13px] hover:bg-red-600 transition-colors shadow-sm shadow-red-200"
                 >
-                  继续创作
+                  {{ COPY.createAnother }}
                 </button>
               </div>
             </div>
-          </div>
-
+          </section>
         </div>
       </main>
     </div>
@@ -170,156 +201,115 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted } from 'vue'
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
-import { post } from '@/utils/request'
+
 import { ElMessage } from 'element-plus'
+
+import { useCreatePostFlow } from '@/modules/post/composables/useCreatePostFlow'
+import { useAuthStore } from '@/stores/auth'
+
+const COPY = {
+  creatorCenter: '\u521b\u4f5c\u8005\u4e2d\u5fc3',
+  capturingIdeas: '\u6b63\u5728\u6355\u6349\u7075\u611f...',
+  createSection: '\u521b\u4f5c',
+  publishNote: '\u53d1\u5e03\u7b14\u8bb0',
+  videoTab: '\u4e0a\u4f20\u89c6\u9891',
+  imageTab: '\u4e0a\u4f20\u56fe\u6587',
+  videoPrompt: '\u70b9\u51fb\u6216\u62d6\u62fd\u4e0a\u4f20\u89c6\u9891',
+  imagePrompt: '\u70b9\u51fb\u6216\u62d6\u62fd\u4e0a\u4f20\u56fe\u7247',
+  videoHint: '\u652f\u6301 mp4\u3001mov \u683c\u5f0f\uff0c\u6700\u591a 1 \u4e2a',
+  imageHint: '\u652f\u6301 jpg\u3001png\u3001webp \u683c\u5f0f\uff0c\u6700\u591a 18 \u5f20',
+  mediaPreview: '\u5a92\u4f53\u9884\u89c8',
+  resetUpload: '\u91cd\u65b0\u4e0a\u4f20',
+  titlePlaceholder: '\u586b\u5199\u6807\u9898\u4f1a\u6709\u66f4\u591a\u8d5e\u54e6~',
+  contentPlaceholder: '\u6dfb\u52a0\u6b63\u6587',
+  cancel: '\u53d6\u6d88',
+  publish: '\u53d1\u5e03',
+  publishSuccess: '\u53d1\u5e03\u6210\u529f',
+  publishSuccessTip: '\u4f60\u7684\u7b14\u8bb0\u5df2\u6210\u529f\u53d1\u5e03\uff0c',
+  secondsSuffix: '\u79d2\u540e\u81ea\u52a8\u91cd\u7f6e...',
+  backHome: '\u56de\u9996\u9875',
+  createAnother: '\u7ee7\u7eed\u521b\u4f5c',
+  uploading: '\u6b63\u5728\u52aa\u529b\u4e0a\u4f20\u6587\u4ef6...',
+  publishing: '\u7b14\u8bb0\u53d1\u5e03\u4e2d...',
+  uploadFailed: '\u6587\u4ef6\u4e0a\u4f20\u4e2d\u65ad',
+  publishFailed: '\u53d1\u5e03\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5',
+} as const
 
 const router = useRouter()
 const authStore = useAuthStore()
 
-// 状态机: 1=选择文件, 2=编辑发布, 3=发布成功倒计时
-const step = ref(1)
-const publishType = ref<'video' | 'image'>('video')
+const {
+  step,
+  publishType,
+  uploadedMedia,
+  isUploading,
+  isPublishing,
+  countdown,
+  postForm,
+  canPublish,
+  selectFiles,
+  removeMediaAt,
+  reset,
+  publish,
+  setPublishType,
+  stopCountdown,
+} = useCreatePostFlow()
 
-// 数据状态
-const uploadedMedia = ref<string[]>([])
-const isUploading = ref(false)
-const isPublishing = ref(false)
+const inputAccept = computed(() => (publishType.value === 'video' ? 'video/*' : 'image/*'))
+const uploadPrompt = computed(() => (publishType.value === 'video' ? COPY.videoPrompt : COPY.imagePrompt))
+const uploadHint = computed(() => (publishType.value === 'video' ? COPY.videoHint : COPY.imageHint))
+const busyLabel = computed(() => (isUploading.value ? COPY.uploading : COPY.publishing))
 
-const postForm = ref({
-  title: '',
-  content: ''
-})
-
-// 倒计时状态
-const countdown = ref(5)
-let timer: number | null = null
-
-// 🌟 原生 Fetch 极速上传引擎 (完美适配多文件，自带 Token)
-const uploadFileToServer = async (file: File): Promise<string> => {
-  const formData = new FormData()
-  formData.append('file', file)
-
-  const token = localStorage.getItem('userToken') // 从本地拿 token
-  const res = await fetch('http://localhost:8080/upload', {
-    method: 'POST',
-    headers: {
-      'Authorization': token || '' 
-    },
-    body: formData
-  })
-  
-  const data = await res.json()
-  if (data.code === 1) return data.data
-  throw new Error(data.msg || '上传失败')
-}
-
-// 处理文件选择
-const handleFileSelect = async (event: Event) => {
-  const input = event.target as HTMLInputElement
-  const files = input.files
-  if (!files || files.length === 0) return
-
-  // 校验限制
-  if (publishType.value === 'video') {
-    if (files.length > 1 || uploadedMedia.value.length > 0) {
-      return ElMessage.warning('视频最多只能上传 1 个哦')
-    }
-  } else {
-    if (uploadedMedia.value.length + files.length > 18) {
-      return ElMessage.warning('图片最多只能上传 18 张哦')
-    }
+const toMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error && error.message) {
+    return error.message
   }
 
-  isUploading.value = true
-  step.value = 2 // 瞬间切到编辑页面
+  return fallback
+}
+
+const handleFileSelect = async (event: Event) => {
+  const input = event.target as HTMLInputElement
 
   try {
-    const fileList = Array.from(files)
-    for (const file of fileList) {
-      const url = await uploadFileToServer(file)
-      uploadedMedia.value.push(url)
-    }
-    
-  } catch (error: any) {
-    ElMessage.error(error.message || '文件上传中断')
-    if (uploadedMedia.value.length === 0) step.value = 1 
+    await selectFiles(input.files)
+  } catch (error) {
+    ElMessage.error(toMessage(error, COPY.uploadFailed))
   } finally {
-    isUploading.value = false
-    input.value = '' 
+    input.value = ''
   }
 }
 
 const removeImage = (index: number) => {
-  uploadedMedia.value.splice(index, 1)
-  if (uploadedMedia.value.length === 0) {
-    step.value = 1 // 删光了自动退回第一步
-  }
+  removeMediaAt(index)
 }
 
-// 提取出来的重置方法，可以在取消、倒计时结束、点击“继续创作”时通用
 const resetUpload = () => {
-  if (timer) clearInterval(timer)
-  step.value = 1
-  uploadedMedia.value = []
-  postForm.value.title = ''
-  postForm.value.content = ''
+  reset()
 }
 
 const goToHome = () => {
-  if (timer) clearInterval(timer)
-  router.push('/')
+  stopCountdown()
+  void router.push('/')
 }
 
-// 终极发布提交
 const handlePublish = async () => {
-  if (!authStore.isLoggedIn) return authStore.showLoginModal()
-  
-  isPublishing.value = true
-  try {
-    const payload = {
-      title: postForm.value.title,
-      content: postForm.value.content,
-      images: uploadedMedia.value.join(','), // 逗号拼接
-      isVideo: publishType.value === 'video' ? 1 : 0
-    }
+  if (!authStore.isLoggedIn) {
+    authStore.showLoginModal()
+    return
+  }
 
-    const res = await post('/post/add', payload)
-    if (res.code === 1) {
-      // 进入成功页面
-      step.value = 3
-      countdown.value = 5
-      
-      if (timer) clearInterval(timer)
-      timer = window.setInterval(() => {
-        countdown.value--
-        if (countdown.value <= 0) {
-          resetUpload() // 倒计时结束自动重置为创作首页
-        }
-      }, 1000)
-    } else {
-      ElMessage.error(res.msg || '发布失败')
-    }
+  try {
+    await publish()
   } catch (error) {
-    ElMessage.error('网络错误，请稍后再试')
-  } finally {
-    isPublishing.value = false
+    ElMessage.error(toMessage(error, COPY.publishFailed))
   }
 }
-
-// 离开页面时记得销毁计时器，避免内存泄漏
-onUnmounted(() => {
-  if (timer) clearInterval(timer)
-})
 </script>
 
 <style scoped>
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-/* 成功界面的渐显动画 */
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
 }
@@ -329,6 +319,7 @@ onUnmounted(() => {
     opacity: 0;
     transform: translateY(10px) scale(0.98);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);

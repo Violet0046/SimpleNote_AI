@@ -1,18 +1,15 @@
-<template>
-  <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[99999] flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-100 opacity-100 max-h-[90vh] overflow-y-auto no-scrollbar">
-      <div class="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
+﻿<template>
+  <div class="fixed inset-0 z-[99999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div class="no-scrollbar max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white shadow-2xl">
+      <div class="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white p-6">
         <div class="flex items-center space-x-2">
-          <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center">
-            <span class="text-white font-bold text-sm">X</span>
+          <div class="flex h-8 w-8 items-center justify-center rounded-full bg-red-500">
+            <span class="text-sm font-bold text-white">X</span>
           </div>
-          <h2 class="text-2xl font-bold text-gray-900">小红书</h2>
+          <h2 class="text-2xl font-bold text-gray-900">简单笔记</h2>
         </div>
-        <button
-          @click="$emit('close')"
-          class="text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button class="text-gray-400 transition-colors hover:text-gray-600" @click="$emit('close')">
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
         </button>
@@ -20,176 +17,167 @@
 
       <div class="flex border-b border-gray-100">
         <button
-          @click="activeTab = 'login'"
           :class="[
-            'flex-1 py-4 text-center font-medium transition-colors relative',
-            activeTab === 'login'
-              ? 'text-red-500'
-              : 'text-gray-500 hover:text-gray-700'
+            'relative flex-1 py-4 text-center font-medium transition-colors',
+            activeTab === 'login' ? 'text-red-500' : 'text-gray-500 hover:text-gray-700',
           ]"
+          @click="activeTab = 'login'"
         >
           {{ isLoginMode ? '登录' : '密码登录' }}
-          <div
-            v-if="activeTab === 'login'"
-            class="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500"
-          ></div>
+          <div v-if="activeTab === 'login'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500"></div>
         </button>
         <button
-          @click="activeTab = 'register'"
           :class="[
-            'flex-1 py-4 text-center font-medium transition-colors relative',
-            activeTab === 'register'
-              ? 'text-red-500'
-              : 'text-gray-500 hover:text-gray-700'
+            'relative flex-1 py-4 text-center font-medium transition-colors',
+            activeTab === 'register' ? 'text-red-500' : 'text-gray-500 hover:text-gray-700',
           ]"
+          @click="activeTab = 'register'"
         >
-          {{ isLoginMode ? '注册' : '注册账号' }}
-          <div
-            v-if="activeTab === 'register'"
-            class="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500"
-          ></div>
+          {{ isLoginMode ? '注册' : '创建账号' }}
+          <div v-if="activeTab === 'register'" class="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500"></div>
         </button>
       </div>
 
-      <form @submit.prevent="handleSubmit" class="p-6">
+      <form class="p-6" @submit.prevent="handleSubmit">
         <div class="space-y-4">
           <div v-if="activeTab === 'login'" class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">用户名</label>
+              <label class="mb-1 block text-sm font-medium text-gray-700">用户名</label>
               <input
                 v-model="loginForm.username"
                 type="text"
                 required
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors"
+                class="w-full rounded-lg border border-gray-300 px-4 py-2.5 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-red-500"
                 placeholder="请输入用户名"
-              >
+              />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+              <label class="mb-1 block text-sm font-medium text-gray-700">密码</label>
               <input
                 v-model="loginForm.password"
                 type="password"
                 required
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-colors"
+                class="w-full rounded-lg border border-gray-300 px-4 py-2.5 transition-colors focus:border-transparent focus:outline-none focus:ring-2 focus:ring-red-500"
                 placeholder="请输入密码"
-              >
+              />
             </div>
           </div>
 
           <div v-else class="space-y-4">
-            
-            <div class="flex flex-col items-center justify-center mb-2">
-              <div class="relative group cursor-pointer" @click="triggerFileInput">
-                <div class="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center transition-all group-hover:border-red-400 group-hover:shadow-md">
-                  <img v-if="registerForm.avatarUrl" :src="registerForm.avatarUrl" class="w-full h-full object-cover" />
+            <div class="mb-2 flex flex-col items-center justify-center">
+              <div class="group relative cursor-pointer" @click="triggerFileInput">
+                <div class="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-gray-100 bg-gray-50 shadow-sm transition-all group-hover:border-red-400 group-hover:shadow-md">
+                  <img v-if="registerForm.avatarUrl" :src="registerForm.avatarUrl" class="h-full w-full object-cover" />
                   <div v-else class="flex flex-col items-center text-gray-400">
-                    <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    <span class="text-[10px]">传头像</span>
+                    <svg class="mb-1 h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <span class="text-[10px]">上传头像</span>
                   </div>
                 </div>
-                <div class="absolute inset-0 bg-black/30 backdrop-blur-[2px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
-                  <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <div class="absolute inset-0 flex items-center justify-center rounded-full bg-black/30 opacity-0 backdrop-blur-[2px] transition-opacity group-hover:opacity-100">
+                  <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
                 </div>
-                <input type="file" ref="fileInput" class="hidden" accept="image/jpeg,image/png,image/gif,image/webp" @change="handleFileUpload" />
+                <input ref="fileInput" type="file" class="hidden" accept="image/jpeg,image/png,image/gif,image/webp" @change="handleFileUpload" />
               </div>
-              <span class="text-[11px] text-gray-400 mt-2">不上传将随机分配默认头像</span>
+              <span class="mt-2 text-[11px] text-gray-400">不上传将随机分配默认头像</span>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">昵称 (选填)</label>
+              <label class="mb-1 block text-sm font-medium text-gray-700">昵称（可选）</label>
               <input
                 v-model="registerForm.nickname"
                 type="text"
-                class="w-full px-4 py-2.5 bg-[#F7F7F7] border border-transparent rounded-xl focus:bg-white focus:border-red-400 focus:ring-4 focus:ring-red-50 transition-all outline-none text-[14px] text-gray-800 placeholder-gray-400"
-                placeholder="如果不填，将自动生成"
-              >
+                class="w-full rounded-xl border border-transparent bg-[#F7F7F7] px-4 py-2.5 text-[14px] text-gray-800 outline-none transition-all placeholder-gray-400 focus:border-red-400 focus:bg-white focus:ring-4 focus:ring-red-50"
+                placeholder="留空将自动生成"
+              />
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">性别</label>
-              <div class="flex gap-3 mt-1">
-                <button 
+              <label class="mb-1 block text-sm font-medium text-gray-700">性别</label>
+              <div class="mt-1 flex gap-3">
+                <button
                   type="button"
-                  @click="registerForm.gender = 1"
-                  class="flex-1 py-2 rounded-xl text-[13px] font-medium transition-all duration-200"
+                  class="flex-1 rounded-xl py-2 text-[13px] font-medium transition-all duration-200"
                   :class="registerForm.gender === 1 ? 'bg-[#EBF3FF] text-[#1E90FF] ring-1 ring-[#1E90FF]' : 'bg-[#F7F7F7] text-gray-500 hover:bg-gray-100'"
+                  @click="registerForm.gender = 1"
                 >
-                  ♂ 男生
+                  男
                 </button>
-                <button 
+                <button
                   type="button"
-                  @click="registerForm.gender = 0"
-                  class="flex-1 py-2 rounded-xl text-[13px] font-medium transition-all duration-200"
+                  class="flex-1 rounded-xl py-2 text-[13px] font-medium transition-all duration-200"
                   :class="registerForm.gender === 0 ? 'bg-[#FFECF0] text-[#FF4D85] ring-1 ring-[#FF4D85]' : 'bg-[#F7F7F7] text-gray-500 hover:bg-gray-100'"
+                  @click="registerForm.gender = 0"
                 >
-                  ♀ 女生
+                  女
                 </button>
-                <button 
+                <button
                   type="button"
-                  @click="registerForm.gender = 2"
-                  class="flex-1 py-2 rounded-xl text-[13px] font-medium transition-all duration-200"
+                  class="flex-1 rounded-xl py-2 text-[13px] font-medium transition-all duration-200"
                   :class="registerForm.gender === 2 ? 'bg-gray-800 text-white ring-1 ring-gray-800' : 'bg-[#F7F7F7] text-gray-500 hover:bg-gray-100'"
+                  @click="registerForm.gender = 2"
                 >
                   保密
                 </button>
               </div>
             </div>
 
-            <div class="h-px bg-gray-100 my-4"></div>
+            <div class="my-4 h-px bg-gray-100"></div>
 
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">账号 (必填)</label>
+              <label class="mb-1 block text-sm font-medium text-gray-700">用户名</label>
               <input
                 v-model="registerForm.username"
                 type="text"
                 required
-                class="w-full px-4 py-2.5 bg-[#F7F7F7] border border-transparent rounded-xl focus:bg-white focus:border-red-400 focus:ring-4 focus:ring-red-50 transition-all outline-none text-[14px] text-gray-800 placeholder-gray-400"
+                class="w-full rounded-xl border border-transparent bg-[#F7F7F7] px-4 py-2.5 text-[14px] text-gray-800 outline-none transition-all placeholder-gray-400 focus:border-red-400 focus:bg-white focus:ring-4 focus:ring-red-50"
                 placeholder="用于登录的账号"
-              >
+              />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">密码</label>
+              <label class="mb-1 block text-sm font-medium text-gray-700">密码</label>
               <input
                 v-model="registerForm.password"
                 type="password"
                 required
-                class="w-full px-4 py-2.5 bg-[#F7F7F7] border border-transparent rounded-xl focus:bg-white focus:border-red-400 focus:ring-4 focus:ring-red-50 transition-all outline-none text-[14px] text-gray-800 placeholder-gray-400"
+                class="w-full rounded-xl border border-transparent bg-[#F7F7F7] px-4 py-2.5 text-[14px] text-gray-800 outline-none transition-all placeholder-gray-400 focus:border-red-400 focus:bg-white focus:ring-4 focus:ring-red-50"
                 placeholder="请输入密码"
-              >
+              />
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">确认密码</label>
+              <label class="mb-1 block text-sm font-medium text-gray-700">确认密码</label>
               <input
                 v-model="registerForm.confirmPassword"
                 type="password"
                 required
-                class="w-full px-4 py-2.5 bg-[#F7F7F7] border border-transparent rounded-xl focus:bg-white focus:border-red-400 focus:ring-4 focus:ring-red-50 transition-all outline-none text-[14px] text-gray-800 placeholder-gray-400"
+                class="w-full rounded-xl border border-transparent bg-[#F7F7F7] px-4 py-2.5 text-[14px] text-gray-800 outline-none transition-all placeholder-gray-400 focus:border-red-400 focus:bg-white focus:ring-4 focus:ring-red-50"
                 placeholder="请再次输入密码"
-              >
+              />
             </div>
           </div>
 
-          <div v-if="error" class="p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div v-if="error" class="rounded-lg border border-red-200 bg-red-50 p-3">
             <p class="text-sm text-red-600">{{ error }}</p>
           </div>
 
           <button
             type="submit"
             :disabled="isLoading"
-            class="w-full py-3 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors mt-2"
+            class="mt-2 w-full rounded-lg bg-red-500 py-3 font-medium text-white transition-colors hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {{ isLoading ? (activeTab === 'login' ? '登录中...' : '注册中...') : (activeTab === 'login' ? '登录' : '注册') }}
           </button>
         </div>
       </form>
 
-      <div class="p-6 pt-0 text-center border-t border-gray-50 mt-2">
-        <p class="text-sm text-gray-500 mt-4">
+      <div class="mt-2 border-t border-gray-50 p-6 pt-0 text-center">
+        <p class="mt-4 text-sm text-gray-500">
           {{ isLoginMode ? '还没有账号？' : '已有账号？' }}
-          <button
-            @click="switchMode"
-            class="text-red-500 hover:text-red-600 font-medium"
-          >
+          <button class="font-medium text-red-500 hover:text-red-600" @click="switchMode">
             {{ isLoginMode ? '立即注册' : '立即登录' }}
           </button>
         </p>
@@ -201,9 +189,10 @@
 <script setup lang="ts">
 import { ref, reactive, watch, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { uploadFile } from '@/modules/upload/upload.api'
 import { post, get } from '@/utils/request'
 import { ElMessage } from 'element-plus'
-import type { LoginRequest, RegisterRequest } from '@/types'
+import type { LoginRequest, RegisterRequest, UserInfo } from '@/types'
 
 const emit = defineEmits<{ close: [] }>()
 const authStore = useAuthStore()
@@ -212,23 +201,22 @@ const isLoading = ref(false)
 const error = ref('')
 const activeTab = ref<'login' | 'register'>('login')
 
-// 登录表单
 const loginForm = reactive<LoginRequest>({
   username: '',
-  password: ''
+  password: '',
 })
 
-// 注册表单 (新增了三个字段)
-const registerForm = reactive<RegisterRequest & { confirmPassword: string; nickname: string; gender: number; avatarUrl: string }>({
+const registerForm = reactive<
+  RegisterRequest & { confirmPassword: string; nickname: string; gender: number; avatarUrl: string }
+>({
   username: '',
   password: '',
   confirmPassword: '',
   nickname: '',
-  gender: 2,  // 默认保密
-  avatarUrl: ''
+  gender: 2,
+  avatarUrl: '',
 })
 
-// =============== 🌟 头像上传逻辑 ===============
 const fileInput = ref<HTMLInputElement | null>(null)
 
 const triggerFileInput = () => {
@@ -240,37 +228,24 @@ const handleFileUpload = async (event: Event) => {
   const file = target.files?.[0]
   if (!file) return
 
-  // 简单验证大小 (最大 10MB)
   if (file.size > 10 * 1024 * 1024) {
     error.value = '图片大小不能超过 10MB'
     return
   }
 
-  const formData = new FormData()
-  formData.append('file', file)
-
   try {
     isLoading.value = true
     error.value = ''
-    
-    // 调用我们后端写好的 FileUploadController
-    const response = await post<string>('/upload', formData)
 
-    if (response.code === 1) {
-      // 拿到后端返回的图片网络地址，赋值给表单，这样页面上就会显示预览图！
-      registerForm.avatarUrl = response.data
-      ElMessage.success('头像上传成功')
-    } else {
-      error.value = response.msg || '头像上传失败'
-    }
+    registerForm.avatarUrl = await uploadFile(file)
+    ElMessage.success('头像上传成功')
   } catch (err: any) {
-    error.value = '图片上传失败，请检查网络或后端配置'
+    error.value = '图片上传失败，请检查网络或服务端配置'
   } finally {
     isLoading.value = false
     if (fileInput.value) fileInput.value.value = ''
   }
 }
-// ==============================================
 
 const isLoginMode = computed(() => activeTab.value === 'login')
 
@@ -292,17 +267,16 @@ const handleLogin = async () => {
     params.append('username', loginForm.username)
     params.append('password', loginForm.password)
 
-    const response = await post('/user/login', params)
+    const response = await post<string>('/user/login', params)
 
     if (response.code === 1) {
       authStore.setToken(response.data)
 
-      // 🌟 核心 Bug 修复地！将那个旧的 /user/info/detail 彻底改为了 /user/me
-      const userResponse = await get('/user/me')
-      
+      const userResponse = await get<UserInfo>('/user/me')
+
       if (userResponse.code === 1) {
         authStore.setUserInfo(userResponse.data)
-        ElMessage.success('登录成功！')
+        ElMessage.success('登录成功')
         emit('close')
         setTimeout(() => {
           window.location.reload()
@@ -330,7 +304,6 @@ const handleRegister = async () => {
     isLoading.value = true
     error.value = ''
 
-    // 将所有新加入的字段（性别、昵称、头像）一起打包发给后端
     const params = new URLSearchParams()
     params.append('username', registerForm.username)
     params.append('password', registerForm.password)
@@ -341,7 +314,7 @@ const handleRegister = async () => {
     const response = await post('/user/register', params)
 
     if (response.code === 1) {
-      ElMessage.success('注册成功！请登录')
+      ElMessage.success('注册成功，请登录')
       activeTab.value = 'login'
       loginForm.username = registerForm.username
       loginForm.password = ''
@@ -358,9 +331,9 @@ const handleRegister = async () => {
 
 const handleSubmit = () => {
   if (activeTab.value === 'login') {
-    handleLogin()
+    void handleLogin()
   } else {
-    handleRegister()
+    void handleRegister()
   }
 }
 </script>

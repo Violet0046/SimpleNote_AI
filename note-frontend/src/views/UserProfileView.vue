@@ -1,165 +1,72 @@
-<template>
-  <main class="flex-1 flex flex-col bg-white h-screen overflow-y-auto scroll-smooth no-scrollbar relative">
-    
-    <div class="sticky top-0 z-50 bg-white pt-[20px] pb-[10px] flex justify-center w-full">
-      <div class="w-[480px] xl:w-[520px] 2xl:w-[580px] h-[54px] rounded-full bg-[#F7F7F7] border-none outline-none ring-0 shadow-none flex items-center px-4">
-        <input type="text" placeholder="搜索小红书" class="flex-1 bg-transparent outline-none text-sm" />
-        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-      </div>
-    </div>
+﻿<template>
+  <main ref="scrollContainer" class="no-scrollbar relative flex h-screen flex-1 flex-col overflow-y-auto scroll-smooth bg-white">
+    <AppSearchBar placeholder="Search Notes" sticky z-class="z-50" />
 
-    <div class="flex flex-col items-center pt-[20px] pb-[40px]">
-      <div class="flex items-center gap-[30px] w-full max-w-[800px] px-[40px]">
-        <div class="w-[140px] h-[140px] rounded-full overflow-hidden flex-shrink-0 bg-gray-100 border border-gray-200">
-          <img :src="userInfo.avatar || 'http://localhost:8080/1.jpg'" class="w-full h-full object-cover" />
-        </div>
-        <div class="flex flex-col gap-[10px] flex-1">
-          <div class="flex items-center flex-wrap gap-x-20 gap-y-3 w-full">
-            <h1 class="text-[28px] font-semibold text-gray-900 max-w-[280px] truncate" :title="userInfo.nickname || authStore.getUsername">
-              {{ userInfo.nickname || authStore.getUsername }}
-            </h1>
-            
-            <button 
-              @click="showEditModal = true"
-              class="px-5 py-1.5 rounded-full font-semibold text-[14px] flex-shrink-0 transition-colors border border-gray-300 text-gray-700 hover:bg-gray-50"
-            >
-              编辑资料
-            </button>
-          </div>
-          <div class="flex items-center gap-4 text-[13px] text-gray-500">
-            <span>小红书号：{{ userInfo.id }}</span>
-            <span v-if="userInfo.ipLocation">IP属地：{{ userInfo.ipLocation }}</span>
-            <div v-if="userInfo.gender === 1" class="flex items-center justify-center w-[22px] h-[22px] rounded-full bg-[#EBF3FF] text-[#1E90FF] text-[13px] font-bold">
-              ♂
-            </div>
-            <div v-if="userInfo.gender === 0" class="flex items-center justify-center w-[22px] h-[22px] rounded-full bg-[#FFECF0] text-[#FF4D85] text-[13px] font-bold">
-              ♀
-            </div>
-          </div>
-          <p class="text-[14px] text-gray-700 mt-1">{{ userInfo.intro || '还没有简介哦~' }}</p>
-          
-          <div class="flex gap-6 mt-2 text-[14px]">
-            <div class="cursor-pointer transition-colors duration-200" 
-                 :class="activeTab === 'following' ? 'text-[#FF2442] font-bold' : 'text-gray-600 hover:text-black'"
-                 @click="switchTab('following')">
-              <span class="font-semibold mr-1" :class="activeTab === 'following' ? 'text-[#FF2442]' : 'text-gray-900'">{{ userInfo.followingCount || 0 }}</span>关注
-            </div>
-            
-            <div class="cursor-pointer transition-colors duration-200"
-                 :class="activeTab === 'followers' ? 'text-[#FF2442] font-bold' : 'text-gray-600 hover:text-black'"
-                 @click="switchTab('followers')">
-              <span class="font-semibold mr-1" :class="activeTab === 'followers' ? 'text-[#FF2442]' : 'text-gray-900'">{{ userInfo.followersCount || 0 }}</span>粉丝
-            </div>
-            
-            <div class="text-gray-600">
-              <span class="font-semibold text-gray-900 mr-1">{{ userInfo.likesCount || 0 }}</span>获赞
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <ProfileHeader
+      :user-info="userInfo"
+      :display-name="userInfo.nickname || authStore.getUsername"
+      :stats="profileStats"
+      :show-action="true"
+      :action-label="COPY.editProfile"
+      :empty-bio-text="COPY.emptyBio"
+      @action="showEditModal = true"
+      @stat-click="handleHeaderTabSelect"
+    />
 
-    <div class="sticky top-[84px] z-40 bg-white w-full flex justify-center border-b border-gray-100 pt-[10px]">
-      <div class="flex gap-12 px-4 h-[48px]">
-        <button @click="switchTab('posts')" class="relative h-full px-2 text-[16px] transition-colors" :class="activeTab === 'posts' ? 'text-gray-900 font-semibold' : 'text-gray-500 hover:text-gray-700'">
-          笔记
-          <div v-show="activeTab === 'posts'" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[3px] bg-[#FF2442] rounded-full"></div>
-        </button>
+    <ProfileTabs :items="profileTabs" :active-tab="activeTab" @select="switchTab" />
 
-        <button @click="switchTab('liked')" class="relative h-full px-2 text-[16px] transition-colors" :class="activeTab === 'liked' ? 'text-gray-900 font-semibold' : 'text-gray-500 hover:text-gray-700'">
-          赞过
-          <div v-show="activeTab === 'liked'" class="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[3px] bg-[#FF2442] rounded-full"></div>
-        </button>
-
-        <button v-show="activeTab === 'following'" class="relative h-full px-2 text-[16px] font-semibold text-gray-900 transition-colors">
-          关注
-          <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[3px] bg-[#FF2442] rounded-full"></div>
-        </button>
-
-        <button v-show="activeTab === 'followers'" class="relative h-full px-2 text-[16px] font-semibold text-gray-900 transition-colors">
-          粉丝
-          <div class="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[3px] bg-[#FF2442] rounded-full"></div>
-        </button>
-      </div>
-    </div>
-
-    <div class="w-full bg-white px-[6px] pt-[20px] pb-[60px]">
-      
-<div v-if="activeTab === 'posts' || activeTab === 'liked'">
-        <div v-if="loading && userPosts.length === 0" class="flex justify-center mt-10">
-          <svg class="animate-spin h-8 w-8 text-[#FF2442]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+    <div class="w-full bg-white px-[6px] pb-[60px] pt-[20px]">
+      <section v-if="isPostTab">
+        <div v-if="loading && userPosts.length === 0" class="mt-10 flex justify-center">
+          <svg class="h-8 w-8 animate-spin text-[#FF2442]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
         </div>
 
-        <div v-if="userPosts.length > 0" class="flex gap-[20px] items-start w-full min-h-[101vh]">
-          <div 
-            v-for="(colPosts, colIndex) in waterfallColumns" 
-            :key="colIndex"
-            class="flex-1 flex flex-col gap-[20px]"
-          >
-            <PostCard
-              v-for="post in colPosts"
-              :key="`${post.id}-${refreshKey}`"
-              :post="post"
-              :is-liked="likeStore.isPostLiked(post.id)"
-              @click="(postObj, rect) => openPostDetail(postObj, rect)"
-              @like="handleLike"
-              class="w-full"
-            />
-          </div>
+        <PostWaterfall
+          v-else-if="hasWaterfallPosts"
+          :columns="waterfallColumns"
+          :is-post-liked="likeStore.isPostLiked"
+          :set-column-ref="setColumnRef"
+          @post-click="openPostDetail"
+          @post-like="handleLike"
+        />
+
+        <div v-else class="mt-[100px] flex flex-col items-center justify-center opacity-70">
+          <svg class="mb-4 h-[80px] w-[80px] text-gray-200" viewBox="0 0 1024 1024" fill="currentColor">
+            <path d="M512 85.333333c-235.648 0-426.666667 191.018667-426.666667 426.666667s191.018667 426.666667 426.666667 426.666667 426.666667-191.018667 426.666667-426.666667S747.648 85.333333 512 85.333333z m0 768c-188.501333 0-341.333333-152.832-341.333333-341.333333 0-188.501333 152.832-341.333333 341.333333-341.333333s341.333333 152.832 341.333333 341.333333c0 188.501333-152.832 341.333333-341.333333 341.333333zM384 469.333333c-23.552 0-42.666667 19.114667-42.666667 42.666667s19.114667 42.666667 42.666667 42.666667 42.666667-19.114667 42.666667-42.666667-19.114667-42.666667-42.666667-42.666667z m256 0c-23.552 0-42.666667 19.114667-42.666667 42.666667s19.114667 42.666667 42.666667 42.666667 42.666667-19.114667 42.666667-42.666667-19.114667-42.666667-42.666667-42.666667z m-128 213.333334c-70.698667 0-128-57.301333-128-128h256c0 70.698667-57.301333 128-128 128z"></path>
+          </svg>
+          <span class="text-[14px] text-gray-500">{{ activeTab === 'posts' ? COPY.emptyPosts : COPY.emptyLikedPosts }}</span>
         </div>
 
-        <div v-if="!loading && userPosts.length === 0" class="flex flex-col items-center justify-center mt-[100px] opacity-70">
-          <svg class="w-[80px] h-[80px] text-gray-200 mb-4" viewBox="0 0 1024 1024" fill="currentColor"><path d="M512 85.333333c-235.648 0-426.666667 191.018667-426.666667 426.666667s191.018667 426.666667 426.666667 426.666667 426.666667-191.018667 426.666667-426.666667S747.648 85.333333 512 85.333333z m0 768c-188.501333 0-341.333333-152.832-341.333333-341.333333 0-188.501333 152.832-341.333333 341.333333-341.333333s341.333333 152.832 341.333333 341.333333c0 188.501333-152.832 341.333333-341.333333 341.333333zM384 469.333333c-23.552 0-42.666667 19.114667-42.666667 42.666667s19.114667 42.666667 42.666667 42.666667 42.666667-19.114667 42.666667-42.666667-19.114667-42.666667-42.666667-42.666667z m256 0c-23.552 0-42.666667 19.114667-42.666667 42.666667s19.114667 42.666667 42.666667 42.666667 42.666667-19.114667 42.666667-42.666667-19.114667-42.666667-42.666667-42.666667z m-128 213.333334c-70.698667 0-128-57.301333-128-128h256c0 70.698667-57.301333 128-128 128z"></path></svg>
-          <span class="text-[14px] text-gray-500">
-            {{ activeTab === 'posts' ? '你还没有发布任何内容哦' : '你还没有点赞过任何内容哦' }}
-          </span>
-        </div>
-        
-        <div class="w-full flex flex-col items-center py-8">
-          <div v-if="loading && userPosts.length > 0" class="flex items-center gap-2 text-gray-400 mb-4">
-            <svg class="animate-spin h-5 w-5 text-[#FF2442]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            <span class="text-sm font-medium">加载中...</span>
+        <div class="flex w-full flex-col items-center py-8">
+          <div v-if="loading && userPosts.length > 0" class="mb-4 flex items-center gap-2 text-gray-400">
+            <svg class="h-5 w-5 animate-spin text-[#FF2442]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-sm font-medium">{{ COPY.loadingMore }}</span>
           </div>
           <div ref="loadMoreTrigger" class="h-10 w-full bg-transparent" style="pointer-events: none;"></div>
         </div>
-      </div>
+      </section>
 
-      <div v-else-if="activeTab === 'following' || activeTab === 'followers'" class="w-full max-w-[1100px] mx-auto py-4 px-4">
-        
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
-          
-          <div v-for="user in userList" :key="user.id" class="flex flex-col items-center p-5 bg-white rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md hover:-translate-y-1">
-            
-            <img :src="user.avatar || 'http://localhost:8080/1.jpg'" class="w-16 h-16 rounded-full object-cover border border-gray-100 mb-3 cursor-pointer hover:opacity-90" @click="goToUserProfile(user.id)" />
-            
-            <span class="text-[15px] font-bold text-gray-900 w-full text-center truncate cursor-pointer hover:text-blue-600 transition-colors" @click="goToUserProfile(user.id)">
-              {{ user.nickname }}
-            </span>
-            
-            <span class="text-[12px] text-gray-400 w-full text-center truncate mt-1 mb-4">
-              {{ user.intro || '这个人很懒，什么都没写~' }}
-            </span>
-
-            <button 
-              v-if="user.id !== authStore.userInfo?.id"
-              @click="handleListFollow(user)"
-              class="w-full py-1.5 rounded-full text-[13px] font-medium transition-colors"
-              :class="getFollowBtnInfo(user).class"
-            >
-              {{ getFollowBtnInfo(user).text }}
-            </button>
-          </div>
-        </div>
-
-        <div class="py-10 text-center">
-          <button v-if="hasMoreUsers" @click="loadMoreUsers" class="px-8 py-2 rounded-full border border-gray-200 text-gray-500 text-sm hover:bg-gray-50 transition-colors">
-            {{ isLoadingUsers ? '加载中...' : '加载更多' }}
-          </button>
-          <span v-else-if="userList.length > 0" class="text-sm text-gray-400">没有更多了~</span>
-          <span v-else class="text-sm text-gray-400">列表空空如也</span>
-        </div>
-      </div>
-
+      <RelationUserGrid
+        v-else
+        :users="userList"
+        :auth-user-id="authStore.userInfo?.id"
+        :has-more="hasMoreUsers"
+        :loading="isLoadingUsers"
+        :intro-fallback="COPY.relationIntro"
+        :empty-text="COPY.emptyRelation"
+        :load-more-text="COPY.loadMore"
+        :loading-text="COPY.loadingMore"
+        :no-more-text="COPY.noMore"
+        :resolve-follow-button="resolveFollowButtonInfo"
+        @follow="handleListFollow"
+        @load-more="loadMoreUsers"
+      />
     </div>
 
     <PostDetailModal
@@ -169,306 +76,306 @@
       @close="closePostDetail"
       @like-toggle="selectedPost ? handleModalLike(selectedPost.id) : null"
     />
-    <EditProfileModal 
-      :visible="showEditModal" 
+
+    <EditProfileModal
+      :visible="showEditModal"
       :user-info="userInfo"
       @close="showEditModal = false"
-      @success="fetchUserInfo"
+      @success="handleProfileUpdated"
     />
   </main>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted, ref, watch } from 'vue'
+
+import { ElMessage } from 'element-plus'
+
+import EditProfileModal from '@/components/EditProfileModal.vue'
+import PostDetailModal from '@/components/PostDetailModal.vue'
+import PostWaterfall from '@/modules/post/components/PostWaterfall.vue'
+import {
+  fetchCurrentUserProfile,
+  fetchLikedPosts,
+  fetchOwnProfilePosts,
+  fetchProfileRelations,
+  toggleFollowUser,
+} from '@/modules/profile/profile.api'
+import { useProfilePostFeed } from '@/modules/profile/composables/useProfilePostFeed'
+import { useRelationList } from '@/modules/profile/composables/useRelationList'
+import ProfileHeader from '@/modules/profile/components/ProfileHeader.vue'
+import ProfileTabs from '@/modules/profile/components/ProfileTabs.vue'
+import RelationUserGrid from '@/modules/profile/components/RelationUserGrid.vue'
+import type { NormalizedRelationUser, OwnProfileTabKey, RelationUser } from '@/modules/profile/profile.types'
+import { createEmptyUserInfo } from '@/modules/profile/profile.types'
+import { getErrorMessage, getFollowButtonInfo, normalizeRelationUser } from '@/modules/profile/profile.utils'
+import { useInfiniteScroll } from '@/shared/composables/useInfiniteScroll'
+import { useMasonryColumns } from '@/shared/composables/useMasonryColumns'
+import { usePostDetailModal } from '@/shared/composables/usePostDetailModal'
+import AppSearchBar from '@/shared/ui/AppSearchBar.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useLikeStore } from '@/stores/like'
-import { get, post } from '@/utils/request'
-import EditProfileModal from '@/components/EditProfileModal.vue'
-import { ElMessage } from 'element-plus'
-import PostCard from '@/components/PostCard.vue'
-import PostDetailModal from '@/components/PostDetailModal.vue'
-import type { Post, UserInfo } from '@/types'
+import type { Post } from '@/types'
 
-const showEditModal = ref(false)
-const router = useRouter()
-const route = useRoute()
+const COPY = {
+  editProfile: '\u7f16\u8f91\u8d44\u6599',
+  emptyBio: '\u8fd8\u6ca1\u6709\u7b80\u4ecb\u54e6~',
+  emptyPosts: '\u4f60\u8fd8\u6ca1\u6709\u53d1\u5e03\u4efb\u4f55\u5185\u5bb9\u54e6',
+  emptyLikedPosts: '\u4f60\u8fd8\u6ca1\u6709\u70b9\u8d5e\u8fc7\u4efb\u4f55\u5185\u5bb9\u54e6',
+  relationIntro: '\u8fd9\u4e2a\u4eba\u5f88\u61d2\uff0c\u4ec0\u4e48\u90fd\u6ca1\u5199~',
+  loadMore: '\u52a0\u8f7d\u66f4\u591a',
+  loadingMore: '\u52a0\u8f7d\u4e2d...',
+  noMore: '\u6ca1\u6709\u66f4\u591a\u4e86',
+  emptyRelation: '\u5217\u8868\u6682\u65f6\u4e3a\u7a7a',
+  loginFirst: '\u8bf7\u5148\u767b\u5f55',
+  actionFailed: '\u64cd\u4f5c\u5931\u8d25',
+  fetchListFailed: '\u83b7\u53d6\u5217\u8868\u5931\u8d25',
+  fetchUserFailed: '\u83b7\u53d6\u7528\u6237\u4fe1\u606f\u5931\u8d25',
+  tabs: {
+    posts: '\u7b14\u8bb0',
+    liked: '\u8d5e\u8fc7',
+    following: '\u5173\u6ce8',
+    followers: '\u7c89\u4e1d',
+    likes: '\u83b7\u8d5e',
+  },
+  followButton: {
+    mutual: '\u4e92\u7c89',
+    following: '\u5df2\u5173\u6ce8',
+    followBack: '\u56de\u5173',
+    follow: '\u5173\u6ce8',
+  },
+} as const
+
 const authStore = useAuthStore()
 const likeStore = useLikeStore()
 
-const userInfo = ref<UserInfo>({
-  id: 0,
-  nickname: '',
-  avatar: '',
-  intro: '',
-  gender: 0,
-  ipLocation: '',
-  followingCount: 0,
-  followersCount: 0,
-  likesCount: 0
+const scrollContainer = ref<HTMLElement | null>(null)
+const showEditModal = ref(false)
+const userInfo = ref(createEmptyUserInfo())
+const activeTab = ref<OwnProfileTabKey>('posts')
+
+const {
+  appendItems,
+  columnCount,
+  columns: waterfallColumns,
+  relayout,
+  setColumnRef,
+  updateColumnCount,
+} = useMasonryColumns<Post>({
+  defaultColumns: 4,
+  strategy: 'sequential',
+  breakpoints: [
+    { minWidth: 1280, columns: 4 },
+    { minWidth: 768, columns: 3 },
+    { minWidth: 0, columns: 2 },
+  ],
 })
 
-const activeTab = ref('posts')
-
-const userList = ref<any[]>([])
-const userListPage = ref(1)
-const hasMoreUsers = ref(true)
-const isLoadingUsers = ref(false)
-
-const fetchUserList = async (reset = false) => {
-  if (reset) {
-    userListPage.value = 1
-    userList.value = []
-    hasMoreUsers.value = true
-  }
-  
-  if (!hasMoreUsers.value || isLoadingUsers.value) return
-  isLoadingUsers.value = true
-
-  try {
-    const endpoint = activeTab.value === 'following' ? 'following' : 'followers'
-    const res = await get<any>(`/follow/${endpoint}/${authStore.userInfo?.id}`, {
-      pageNum: userListPage.value,
-      pageSize: 20
-    })
-    
-    if (res.code === 1) {
-      // 🌟 修复 1：明确告诉 TS 这是一个 any 类型的数组
-      let newItems: any[] = [] 
-      if (res.data && Array.isArray(res.data.items)) {
-        newItems = res.data.items 
-      } else if (Array.isArray(res.data)) {
-        newItems = res.data       
-      }
-      
-      // 🌟 修复 2：给参数 u 显式加上 (u: any)，彻底消灭报错！
-      newItems = newItems.map((u: any) => {
-        const following = u.isFollowing === 1 || u.following === 1 || u.isFollowing === true || u.following === true
-        const follower = u.isFollower === 1 || u.follower === 1 || u.isFollower === true || u.follower === true
-        return { ...u, isFollowing: following, isFollower: follower }
-      })
-      
-      userList.value.push(...newItems)
-      hasMoreUsers.value = newItems.length === 20
+const {
+  posts: userPosts,
+  loading,
+  hasMore,
+  fetchPosts,
+  reset: resetPostState,
+  applyLike,
+} = useProfilePostFeed({
+  loadPage: async (pageNum, pageSize) => {
+    if (activeTab.value === 'liked') {
+      return fetchLikedPosts({ pageNum, pageSize })
     }
-  } catch (e) {
-    console.error('获取列表失败')
-  } finally {
-    isLoadingUsers.value = false
-  }
-}
 
-const loadMoreUsers = () => {
-  userListPage.value++
-  fetchUserList()
-}
-
-// 🌟 根据抹平后的状态，展示正确的文案
-const getFollowBtnInfo = (user: any) => {
-  if (user.isFollowing && user.isFollower) return { text: '已互粉', class: 'bg-gray-100 text-gray-500 hover:bg-gray-200' }
-  if (user.isFollowing && !user.isFollower) return { text: '已关注', class: 'bg-gray-100 text-gray-500 hover:bg-gray-200' }
-  if (!user.isFollowing && user.isFollower) return { text: '回关', class: 'bg-[#FF2442] text-white hover:bg-red-600' }
-  return { text: '关注', class: 'bg-[#FF2442] text-white hover:bg-red-600' }
-}
-
-const handleListFollow = async (user: any) => {
-  if (!authStore.isLoggedIn) return ElMessage.warning('请先登录哦')
-  try {
-    const res = await post(`/follow/${user.id}`)
-    if (res.code === 1) {
-      user.isFollowing = !user.isFollowing
-      
-      if (user.isFollowing) {
-        userInfo.value.followingCount! += 1
-      } else {
-        userInfo.value.followingCount! = Math.max(0, userInfo.value.followingCount! - 1)
-      }
-    }
-  } catch (e) {
-    ElMessage.error('操作失败')
-  }
-}
-
-// =========== 笔记/赞过 列表逻辑 ===========
-const userPosts = ref<Post[]>([])
-const loading = ref(false)
-const hasMore = ref(true)
-const currentPage = ref(1)
-const pageSize = ref(15)
-const refreshKey = ref(0) 
-
-const showModal = ref(false)
-const selectedPost = ref<Post | null>(null)
-const triggerRect = ref<DOMRect | null>(null)
-
-const loadMoreTrigger = ref<HTMLElement>()
-let observer: IntersectionObserver | null = null
-const goToUserProfile = (userId?: number) => {
-  if (!userId) return
-  // 使用 resolve 解析出完整 URL，然后用 window.open 在新标签页打开
-  const routeUrl = router.resolve(`/user/${userId}`)
-  window.open(routeUrl.href, '_blank')
-}
-const colCount = ref(5)
-const updateColCount = () => {
-  const width = window.innerWidth
-  if (width < 768) colCount.value = 2
-  else if (width < 1024) colCount.value = 3
-  else if (width < 1280) colCount.value = 4
-  else colCount.value = 4
-}
-
-const waterfallColumns = computed(() => {
-  const cols: Post[][] = Array.from({ length: colCount.value }, () => [])
-  userPosts.value.forEach((post, index) => {
-    const colIndex = index % colCount.value
-    if (cols[colIndex]) {
-      cols[colIndex].push(post)
-    }
-  })
-  return cols
+    return fetchOwnProfilePosts({ pageNum, pageSize })
+  },
+  onAppend: appendItems,
+  onReplace: relayout,
+  pageSize: 15,
 })
 
-const fetchUserInfo = async () => {
-  try {
-    const response = await get<any>('/user/me')
-    if (response.code === 1) {
-      userInfo.value = response.data
+const {
+  items: userList,
+  hasMore: hasMoreUsers,
+  loading: isLoadingUsers,
+  fetchItems: fetchRelationUsers,
+  loadMore: loadMoreRelationUsers,
+} = useRelationList<NormalizedRelationUser>({
+  loadPage: async (pageNum, pageSize) => {
+    const currentUserId = authStore.userInfo?.id ?? userInfo.value.id
+    if (!currentUserId) {
+      return []
     }
+
+    const relationType = activeTab.value === 'following' ? 'following' : 'followers'
+    const relations = await fetchProfileRelations({
+      userId: currentUserId,
+      relationType,
+      pageNum,
+      pageSize,
+    })
+
+    return relations.map(normalizeRelationUser)
+  },
+  pageSize: 20,
+})
+
+const {
+  selectedPost,
+  visible: showModal,
+  triggerRect,
+  openPostDetail,
+  closePostDetail,
+} = usePostDetailModal<Post>({ closeDelay: 300 })
+
+const isPostTab = computed(() => activeTab.value === 'posts' || activeTab.value === 'liked')
+const canLoadMorePosts = computed(() => hasMore.value && !loading.value && isPostTab.value)
+const hasWaterfallPosts = computed(() => waterfallColumns.value.some((column) => column.length > 0))
+
+const profileStats = computed(() => [
+  {
+    key: 'following',
+    label: COPY.tabs.following,
+    count: userInfo.value.followingCount || 0,
+    active: activeTab.value === 'following',
+    clickable: true,
+  },
+  {
+    key: 'followers',
+    label: COPY.tabs.followers,
+    count: userInfo.value.followersCount || 0,
+    active: activeTab.value === 'followers',
+    clickable: true,
+  },
+  {
+    key: 'likes',
+    label: COPY.tabs.likes,
+    count: userInfo.value.likesCount || 0,
+    active: false,
+    clickable: false,
+  },
+])
+
+const profileTabs = computed(() => [
+  { key: 'posts', label: COPY.tabs.posts },
+  { key: 'liked', label: COPY.tabs.liked },
+  { key: 'following', label: COPY.tabs.following, visible: activeTab.value === 'following' },
+  { key: 'followers', label: COPY.tabs.followers, visible: activeTab.value === 'followers' },
+])
+
+const resolveFollowButtonInfo = (user: RelationUser) => getFollowButtonInfo(user, COPY.followButton)
+
+const { targetRef: loadMoreTrigger } = useInfiniteScroll({
+  enabled: canLoadMorePosts,
+  onIntersect: async () => {
+    await loadUserPosts(true)
+  },
+  root: scrollContainer,
+  rootMargin: '600px',
+  threshold: 0.1,
+})
+
+watch(columnCount, async () => {
+  await relayout(userPosts.value)
+})
+
+const loadCurrentUserInfo = async () => {
+  try {
+    const profile = await fetchCurrentUserProfile()
+    userInfo.value = profile
+    authStore.setUserInfo(profile)
   } catch (error) {
-    ElMessage.error('获取用户信息失败')
+    ElMessage.error(getErrorMessage(error, COPY.fetchUserFailed))
   }
 }
 
-const fetchUserPosts = async (isLoadMore = false) => {
-  if (loading.value || (!isLoadMore && userPosts.value.length > 0)) return
-  loading.value = true
-  
+const loadUserPosts = async (isLoadMore = false) => {
   try {
-    let url = activeTab.value === 'posts' ? '/post/list/own' : '/post/list/liked'
-    const response = await get<any>(url, {
-      pageNum: currentPage.value,
-      pageSize: pageSize.value
-    })
-    
-    if (response.code === 1) {
-      const newPosts = response.data.items || response.data || []
-      if (isLoadMore) {
-        userPosts.value.push(...newPosts)
-      } else {
-        userPosts.value = newPosts
-      }
-      hasMore.value = newPosts.length === pageSize.value
-      currentPage.value++
+    await fetchPosts(isLoadMore)
+  } catch (error) {
+    ElMessage.error(getErrorMessage(error, COPY.fetchListFailed))
+  }
+}
+
+const resetPostFeed = async () => {
+  await resetPostState()
+  await loadUserPosts()
+}
+
+const loadRelationList = async (resetList = false) => {
+  try {
+    await fetchRelationUsers({ resetList })
+  } catch (error) {
+    ElMessage.error(getErrorMessage(error, COPY.fetchListFailed))
+  }
+}
+
+const loadMoreUsers = async () => {
+  try {
+    await loadMoreRelationUsers()
+  } catch (error) {
+    ElMessage.error(getErrorMessage(error, COPY.fetchListFailed))
+  }
+}
+
+const handleListFollow = async (user: RelationUser) => {
+  if (!authStore.isLoggedIn) {
+    ElMessage.warning(COPY.loginFirst)
+    authStore.showLoginModal()
+    return
+  }
+
+  try {
+    const relationUser = user as NormalizedRelationUser
+    await toggleFollowUser(relationUser.id)
+    relationUser.isFollowing = !relationUser.isFollowing
+
+    if (relationUser.isFollowing) {
+      userInfo.value.followingCount += 1
+    } else {
+      userInfo.value.followingCount = Math.max(0, userInfo.value.followingCount - 1)
     }
   } catch (error) {
-    ElMessage.error('获取列表失败')
-  } finally {
-    loading.value = false
+    ElMessage.error(getErrorMessage(error, COPY.actionFailed))
   }
 }
 
 const switchTab = (tabKey: string) => {
   if (activeTab.value === tabKey) return
-  activeTab.value = tabKey
-  
-  if (tabKey === 'posts' || tabKey === 'liked') {
-    currentPage.value = 1
-    hasMore.value = true
-    userPosts.value = []
-    fetchUserPosts()
-  } else {
-    fetchUserList(true)
+
+  activeTab.value = tabKey as OwnProfileTabKey
+  scrollContainer.value?.scrollTo({ top: 0, behavior: 'auto' })
+
+  if (isPostTab.value) {
+    void resetPostFeed()
+    return
   }
 
+  void loadRelationList(true)
 }
-watch(() => route.fullPath, (newPath) => {
-  // 假设你的个人主页路由是 /profile 或 /user/me，你可以根据实际修改这个路径判定
-  if (newPath === '/profile' || newPath === '/user') { 
-    activeTab.value = 'posts'
-    currentPage.value = 1
-    hasMore.value = true
-    userPosts.value = []
-    fetchUserPosts()
+
+const handleHeaderTabSelect = (tabKey: string) => {
+  if (tabKey === 'following' || tabKey === 'followers') {
+    switchTab(tabKey)
   }
-})
-
-const setupInfiniteScroll = () => {
-  if (!loadMoreTrigger.value) return
-  observer = new IntersectionObserver((entries) => {
-    // 🌟 去掉了对 loading 的强校验，交给 fetchUserPosts 内部去做防抖拦截，更加稳妥
-    if (entries[0]?.isIntersecting && hasMore.value && (activeTab.value === 'posts' || activeTab.value === 'liked')) {
-      fetchUserPosts(true)
-    }
-  }, { 
-    rootMargin: '600px', // 从 100 改为 600，丝滑无缝加载！
-    threshold: 0.1 
-  })
-  observer.observe(loadMoreTrigger.value)
-}
-
-const cleanupInfiniteScroll = () => {
-  if (observer) {
-    observer.disconnect()
-    observer = null
-  }
-}
-
-const openPostDetail = (post: Post, rect: DOMRect | null) => {
-  selectedPost.value = post
-  triggerRect.value = rect
-  showModal.value = true
-}
-
-const closePostDetail = () => {
-  showModal.value = false
-  setTimeout(() => { selectedPost.value = null }, 300)
 }
 
 const handleLike = (postId: number, isLiked: boolean) => {
   if (isLiked) likeStore.addLikedPost(postId)
   else likeStore.removeLikedPost(postId)
 
-  const targetPost = userPosts.value.find(p => p.id === postId)
-  if (targetPost) {
-    const currentCount = targetPost.likesCount ?? targetPost.likeCount ?? 0
-    targetPost.likesCount = isLiked ? currentCount + 1 : Math.max(0, currentCount - 1)
-    targetPost.likeCount = targetPost.likesCount
-  }
+  applyLike(postId, isLiked)
 }
 
 const handleModalLike = (postId: number) => {
   handleLike(postId, !likeStore.isPostLiked(postId))
 }
 
-onMounted(() => {
-  updateColCount()
-  window.addEventListener('resize', updateColCount)
-  fetchUserInfo()
-  
-  if (activeTab.value === 'posts' || activeTab.value === 'liked') {
-    fetchUserPosts()
-  } else {
-    fetchUserList(true)
-  }
-  
-  setTimeout(() => {
-    setupInfiniteScroll()
-  }, 500)
-})
+const handleProfileUpdated = async () => {
+  await loadCurrentUserInfo()
+}
 
-onUnmounted(() => {
-  window.removeEventListener('resize', updateColCount)
-  cleanupInfiniteScroll()
+onMounted(() => {
+  updateColumnCount()
+  void loadCurrentUserInfo()
+  void loadUserPosts()
 })
 </script>
 
-<style scoped>
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-</style>

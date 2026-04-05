@@ -13,18 +13,9 @@ declare module 'vue' {
   export interface GlobalComponents {
     AuthModal: typeof import('./../components/AuthModal.vue')['default']
     EditProfileModal: typeof import('./../components/EditProfileModal.vue')['default']
-    HelloWorld: typeof import('./../components/HelloWorld.vue')['default']
-    IconCommunity: typeof import('./../components/icons/IconCommunity.vue')['default']
-    IconDocumentation: typeof import('./../components/icons/IconDocumentation.vue')['default']
-    IconEcosystem: typeof import('./../components/icons/IconEcosystem.vue')['default']
-    IconSupport: typeof import('./../components/icons/IconSupport.vue')['default']
-    IconTooling: typeof import('./../components/icons/IconTooling.vue')['default']
     PostCard: typeof import('./../components/PostCard.vue')['default']
     PostDetailModal: typeof import('./../components/PostDetailModal.vue')['default']
-    PublishModal: typeof import('./../components/PublishModal.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    TheWelcome: typeof import('./../components/TheWelcome.vue')['default']
-    WelcomeItem: typeof import('./../components/WelcomeItem.vue')['default']
   }
 }

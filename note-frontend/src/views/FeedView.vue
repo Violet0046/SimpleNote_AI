@@ -1,47 +1,40 @@
-<template>
-  <main class="flex-1 flex flex-col bg-white h-screen overflow-hidden">
-    
-    <div class="flex justify-center items-center pt-[20px] pb-[10px] w-full z-10 bg-white">
-      <div class="w-[480px] xl:w-[520px] 2xl:w-[580px] h-[54px] rounded-full bg-[#F7F7F7] border-none outline-none flex items-center px-4">
-        <input type="text" placeholder="搜索小红书" class="flex-1 bg-transparent outline-none text-sm" />
-        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-      </div>
-    </div>
+﻿<template>
+  <main class="flex h-screen flex-1 flex-col overflow-hidden bg-white">
+    <AppSearchBar placeholder="Search Notes" z-class="z-10" />
 
-    <div ref="scrollContainer" class="flex-1 overflow-y-auto bg-white px-[6px] no-scrollbar pb-[40px]">
-      
-      <div class="w-full flex justify-center items-center overflow-hidden transition-all duration-300" :class="isRefreshing ? 'h-[60px] opacity-100' : 'h-0 opacity-0'">
-        <svg class="animate-spin -ml-1 mr-3 h-6 w-6 text-[#FF2442]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-        <span class="text-sm text-gray-500 font-medium">正在为你推荐...</span>
-      </div>
-
-      <div v-if="waterfallColumns.length > 0" class="flex gap-[20px] items-start w-full min-h-[101vh]">
-        <div 
-          v-for="(colPosts, colIndex) in waterfallColumns" 
-          :key="colIndex"
-          :ref="(el) => setColumnRef(el, colIndex)"
-          class="flex-1 flex flex-col gap-[20px]"
-        >
-          <PostCard
-            v-for="(post, index) in colPosts"
-            :key="`post_${post.id}_${index}_${refreshKey}`"
-            :post="post"
-            :is-liked="likeStore.isPostLiked(post.id)"
-            @click="(postObj, rect) => openPostDetail(postObj, rect)"
-            @like="handleLike"
-            class="w-full animate-fade-in-up"
-          />
-        </div>
+    <div ref="scrollContainer" class="no-scrollbar flex-1 overflow-y-auto bg-white px-[6px] pb-[40px]">
+      <div
+        class="flex w-full items-center justify-center overflow-hidden transition-all duration-300"
+        :class="isRefreshing ? 'h-[60px] opacity-100' : 'h-0 opacity-0'"
+      >
+        <svg class="-ml-1 mr-3 h-6 w-6 animate-spin text-[#FF2442]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="text-sm font-medium text-gray-500">Refreshing recommendations...</span>
       </div>
 
-      <div class="w-full flex flex-col items-center py-8">
-        <div v-if="loading && !isRefreshing" class="flex items-center gap-2 text-gray-400">
-          <svg class="animate-spin h-5 w-5 text-[#FF2442]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-          <span class="text-sm font-medium">加载中...</span>
+      <PostWaterfall
+        v-if="hasWaterfallPosts"
+        :columns="waterfallColumns"
+        :refresh-key="refreshKey"
+        :set-column-ref="setColumnRef"
+        :is-post-liked="likeStore.isPostLiked"
+        animated
+        @post-click="openPostDetail"
+        @post-like="handleLike"
+      />
+
+      <div class="flex w-full flex-col items-center py-8">
+        <div v-if="loading && !isRefreshing" class="mb-4 flex items-center gap-2 text-gray-400">
+          <svg class="h-5 w-5 animate-spin text-[#FF2442]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span class="text-sm font-medium">Loading...</span>
         </div>
         <div ref="loadMoreTrigger" class="h-10 w-full bg-transparent" style="pointer-events: none;"></div>
       </div>
-
     </div>
 
     <PostDetailModal
@@ -55,73 +48,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, inject, watch, nextTick } from 'vue'
-import { useLikeStore } from '@/stores/like'
-import { get } from '@/utils/request'
-import { ElMessage } from 'element-plus'
-import PostCard from '@/components/PostCard.vue'
+import { computed, inject, onMounted, ref, watch, type Ref } from 'vue'
+
 import PostDetailModal from '@/components/PostDetailModal.vue'
+import PostWaterfall from '@/modules/post/components/PostWaterfall.vue'
+import { useInfiniteScroll } from '@/shared/composables/useInfiniteScroll'
+import { useMasonryColumns } from '@/shared/composables/useMasonryColumns'
+import { usePostDetailModal } from '@/shared/composables/usePostDetailModal'
+import AppSearchBar from '@/shared/ui/AppSearchBar.vue'
+import { useLikeStore } from '@/stores/like'
 import type { Post, PostListResponse } from '@/types'
+import { get } from '@/utils/request'
 
-// 🌟 修复：获取滚动容器的 DOM 引用
 const scrollContainer = ref<HTMLElement | null>(null)
-
-// 列数与容器引用控制
-const colCount = ref(4)
-const waterfallColumns = ref<Post[][]>([[], [], [], []])
-const columnsRef = ref<HTMLElement[]>([]) 
-
-const setColumnRef = (el: any, index: number) => {
-  if (el) columnsRef.value[index] = el as HTMLElement
-}
-
-// 响应式重排布局
-const updateColCount = () => {
-  const width = window.innerWidth
-  let newColCount = 4
-  if (width < 768) newColCount = 2
-  else if (width < 1280) newColCount = 3
-  else newColCount = 4
-
-  if (waterfallColumns.value.length !== newColCount) {
-    colCount.value = newColCount
-    reflowWaterfall()
-  }
-}
-
-// 动态高度贪心分配算法
-const layoutPosts = async (items: Post[]) => {
-  for (const post of items) {
-    await nextTick() 
-    
-    let minIndex = 0
-    let minHeight = columnsRef.value[0]?.offsetHeight || 0
-    
-    for (let i = 1; i < colCount.value; i++) {
-      const h = columnsRef.value[i]?.offsetHeight || 0
-      if (h < minHeight) {
-        minHeight = h
-        minIndex = i
-      }
-    }
-    
-    const targetColumn = waterfallColumns.value[minIndex]
-    if (targetColumn) {
-      targetColumn.push(post)
-    }
-  }
-}
-
-// 重新排版
-const reflowWaterfall = async () => {
-  waterfallColumns.value = Array.from({ length: colCount.value }, () => [])
-  await nextTick()
-  if (posts.value.length > 0) {
-    await layoutPosts(posts.value)
-  }
-}
-
 const likeStore = useLikeStore()
+
 const posts = ref<Post[]>([])
 const loading = ref(false)
 const hasMore = ref(true)
@@ -130,143 +71,134 @@ const pageSize = ref(30)
 const isRefreshing = ref(false)
 const refreshKey = ref(0)
 
-const selectedPost = ref<Post | null>(null)
-const showModal = ref(false)
-const triggerRect = ref<DOMRect | null>(null)
-const loadMoreTrigger = ref<HTMLElement>()
-let observer: IntersectionObserver | null = null
+const refreshDiscoverTrigger = inject<Ref<number>>('refreshDiscoverTrigger', ref(0))
 
-const refreshDiscoverTrigger = inject('refreshDiscoverTrigger', ref(0))
-watch(refreshDiscoverTrigger, (newVal) => {
-  if (newVal > 0) handleForceRefresh()
+const {
+  appendItems,
+  columnCount,
+  columns: waterfallColumns,
+  relayout,
+  setColumnRef,
+  updateColumnCount,
+} = useMasonryColumns<Post>({
+  defaultColumns: 4,
+  strategy: 'balanced',
+  breakpoints: [
+    { minWidth: 1280, columns: 4 },
+    { minWidth: 768, columns: 3 },
+    { minWidth: 0, columns: 2 },
+  ],
 })
 
-const fetchPosts = async (isLoadMore = false, isForceRefresh = false) => {
+const {
+  selectedPost,
+  visible: showModal,
+  triggerRect,
+  openPostDetail,
+  closePostDetail,
+} = usePostDetailModal<Post>()
+
+const hasWaterfallPosts = computed(() => waterfallColumns.value.some((column) => column.length > 0))
+const canLoadMore = computed(() => hasMore.value && !loading.value && !isRefreshing.value)
+
+const { targetRef: loadMoreTrigger } = useInfiniteScroll({
+  enabled: canLoadMore,
+  onIntersect: async () => {
+    await fetchPosts(true)
+  },
+  root: scrollContainer,
+  rootMargin: '600px',
+  threshold: 0.1,
+})
+
+watch(columnCount, async () => {
+  if (posts.value.length > 0) {
+    await relayout(posts.value)
+  }
+})
+
+watch(refreshDiscoverTrigger, (newValue) => {
+  if (newValue > 0) {
+    void handleForceRefresh()
+  }
+})
+
+const fetchPosts = async (isLoadMore = false) => {
   if (loading.value) return
+
   loading.value = true
+
   try {
-    const res = await get<PostListResponse>('/post/list/page', { pageNum: currentPage.value, pageSize: pageSize.value })
-    if (res.code === 1) {
-      const items = res.data.items || []
-      
-      if (items.length === 0 && posts.value.length === 0) {
-        hasMore.value = false
-        return
-      }
+    const res = await get<PostListResponse>('/post/list/page', {
+      pageNum: currentPage.value,
+      pageSize: pageSize.value,
+    })
 
-      const randomizedItems = [...items].sort(() => Math.random() - 0.5)
+    if (res.code !== 1) return
 
-      if (isLoadMore) {
-        posts.value.push(...randomizedItems)
-        await layoutPosts(randomizedItems)
-      } else {
-        posts.value = randomizedItems
-        waterfallColumns.value = Array.from({ length: colCount.value }, () => [])
-        await nextTick()
-        await layoutPosts(randomizedItems)
-      }
-      
-      if (items.length < pageSize.value) {
-        currentPage.value = 1
-        hasMore.value = true 
-      } else {
-        currentPage.value++
-        hasMore.value = true
-      }
+    const items = res.data.items || []
+
+    if (items.length === 0 && posts.value.length === 0) {
+      hasMore.value = false
+      return
     }
-  } finally { 
-    loading.value = false 
+
+    const randomizedItems = [...items].sort(() => Math.random() - 0.5)
+
+    if (isLoadMore) {
+      posts.value.push(...randomizedItems)
+      await appendItems(randomizedItems)
+    } else {
+      posts.value = randomizedItems
+      await relayout(posts.value)
+    }
+
+    if (items.length < pageSize.value) {
+      currentPage.value = 1
+      hasMore.value = true
+    } else {
+      currentPage.value += 1
+      hasMore.value = true
+    }
+  } finally {
+    loading.value = false
   }
 }
 
 const handleForceRefresh = async () => {
-  // 1. 瞬间秒跳回顶部！(将 behavior 从 'smooth' 改为默认的 'auto')
-  if (scrollContainer.value) {
-    scrollContainer.value.scrollTo({ top: 0, behavior: 'auto' })
-  }
+  scrollContainer.value?.scrollTo({ top: 0, behavior: 'auto' })
 
   isRefreshing.value = true
   currentPage.value = 1
   hasMore.value = true
 
-  // 2. 删掉之前为了等滚动条而加的 setTimeout，直接瞬间同步拉取数据！
   try {
-    await fetchPosts(false, true)
-    refreshKey.value++ // 触发新卡片的渐显动画，掩盖瞬间替换的生硬感
+    await fetchPosts(false)
+    refreshKey.value += 1
   } finally {
-    // 稍微保留 500ms 的动画收尾，防止因为网速太快导致 Loading 圈闪烁一下就没了
-    setTimeout(() => { isRefreshing.value = false }, 500)
+    window.setTimeout(() => {
+      isRefreshing.value = false
+    }, 500)
   }
-}
-
-const setupInfiniteScroll = () => {
-  if (!loadMoreTrigger.value) return
-  observer = new IntersectionObserver((entries) => {
-    if (entries[0]?.isIntersecting && hasMore.value && !loading.value) {
-      fetchPosts(true)
-    }
-  }, { 
-    rootMargin: '600px',
-    threshold: 0.1 
-  })
-  observer.observe(loadMoreTrigger.value)
-}
-
-onMounted(() => {
-  updateColCount()
-  window.addEventListener('resize', updateColCount)
-  fetchPosts()
-  setTimeout(() => { setupInfiniteScroll() }, 300)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', updateColCount)
-  if (observer) observer.disconnect()
-})
-
-const openPostDetail = (postObj: Post, rect: DOMRect | null) => {
-  selectedPost.value = postObj
-  triggerRect.value = rect instanceof DOMRect ? rect : null
-  showModal.value = true
-}
-
-const closePostDetail = () => {
-  showModal.value = false
-  setTimeout(() => {
-    selectedPost.value = null
-    triggerRect.value = null
-  }, 400)
 }
 
 const handleLike = (postId: number, isLiked: boolean) => {
   if (isLiked) likeStore.addLikedPost(postId)
   else likeStore.removeLikedPost(postId)
-  
-  posts.value.forEach(p => {
-    if (p.id === postId) p.likesCount = isLiked ? (p.likesCount || 0) + 1 : Math.max(0, (p.likesCount || 0) - 1)
+
+  posts.value.forEach((post) => {
+    if (post.id === postId) {
+      post.likesCount = isLiked ? (post.likesCount || 0) + 1 : Math.max(0, (post.likesCount || 0) - 1)
+    }
   })
 }
 
 const handleModalLike = (postId: number) => {
   handleLike(postId, !likeStore.isPostLiked(postId))
 }
+
+onMounted(() => {
+  updateColumnCount()
+  void fetchPosts()
+})
 </script>
-
-<style scoped>
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-.animate-fade-in-up {
-  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-</style>

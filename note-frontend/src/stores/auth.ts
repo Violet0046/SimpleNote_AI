@@ -1,26 +1,28 @@
 import { defineStore } from 'pinia'
-import { get } from '@/utils/request'
 import { ElMessage } from 'element-plus'
+
 import type { UserInfo } from '@/types'
+import { get } from '@/utils/request'
+import { tokenStorage } from '@/shared/utils/storage'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    token: localStorage.getItem('userToken') || '',
+    token: tokenStorage.get(),
     userInfo: null as UserInfo | null,
-    isLoginModalVisible: false
+    isLoginModalVisible: false,
   }),
 
   getters: {
     isLoggedIn: (state) => !!state.token,
     getUserInfo: (state) => state.userInfo,
     getUsername: (state) => state.userInfo?.nickname || '',
-    getUserAvatar: (state) => state.userInfo?.avatar || ''
+    getUserAvatar: (state) => state.userInfo?.avatar || '',
   },
 
   actions: {
     setToken(token: string) {
       this.token = token
-      localStorage.setItem('userToken', token)
+      tokenStorage.set(token)
     },
 
     setUserInfo(userInfo: UserInfo) {
@@ -31,22 +33,21 @@ export const useAuthStore = defineStore('auth', {
       if (!this.token) return
 
       try {
-        const response = await get('/user/me')
+        const response = await get<UserInfo>('/user/me')
         if (response.code === 1) {
           this.setUserInfo(response.data)
         }
       } catch (error) {
-        console.error('获取用户信息失败:', error)
+        console.error('Failed to fetch user info:', error)
       }
     },
 
     logout() {
       this.token = ''
       this.userInfo = null
-      localStorage.removeItem('userToken')
-      // 关闭登录弹窗
+      tokenStorage.clear()
       this.isLoginModalVisible = false
-      ElMessage.success('已退出登录')
+      ElMessage.success('Logged out successfully')
     },
 
     showLoginModal() {
@@ -62,7 +63,7 @@ export const useAuthStore = defineStore('auth', {
     },
 
     checkAuth() {
-      return this.token
-    }
-  }
+      return this.token || tokenStorage.get()
+    },
+  },
 })
