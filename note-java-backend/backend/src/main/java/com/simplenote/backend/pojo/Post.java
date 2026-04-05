@@ -15,4 +15,6 @@ public class Post {
     private String images;        // 配图
     private Integer likesCount;   // 点赞数
     private LocalDateTime createTime; // 发布时间
+
+    private Integer isVideo;      // 是否为视频帖子
 }

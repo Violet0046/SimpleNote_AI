@@ -93,3 +93,5 @@ CREATE TABLE comment_like (
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uk_comment_user (comment_id, user_id)
 );
+
+ALTER TABLE `post` ADD COLUMN `is_video` TINYINT DEFAULT 0 COMMENT '是否为视频：0图片，1视频';

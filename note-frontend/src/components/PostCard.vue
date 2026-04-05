@@ -7,8 +7,8 @@
     <div class="relative w-full overflow-hidden rounded-2xl bg-gray-100">
       
       <video
-        v-if="post.isVideo"
-        :src="post.images ? post.images.split(',')[0] : ''"
+        v-if="Number(post.isVideo) === 1"
+        :src="(post.images?.split(',')[0] || '').trim()"
         class="w-full h-auto block object-cover transition-all duration-700 ease-out pointer-events-none"
         :class="isImageLoaded ? 'blur-0 scale-100' : 'blur-xl scale-110'"
         muted
@@ -20,7 +20,7 @@
 
       <img
         v-else
-        :src="post.images ? post.images.split(',')[0] : ''"
+        :src="(post.images?.split(',')[0] || '').trim()"
         :alt="post.title"
         class="w-full h-auto block object-cover transition-all duration-700 ease-out"
         :class="isImageLoaded ? 'blur-0 scale-100' : 'blur-xl scale-110'"
@@ -30,7 +30,7 @@
       />
 
       <div
-        v-if="post.isVideo"
+        v-if="Number(post.isVideo) === 1"
         class="absolute top-3 right-3 w-7 h-7 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center z-10"
       >
         <svg class="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">

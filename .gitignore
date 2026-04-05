@@ -4,6 +4,7 @@ target/
 .mvn/wrapper/maven-wrapper.jar
 *.jpg
 *.png
+*.mp4
 # Python
 __pycache__/
 *.py[cod]

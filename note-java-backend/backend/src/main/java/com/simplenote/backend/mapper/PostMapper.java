@@ -10,8 +10,8 @@ import java.util.List;
 public interface PostMapper {
 
     // 1. 发布帖子
-    @Insert("insert into post(user_id, title, content, images, create_time) " +
-            "values(#{userId}, #{title}, #{content}, #{images}, now())")
+    @Insert("insert into post(user_id, title, content, images, create_time, is_video) " +
+            "values(#{userId}, #{title}, #{content}, #{images}, now(), #{isVideo})")
     void add(Post post);
 
     // 2. 首页瀑布流查询 (配合 PageHelper 使用，绝对不会全量查)
