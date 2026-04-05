@@ -8,9 +8,11 @@ import com.simplenote.backend.pojo.CommentAddDTO;
 import com.simplenote.backend.pojo.CommentVO;
 import com.simplenote.backend.pojo.PageBean;
 import com.simplenote.backend.service.CommentService;
+import com.simplenote.backend.utils.JwtUtils;
 import com.simplenote.backend.utils.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
 import java.util.Map;
@@ -20,6 +22,8 @@ public class CommentServiceImpl implements CommentService {
 
     @Autowired
     private CommentMapper commentMapper;
+    @Autowired
+    private HttpServletRequest request;
 
     @Override
     public void addComment(CommentAddDTO dto) {
@@ -90,11 +94,21 @@ public class CommentServiceImpl implements CommentService {
     // 获取当前用户 ID (游客为 0)
     private Integer getCurrentUserId() {
         try {
+            // 1. 先尝试从 ThreadLocal 获取（走拦截器的普通接口）
             Map<String, Object> map = ThreadLocalUtil.get();
             if (map != null && map.get("id") != null) {
                 return (Integer) map.get("id");
             }
-        } catch (Exception e) {}
+            
+            // 2. 如果是被拦截器放行的接口（如 /comment/list），我们手动解析请求头里的 Token
+            String token = request.getHeader("Authorization");
+            if (token != null && !token.isEmpty()) {
+                Map<String, Object> claims = JwtUtils.parseToken(token);
+                return (Integer) claims.get("id");
+            }
+        } catch (Exception e) {
+            // 解析失败（例如 Token 伪造或过期），静默处理，当做未登录的游客
+        }
         return 0; // 0代表未登录
     }
 

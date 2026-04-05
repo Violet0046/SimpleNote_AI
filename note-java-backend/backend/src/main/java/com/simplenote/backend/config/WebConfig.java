@@ -36,6 +36,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "/follow/followers/*",// 进别人的主页看粉丝列表
                         "/follow/following/*",
                         "/follow/followers/*",
+                        "/comment/replies",   // 游客看评论的回复列表
                         "/error"              // 错误页
                 );
     }

@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  <div class="fixed inset-0 bg-black/50 backdrop-blur-sm z-[99999] flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-100 opacity-100 max-h-[90vh] overflow-y-auto no-scrollbar">
       <div class="flex items-center justify-between p-6 border-b border-gray-100 sticky top-0 bg-white z-10">
         <div class="flex items-center space-x-2">

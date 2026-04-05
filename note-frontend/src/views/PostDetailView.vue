@@ -222,8 +222,11 @@
               v-model="commentText"
               ref="commentInputRef"
               type="text" 
-              :placeholder="replyingTo ? '写下你的回复...' : '说点什么...'" 
+              :readonly="!authStore.isLoggedIn"
+              :placeholder="!authStore.isLoggedIn ? '登录后评论' : (replyingTo ? '回复 @' + replyingTo.authorName : '说点什么...')" 
               class="w-full !bg-transparent outline-none text-[14px] text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+              :class="{ 'cursor-pointer': !authStore.isLoggedIn }"
+              @click="handleInputClick"
               @keyup.enter="handleSendComment"
             />
           </div>
@@ -239,12 +242,14 @@
             </button>
 
             <div class="flex items-center gap-1 cursor-pointer transition-colors" 
-                 :class="likeStore.isPostLiked(postDetail?.id || 0) ? 'text-[#FF2442]' : 'text-gray-500 hover:text-[#FF2442]'"
-                 @click="$emit('like-toggle')">
-              <svg class="w-6 h-6" :fill="likeStore.isPostLiked(postDetail?.id || 0) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor">
+                :class="likeStore.isPostLiked(postDetail?.id || 0) ? 'text-[#FF2442]' : 'text-gray-500 hover:text-[#FF2442]'"
+                @click="handlePostLike"> <svg class="w-6 h-6" :fill="likeStore.isPostLiked(postDetail?.id || 0) ? 'currentColor' : 'none'" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
               </svg>
-              <span class="text-[13px] font-medium">{{ postDetail?.likesCount ? formatCount(postDetail.likesCount) : '赞' }}</span>
+              
+              <span class="text-[13px] font-medium">
+                {{ postDetail?.likesCount ? formatCount(postDetail.likesCount) : '赞' }}
+              </span>
             </div>
           </div>
         </div>
@@ -264,6 +269,51 @@ import { useAuthStore } from '@/stores/auth'
 import { useLikeStore } from '@/stores/like'
 import { ElMessage } from 'element-plus'
 
+// 处理详情页的点赞逻辑
+// 🌟 详情页帖子点赞逻辑（已修复 res 校验）
+const handlePostLike = async () => {
+  // 1. 如果没登录，弹窗并打断
+  if (!authStore.isLoggedIn) {
+    authStore.showLoginModal()
+    return
+  }
+  
+  // 2. 确保帖子数据存在
+  if (!postDetail.value) return
+
+  const postId = postDetail.value.id
+  const isCurrentlyLiked = likeStore.isPostLiked(postId)
+  
+  try {
+    // 3. 调用后端点赞接口 (带上泛型防 TS 报错)
+    const res = await post<any>(`/post/${postId}/like`)
+    
+    // 🌟 核心修复：必须判断后端返回的 code 是否成功
+    if (res.code === 1) {
+      // 取出当前的点赞数 (兼容后端字段可能叫 likesCount 或 likeCount 的情况)
+      const currentCount = Number(postDetail.value.likesCount || postDetail.value.likeCount || 0)
+
+      if (!isCurrentlyLiked) {
+        likeStore.addLikedPost(postId)
+        postDetail.value.likesCount = currentCount + 1
+        ElMessage.success('点赞成功！')
+      } else {
+        likeStore.removeLikedPost(postId)
+        postDetail.value.likesCount = Math.max(0, currentCount - 1)
+        ElMessage.success('取消点赞')
+      }
+      
+      // 4. 通知父组件同步状态 (让外面的瀑布流卡片也变红)
+      emit('like-toggle', postId, !isCurrentlyLiked)
+    } else {
+      // 如果后端返回了 code 0 或其他错误码
+      throw new Error(res.msg || '操作失败')
+    }
+    
+  } catch (e: any) {
+    ElMessage.error(e.message || '点赞失败，请稍后重试')
+  }
+}
 const router = useRouter()
 // 数字格式化函数
 const formatCount = (count: number | string | undefined | null) => {
@@ -313,6 +363,16 @@ const tagList = computed(() => props.post?.tags ? String(props.post.tags).split(
 const totalCommentsCount = computed(() => {
   return comments.value.reduce((total, c) => total + 1 + (c.childCount || c.replies?.length || 0), 0)
 })
+// 理游客点击输入框的拦截
+const handleInputClick = (e: Event) => {
+  if (!authStore.isLoggedIn) {
+    e.preventDefault()
+    if (commentInputRef.value) {
+      commentInputRef.value.blur() // 移除焦点
+    }
+    authStore.showLoginModal() // 弹出登录框
+  }
+}
 
 const formatTime = (timeStr?: string) => {
   if (!timeStr) return ''
@@ -358,18 +418,23 @@ const expandReplies = async (comment: any) => {
 
 const toggleCommentLike = async (commentItem: any) => {
   if (!authStore.isLoggedIn) {
-    ElMessage.warning('请先登录哦')
+    // 改为弹出登录框，而不是光提示
+    authStore.showLoginModal() 
     return
   }
-  
-  const isLikedNow = commentItem.isLiked === 1
+
+  // 兼容后端返回 1 或 true 的情况
+  const isLikedNow = commentItem.isLiked === 1 || commentItem.isLiked === true
+
+  // 乐观更新
   commentItem.isLiked = isLikedNow ? 0 : 1
-  commentItem.likesCount = (commentItem.likesCount || 0) + (isLikedNow ? -1 : 1)
+  commentItem.likesCount = Math.max(0, (commentItem.likesCount || 0) + (isLikedNow ? -1 : 1)) // 防止负数
 
   try {
     const res = await post(`/comment/like/${commentItem.id}`)
     if (res.code !== 1) throw new Error()
   } catch (e) {
+    // 失败回滚
     commentItem.isLiked = isLikedNow ? 1 : 0
     commentItem.likesCount += (isLikedNow ? 1 : -1)
     ElMessage.error('点赞失败，请重试')
@@ -401,7 +466,11 @@ const checkFollowStatus = async (authorId: number) => {
 }
 
 const toggleFollow = async () => {
-  if (!authStore.isLoggedIn) return ElMessage.warning('请先登录哦')
+  if (!authStore.isLoggedIn) {
+    // 游客点击关注弹出登录框
+    authStore.showLoginModal()
+    return 
+  }
   try {
     const res = await post(`/follow/${postDetail.value?.userId}`)
     if (res.code === 1) isFollowing.value = !isFollowing.value
@@ -411,10 +480,11 @@ const toggleFollow = async () => {
 }
 
 const handleSendComment = async () => {
-  if (!commentText.value.trim() || !authStore.isLoggedIn || isSending.value) {
-    if (!authStore.isLoggedIn) ElMessage.warning('请先登录哦')
+  if (!authStore.isLoggedIn) {
+    authStore.showLoginModal() // 改为弹窗
     return
   }
+  if (!commentText.value.trim() || isSending.value) return
   isSending.value = true
   try {
     const payload: any = {
