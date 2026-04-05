@@ -23,32 +23,34 @@
       @click.stop
     >
       <div class="flex-1 relative flex items-center justify-center overflow-hidden bg-[#F8F8F8] dark:bg-black">
-        
         <div class="absolute inset-0 bg-cover bg-center blur-[50px] opacity-50 transform scale-110 dark:opacity-30" :style="{ backgroundImage: `url(${firstImage})` }"></div>
-
-        <div v-if="postDetail?.images && !String(postDetail.images).includes(',')" class="relative w-full h-full flex items-center justify-center z-10">
-          <img :src="postDetail.images" class="max-w-full max-h-full object-contain drop-shadow-lg" />
+        <div v-if="postDetail?.isVideo" class="relative w-full h-full flex items-center justify-center z-10">
+          <video 
+            :src="firstImage" 
+            controls 
+            autoplay 
+            loop 
+            playsinline 
+            class="max-w-full max-h-full object-contain drop-shadow-lg outline-none"
+          ></video>
         </div>
-
         <div v-else-if="postDetail?.images && String(postDetail.images).includes(',')" class="relative w-full h-full overflow-hidden group z-10">
           <div class="w-full h-full transition-transform duration-300 ease-out flex" :style="{ transform: `translateX(-${currentImageIndex * 100}%)` }">
             <div v-for="(img, idx) in imageList" :key="idx" class="w-full h-full flex-shrink-0 flex items-center justify-center">
               <img :src="img" class="max-w-full max-h-full object-contain drop-shadow-lg" />
             </div>
           </div>
-          
           <button v-if="imageList.length > 1" @click="prevImage" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/20 text-white rounded-full flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
           </button>
           <button v-if="imageList.length > 1" @click="nextImage" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/20 text-white rounded-full flex items-center justify-center backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity">
             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
           </button>
-          
           <div v-if="imageList.length > 1" class="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-2">
             <div v-for="(_, idx) in imageList" :key="idx" class="w-2 h-2 rounded-full transition-all" :class="currentImageIndex === idx ? 'bg-red-500 scale-110' : 'bg-gray-300'"></div>
           </div>
         </div>
-        </div>
+      </div>
 
       <div class="w-[360px] lg:w-[400px] flex-shrink-0 flex flex-col h-full border-l border-gray-100 dark:border-gray-800 transition-opacity duration-300 bg-white dark:bg-gray-900" :class="isExpanded ? 'opacity-100' : 'opacity-0'">
         
@@ -480,14 +482,19 @@ watch(() => props.visible, async (isVisible) => {
       })
     }
 
-    const img = new Image()
-    img.src = firstImage.value
-    if (img.complete && img.naturalHeight) {
-      animateModal(img.naturalWidth / img.naturalHeight)
+//如果是视频，不用去量了，直接给一个标准的竖屏比例 (比如 0.75 也就是 3:4) 展开弹窗
+    if (props.post.isVideo) {
+      setTimeout(() => animateModal(0.75), 50)
     } else {
-      img.onload = () => animateModal(img.naturalWidth / img.naturalHeight)
-      img.onerror = () => animateModal(1)
-      setTimeout(() => animateModal(1), 150)
+      const img = new Image()
+      img.src = firstImage.value
+      if (img.complete && img.naturalHeight) {
+        animateModal(img.naturalWidth / img.naturalHeight)
+      } else {
+        img.onload = () => animateModal(img.naturalWidth / img.naturalHeight)
+        img.onerror = () => animateModal(1) // 兜底为 1:1 方形
+        setTimeout(() => animateModal(1), 150)
+      }
     }
 
   } else {

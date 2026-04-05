@@ -85,12 +85,12 @@
 
     <div class="w-full bg-white px-[6px] pt-[20px] pb-[60px]">
       
-      <div v-if="activeTab === 'posts' || activeTab === 'liked'">
-        <div v-if="loading" class="flex justify-center mt-10">
+<div v-if="activeTab === 'posts' || activeTab === 'liked'">
+        <div v-if="loading && userPosts.length === 0" class="flex justify-center mt-10">
           <svg class="animate-spin h-8 w-8 text-[#FF2442]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
         </div>
 
-        <div v-else-if="userPosts.length > 0" class="flex gap-[20px] items-start w-full">
+        <div v-if="userPosts.length > 0" class="flex gap-[20px] items-start w-full min-h-[101vh]">
           <div 
             v-for="(colPosts, colIndex) in waterfallColumns" 
             :key="colIndex"
@@ -108,14 +108,20 @@
           </div>
         </div>
 
-        <div v-else class="flex flex-col items-center justify-center mt-[100px] opacity-70">
+        <div v-if="!loading && userPosts.length === 0" class="flex flex-col items-center justify-center mt-[100px] opacity-70">
           <svg class="w-[80px] h-[80px] text-gray-200 mb-4" viewBox="0 0 1024 1024" fill="currentColor"><path d="M512 85.333333c-235.648 0-426.666667 191.018667-426.666667 426.666667s191.018667 426.666667 426.666667 426.666667 426.666667-191.018667 426.666667-426.666667S747.648 85.333333 512 85.333333z m0 768c-188.501333 0-341.333333-152.832-341.333333-341.333333 0-188.501333 152.832-341.333333 341.333333-341.333333s341.333333 152.832 341.333333 341.333333c0 188.501333-152.832 341.333333-341.333333 341.333333zM384 469.333333c-23.552 0-42.666667 19.114667-42.666667 42.666667s19.114667 42.666667 42.666667 42.666667 42.666667-19.114667 42.666667-42.666667-19.114667-42.666667-42.666667-42.666667z m256 0c-23.552 0-42.666667 19.114667-42.666667 42.666667s19.114667 42.666667 42.666667 42.666667 42.666667-19.114667 42.666667-42.666667-19.114667-42.666667-42.666667-42.666667z m-128 213.333334c-70.698667 0-128-57.301333-128-128h256c0 70.698667-57.301333 128-128 128z"></path></svg>
           <span class="text-[14px] text-gray-500">
             {{ activeTab === 'posts' ? '你还没有发布任何内容哦' : '你还没有点赞过任何内容哦' }}
           </span>
         </div>
         
-        <div v-if="hasMore && !loading" ref="loadMoreTrigger" class="h-20"></div>
+        <div class="w-full flex flex-col items-center py-8">
+          <div v-if="loading && userPosts.length > 0" class="flex items-center gap-2 text-gray-400 mb-4">
+            <svg class="animate-spin h-5 w-5 text-[#FF2442]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            <span class="text-sm font-medium">加载中...</span>
+          </div>
+          <div ref="loadMoreTrigger" class="h-10 w-full bg-transparent" style="pointer-events: none;"></div>
+        </div>
       </div>
 
       <div v-else-if="activeTab === 'following' || activeTab === 'followers'" class="w-full max-w-[1100px] mx-auto py-4 px-4">
@@ -173,7 +179,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useLikeStore } from '@/stores/like'
@@ -186,6 +192,7 @@ import type { Post, UserInfo } from '@/types'
 
 const showEditModal = ref(false)
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
 const likeStore = useLikeStore()
 
@@ -201,7 +208,7 @@ const userInfo = ref<UserInfo>({
   likesCount: 0
 })
 
-const activeTab = ref(sessionStorage.getItem('profileActiveTab') || 'posts')
+const activeTab = ref('posts')
 
 const userList = ref<any[]>([])
 const userListPage = ref(1)
@@ -308,7 +315,7 @@ const updateColCount = () => {
   if (width < 768) colCount.value = 2
   else if (width < 1024) colCount.value = 3
   else if (width < 1280) colCount.value = 4
-  else colCount.value = 5
+  else colCount.value = 4
 }
 
 const waterfallColumns = computed(() => {
@@ -364,7 +371,6 @@ const fetchUserPosts = async (isLoadMore = false) => {
 const switchTab = (tabKey: string) => {
   if (activeTab.value === tabKey) return
   activeTab.value = tabKey
-  sessionStorage.setItem('profileActiveTab', tabKey)
   
   if (tabKey === 'posts' || tabKey === 'liked') {
     currentPage.value = 1
@@ -374,15 +380,30 @@ const switchTab = (tabKey: string) => {
   } else {
     fetchUserList(true)
   }
+
 }
+watch(() => route.fullPath, (newPath) => {
+  // 假设你的个人主页路由是 /profile 或 /user/me，你可以根据实际修改这个路径判定
+  if (newPath === '/profile' || newPath === '/user') { 
+    activeTab.value = 'posts'
+    currentPage.value = 1
+    hasMore.value = true
+    userPosts.value = []
+    fetchUserPosts()
+  }
+})
 
 const setupInfiniteScroll = () => {
   if (!loadMoreTrigger.value) return
   observer = new IntersectionObserver((entries) => {
-    if (entries[0]?.isIntersecting && hasMore.value && !loading.value && (activeTab.value === 'posts' || activeTab.value === 'liked')) {
+    // 🌟 去掉了对 loading 的强校验，交给 fetchUserPosts 内部去做防抖拦截，更加稳妥
+    if (entries[0]?.isIntersecting && hasMore.value && (activeTab.value === 'posts' || activeTab.value === 'liked')) {
       fetchUserPosts(true)
     }
-  }, { rootMargin: '100px', threshold: 0.1 })
+  }, { 
+    rootMargin: '600px', // 从 100 改为 600，丝滑无缝加载！
+    threshold: 0.1 
+  })
   observer.observe(loadMoreTrigger.value)
 }
 
