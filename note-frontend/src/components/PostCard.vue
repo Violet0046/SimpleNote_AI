@@ -6,7 +6,20 @@
   >
     <div class="relative w-full overflow-hidden rounded-2xl bg-gray-100">
       
+      <video
+        v-if="post.isVideo"
+        :src="post.images ? post.images.split(',')[0] : ''"
+        class="w-full h-auto block object-cover transition-all duration-700 ease-out pointer-events-none"
+        :class="isImageLoaded ? 'blur-0 scale-100' : 'blur-xl scale-110'"
+        muted
+        loop
+        autoplay
+        playsinline
+        @loadeddata="isImageLoaded = true"
+      ></video>
+
       <img
+        v-else
         :src="post.images ? post.images.split(',')[0] : ''"
         :alt="post.title"
         class="w-full h-auto block object-cover transition-all duration-700 ease-out"
@@ -18,14 +31,14 @@
 
       <div
         v-if="post.isVideo"
-        class="absolute top-3 right-3 w-7 h-7 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center"
+        class="absolute top-3 right-3 w-7 h-7 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center z-10"
       >
-        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
           <path d="M8 5v14l11-7z"/>
         </svg>
       </div>
 
-      <div v-if="isLoading" class="absolute inset-0 bg-gray-200 animate-pulse">
+      <div v-if="isLoading" class="absolute inset-0 bg-gray-200 animate-pulse z-0">
         <div class="w-full h-full bg-gradient-to-br from-[#ff2442] to-[#ff6b6b] flex items-center justify-center">
           <span class="text-white text-lg">图片</span>
         </div>
