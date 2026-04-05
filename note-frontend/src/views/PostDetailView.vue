@@ -248,7 +248,7 @@
               </svg>
               
               <span class="text-[13px] font-medium">
-                {{ postDetail?.likesCount ? formatCount(postDetail.likesCount) : '赞' }}
+                {{ (postDetail?.likesCount || postDetail?.likeCount) ? formatCount(postDetail.likesCount || postDetail.likeCount) : '赞' }}
               </span>
             </div>
           </div>
@@ -270,11 +270,11 @@ import { useLikeStore } from '@/stores/like'
 import { ElMessage } from 'element-plus'
 
 // 处理详情页的点赞逻辑
-// 🌟 详情页帖子点赞逻辑（已修复 res 校验）
 const handlePostLike = async () => {
   // 1. 如果没登录，弹窗并打断
   if (!authStore.isLoggedIn) {
     authStore.showLoginModal()
+    // 注意：如果登录框也被遮挡，请去 LoginModal 组件里把外层 z-index 调到 10000 以上
     return
   }
   
@@ -285,33 +285,32 @@ const handlePostLike = async () => {
   const isCurrentlyLiked = likeStore.isPostLiked(postId)
   
   try {
-    // 3. 调用后端点赞接口 (带上泛型防 TS 报错)
-    const res = await post<any>(`/post/${postId}/like`)
+    // 3. 移除 res.code 判断！让请求拦截器自己处理异常
+    // 向 PostCard 逻辑靠拢，只要没抛出 catch 异常就视为成功
+    await post(`/post/${postId}/like`)
     
-    // 🌟 核心修复：必须判断后端返回的 code 是否成功
-    if (res.code === 1) {
-      // 取出当前的点赞数 (兼容后端字段可能叫 likesCount 或 likeCount 的情况)
-      const currentCount = Number(postDetail.value.likesCount || postDetail.value.likeCount || 0)
+    const currentCount = Number(postDetail.value.likesCount || postDetail.value.likeCount || 0)
 
-      if (!isCurrentlyLiked) {
-        likeStore.addLikedPost(postId)
-        postDetail.value.likesCount = currentCount + 1
-        ElMessage.success('点赞成功！')
-      } else {
-        likeStore.removeLikedPost(postId)
-        postDetail.value.likesCount = Math.max(0, currentCount - 1)
-        ElMessage.success('取消点赞')
-      }
-      
-      // 4. 通知父组件同步状态 (让外面的瀑布流卡片也变红)
-      emit('like-toggle', postId, !isCurrentlyLiked)
+    if (!isCurrentlyLiked) {
+      likeStore.addLikedPost(postId)
+      postDetail.value.likesCount = currentCount + 1
+      // 🌟 核心修复：提升 ElMessage 层级，防止被 z-[9999] 的详情页遮挡
+      ElMessage({ message: '点赞成功！', type: 'success', zIndex: 10005 })
     } else {
-      // 如果后端返回了 code 0 或其他错误码
-      throw new Error(res.msg || '操作失败')
+      likeStore.removeLikedPost(postId)
+      postDetail.value.likesCount = Math.max(0, currentCount - 1)
+      ElMessage({ message: '取消点赞', type: 'success', zIndex: 10005 })
     }
     
+    // 4. 通知父组件同步状态
+    emit('like-toggle', postId, !isCurrentlyLiked)
+    
   } catch (e: any) {
-    ElMessage.error(e.message || '点赞失败，请稍后重试')
+    ElMessage({ 
+      message: e.message || '点赞失败，请稍后重试', 
+      type: 'error', 
+      zIndex: 10005 // 提升层级
+    })
   }
 }
 const router = useRouter()
@@ -416,28 +415,27 @@ const expandReplies = async (comment: any) => {
   }
 }
 
+// 评论点赞交互
 const toggleCommentLike = async (commentItem: any) => {
   if (!authStore.isLoggedIn) {
-    // 改为弹出登录框，而不是光提示
     authStore.showLoginModal() 
     return
   }
 
-  // 兼容后端返回 1 或 true 的情况
   const isLikedNow = commentItem.isLiked === 1 || commentItem.isLiked === true
 
   // 乐观更新
   commentItem.isLiked = isLikedNow ? 0 : 1
-  commentItem.likesCount = Math.max(0, (commentItem.likesCount || 0) + (isLikedNow ? -1 : 1)) // 防止负数
+  commentItem.likesCount = Math.max(0, (commentItem.likesCount || 0) + (isLikedNow ? -1 : 1))
 
   try {
-    const res = await post(`/comment/like/${commentItem.id}`)
-    if (res.code !== 1) throw new Error()
+    // 移除 if (res.code !== 1) 判断
+    await post(`/comment/like/${commentItem.id}`)
   } catch (e) {
     // 失败回滚
     commentItem.isLiked = isLikedNow ? 1 : 0
     commentItem.likesCount += (isLikedNow ? 1 : -1)
-    ElMessage.error('点赞失败，请重试')
+    ElMessage({ message: '点赞失败，请重试', type: 'error', zIndex: 10005 }) // 提升层级
   }
 }
 
