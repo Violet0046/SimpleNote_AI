@@ -6,7 +6,7 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      component: HomeView, // 🌟 核心改变：HomeView 现在成了带侧边栏的“父壳子”
+      component: HomeView, // HomeView 现在成了带侧边栏的“父壳子”
       children: [
         {
           path: '', // 默认路径，刚进网站时右边显示的瀑布流

@@ -134,6 +134,8 @@
             :post-user-id="postDetail.userId"
             :avatar-fallback="avatarFallback"
             :comments-label="COPY.commentsLabel"
+            :comments-label2="COPY.commentsLabel2"
+            :empty-comments-title="COPY.emptyCommentsTitle"
             :hottest-label="COPY.hottest"
             :newest-label="COPY.newest"
             :loading-label="COPY.loading"
@@ -195,7 +197,9 @@ import type { Post } from '@/types'
 const COPY = {
   follow: '\u5173\u6ce8',
   following: '\u5df2\u5173\u6ce8',
-  commentsLabel: '\u5171\u6709',
+  commentsLabel: '\u5171',
+  commentsLabel2: '\u6761\u8bc4\u8bba',
+  emptyCommentsTitle: '\u8fd9\u662f\u4e00\u7247\u8352\u5730',
   hottest: '\u6700\u70ed',
   newest: '\u6700\u65b0',
   loading: '\u52a0\u8f7d\u4e2d...',

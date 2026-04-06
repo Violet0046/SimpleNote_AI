@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="flex h-screen overflow-hidden bg-white">
     <div class="mx-auto flex h-full w-full max-w-[2130px] px-[30px] 2xl:px-[210px]">
       <aside class="w-[320px] h-full flex-shrink-0 flex flex-col bg-white">
@@ -6,7 +6,7 @@
           <svg class="w-8 h-8 text-[#FF2442]" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
           </svg>
-          <span class="ml-2 text-lg font-semibold text-[#FF2442]">小红书</span>
+          <span class="ml-2 text-lg font-semibold text-[#FF2442]">简单笔记</span>
         </div>
 
         <div class="mt-[45px] flex flex-1 flex-col">
@@ -299,7 +299,8 @@ html.dark-theme span {
 html.dark-theme .bg-\[\#F7F7F7\],
 html.dark-theme .hover\:bg-\[\#F7F7F7\]:hover,
 html.dark-theme .bg-gray-100,
-html.dark-theme .bg-gray-50 {
+html.dark-theme .bg-gray-50,
+html.dark-theme .hover\:bg-gray-50:hover {
   background-color: #1a1a1a !important;
 }
 
@@ -315,3 +316,20 @@ html.dark-theme .border-gray-100 {
   border-color: #333333 !important;
 }
 </style>
+
+
+*** Begin Patch
+*** Update File: d:\VS\26project\SimpleNote_AI\note-frontend\src\layouts\MainLayout.vue
+@@
+ html.dark-theme .bg-[#F7F7F7],
+ html.dark-theme .hover\:bg-[#F7F7F7]:hover,
+ html.dark-theme .bg-gray-100,
+ html.dark-theme .bg-gray-50 {
+   background-color: #1a1a1a !important;
+ }
++
++/* 修复暗色下 hover:bg-gray-50 变成白底的问题 */
++html.dark-theme .hover\:bg-gray-50:hover {
++  background-color: #1a1a1a !important;
++}
+*** End Patch

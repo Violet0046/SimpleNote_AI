@@ -1,7 +1,14 @@
 ﻿<template>
   <div class="px-6 pb-6">
     <div class="mb-5 flex items-center justify-between">
-      <h3 class="text-[14px] font-medium text-gray-600 dark:text-gray-400">{{ commentsLabel }} {{ totalCommentsCount }}</h3>
+      <h3 class="text-[14px] font-medium text-gray-600 dark:text-gray-400">
+        <template v-if="totalCommentsCount > 0">
+          {{ commentsLabel }} {{ totalCommentsCount }} {{ commentsLabel2 }}
+        </template>
+        <template v-else>
+          {{ emptyCommentsTitle }}
+        </template>
+      </h3>
       <div class="flex items-center gap-3 text-[13px] text-gray-400 dark:text-gray-500">
         <button
           type="button"
@@ -65,6 +72,8 @@ defineProps<{
   postUserId: number
   avatarFallback: string
   commentsLabel: string
+  commentsLabel2: string
+  emptyCommentsTitle: string
   hottestLabel: string
   newestLabel: string
   loadingLabel: string
