@@ -74,7 +74,6 @@
       :visible="showModal"
       :trigger-rect="triggerRect"
       @close="closePostDetail"
-      @like-toggle="selectedPost ? handleModalLike(selectedPost.id) : null"
     />
 
     <EditProfileModal
@@ -362,10 +361,6 @@ const handleLike = (postId: number, isLiked: boolean) => {
   else likeStore.removeLikedPost(postId)
 
   applyLike(postId, isLiked)
-}
-
-const handleModalLike = (postId: number) => {
-  handleLike(postId, !likeStore.isPostLiked(postId))
 }
 
 const handleProfileUpdated = async () => {

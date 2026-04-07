@@ -75,7 +75,6 @@
       :visible="showModal"
       :trigger-rect="triggerRect"
       @close="closePostDetail"
-      @like-toggle="selectedPost ? handleModalLike(selectedPost.id) : null"
     />
   </main>
 </template>
