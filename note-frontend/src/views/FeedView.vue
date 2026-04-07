@@ -8,8 +8,8 @@
         :class="isRefreshing ? 'h-[60px] opacity-100' : 'h-0 opacity-0'"
       >
         <svg class="-ml-1 mr-3 h-6 w-6 animate-spin text-[#FF2442]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
         </svg>
         <span class="text-sm font-medium text-gray-500">Refreshing recommendations...</span>
       </div>
@@ -28,8 +28,8 @@
       <div class="flex w-full flex-col items-center py-8">
         <div v-if="loading && !isRefreshing" class="mb-4 flex items-center gap-2 text-gray-400">
           <svg class="h-5 w-5 animate-spin text-[#FF2442]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
           <span class="text-sm font-medium">Loading...</span>
         </div>
@@ -48,7 +48,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, onMounted, ref, watch, type Ref } from 'vue'
+import {
+  computed,
+  inject,
+  nextTick,
+  onActivated,
+  onBeforeUnmount,
+  onDeactivated,
+  onMounted,
+  ref,
+  watch,
+  type Ref,
+} from 'vue'
 
 import PostDetailModal from '@/components/PostDetailModal.vue'
 import PostWaterfall from '@/modules/post/components/PostWaterfall.vue'
@@ -61,6 +72,9 @@ import type { Post, PostListResponse } from '@/types'
 import { get } from '@/utils/request'
 
 const scrollContainer = ref<HTMLElement | null>(null)
+const savedScrollTop = ref(0)
+let detachScrollListener: (() => void) | null = null
+const SCROLL_STORAGE_KEY = 'feed-scroll-top'
 const likeStore = useLikeStore()
 
 const posts = ref<Post[]>([])
@@ -119,7 +133,7 @@ watch(columnCount, async () => {
 
 watch(refreshDiscoverTrigger, (newValue) => {
   if (newValue > 0) {
-    void handleForceRefresh()
+    void handleForceRefresh({ resetScroll: true })
   }
 })
 
@@ -165,8 +179,16 @@ const fetchPosts = async (isLoadMore = false) => {
   }
 }
 
-const handleForceRefresh = async () => {
-  scrollContainer.value?.scrollTo({ top: 0, behavior: 'auto' })
+interface ForceRefreshOptions {
+  resetScroll?: boolean
+}
+
+const handleForceRefresh = async ({ resetScroll = false }: ForceRefreshOptions = {}) => {
+  if (resetScroll) {
+    scrollContainer.value?.scrollTo({ top: 0, behavior: 'auto' })
+    sessionStorage.setItem(SCROLL_STORAGE_KEY, '0')
+    savedScrollTop.value = 0
+  }
 
   isRefreshing.value = true
   currentPage.value = 1
@@ -197,8 +219,55 @@ const handleModalLike = (postId: number) => {
   handleLike(postId, !likeStore.isPostLiked(postId))
 }
 
+const saveScroll = () => {
+  const top = scrollContainer.value?.scrollTop || 0
+  savedScrollTop.value = top
+  sessionStorage.setItem(SCROLL_STORAGE_KEY, String(top))
+}
+
+const restoreScroll = () => {
+  const stored = Number(sessionStorage.getItem(SCROLL_STORAGE_KEY))
+  const top = Number.isFinite(stored) ? stored : savedScrollTop.value
+  savedScrollTop.value = top
+  requestAnimationFrame(() => {
+    scrollContainer.value?.scrollTo({ top, behavior: 'auto' })
+  })
+}
+
 onMounted(() => {
   updateColumnCount()
-  void fetchPosts()
+  void (async () => {
+    await fetchPosts()
+    await nextTick()
+    restoreScroll()
+  })()
+
+  const handler = saveScroll
+
+  nextTick(() => {
+    if (scrollContainer.value) {
+      scrollContainer.value.addEventListener('scroll', handler, { passive: true })
+    }
+  })
+
+  detachScrollListener = () => {
+    if (scrollContainer.value) {
+      scrollContainer.value.removeEventListener('scroll', handler)
+    }
+  }
+})
+
+onDeactivated(() => {
+  saveScroll()
+})
+
+onBeforeUnmount(() => {
+  saveScroll()
+  detachScrollListener?.()
+})
+
+onActivated(async () => {
+  await nextTick()
+  restoreScroll()
 })
 </script>
