@@ -3,10 +3,8 @@
     <div class="no-scrollbar max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white shadow-2xl">
       <div class="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white p-6">
         <div class="flex items-center space-x-2">
-          <div class="flex h-8 w-8 items-center justify-center rounded-full bg-red-500">
-            <span class="text-sm font-bold text-white">X</span>
-          </div>
-          <h2 class="text-2xl font-bold text-gray-900">简单笔记</h2>
+          <img :src="logo" alt="Simple Note" class="h-8 w-8 rounded-full object-cover" />
+          <h2 class="text-2xl font-bold text-[#FF2442]">简单笔记</h2>
         </div>
         <button class="text-gray-400 transition-colors hover:text-gray-600" @click="$emit('close')">
           <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,7 +165,7 @@
           <button
             type="submit"
             :disabled="isLoading"
-            class="mt-2 w-full rounded-lg bg-red-500 py-3 font-medium text-white transition-colors hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+            class="mt-2 w-full rounded-lg bg-red-500 py-3 font-bold text-white transition-colors hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {{ isLoading ? (activeTab === 'login' ? '登录中...' : '注册中...') : (activeTab === 'login' ? '登录' : '注册') }}
           </button>
@@ -193,6 +191,7 @@ import { uploadFile } from '@/modules/upload/upload.api'
 import { post, get } from '@/utils/request'
 import { ElMessage } from 'element-plus'
 import type { LoginRequest, RegisterRequest, UserInfo } from '@/types'
+import logo from '@/assets/logo.png'
 
 const emit = defineEmits<{ close: [] }>()
 const authStore = useAuthStore()
