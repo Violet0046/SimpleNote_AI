@@ -1,7 +1,5 @@
 package com.simplenote.backend.service;
 
-import java.util.List;
-
 import com.simplenote.backend.pojo.CommentAddDTO;
 import com.simplenote.backend.pojo.CommentVO;
 import com.simplenote.backend.pojo.PageBean;

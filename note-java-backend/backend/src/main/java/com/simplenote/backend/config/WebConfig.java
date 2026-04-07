@@ -8,6 +8,8 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.beans.factory.annotation.Value;
+import java.util.Objects;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -15,11 +17,15 @@ public class WebConfig implements WebMvcConfigurer {
     @Autowired
     private LoginInterceptor loginInterceptor;
 
+    @Value("${file.upload-dir}")
+    private String uploadPath;
+
     @Override
     public void addInterceptors(@NonNull InterceptorRegistry registry) {
-        registry.addInterceptor(loginInterceptor)
+        registry.addInterceptor(Objects.requireNonNull(loginInterceptor))
                 .excludePathPatterns(
                         "/uploads/**",      // 图片文件访问放行
+                        "/upload",            // 图片上传接口放行
                         "/**/*.jpg",        // 默认头像等静态资源放行
                         "/**/*.png",
                         "/**/*.jpeg",
@@ -41,13 +47,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowCredentials(true);
     }
 
-    // 配置静态资源映射规则
     @Override
     public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
-        // 获取与 FileUploadController 中一致的当前项目目录
-        String uploadPath = System.getProperty("user.dir") + "/uploads/";
-        
-        // 关键映射：把网络请求的 /uploads/** 映射到本地 file: 物理路径
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations("file:" + uploadPath);
     }

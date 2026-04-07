@@ -8,7 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.servlet.HandlerInterceptor;
-
+import java.util.Objects;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -42,13 +42,17 @@ public class LoginInterceptor implements HandlerInterceptor {
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
-
+        
         String requestURI = request.getRequestURI();
+        if (requestURI == null) {
+            requestURI = "";
+        }
+        final String finalRequestURI = requestURI;
         String token = request.getHeader("Authorization");
 
         // 2. 检查当前请求的路径是否匹配白名单中的任意一项
         boolean isPublicPath = PUBLIC_PATHS.stream()
-                .anyMatch(pattern -> pathMatcher.match(pattern, requestURI));
+                .anyMatch(pattern -> pathMatcher.match(Objects.requireNonNull(pattern), finalRequestURI));
 
         try {
             // 3. 核心逻辑：只要带了 Token，就强行解析！（不管是不是公共接口）

@@ -1,6 +1,6 @@
 <template>
   <main class="flex h-screen flex-1 flex-col overflow-hidden bg-white">
-    <AppSearchBar placeholder="Search Notifications" z-class="z-10" />
+    <AppSearchBar placeholder="Search Notes" z-class="z-10" />
 
     <div class="no-scrollbar flex-1 overflow-y-auto bg-white">
       <div class="mx-auto w-full max-w-[800px] px-4 py-8">
@@ -119,7 +119,7 @@ const notices = computed<Notice[]>(() => [
     action: '\u5f00\u59cb\u5173\u6ce8\u4e86\u4f60',
     time: '2 \u5c0f\u65f6\u524d',
     avatars: ['B'],
-    followLabel: '\u56de\u7c89',
+    followLabel: '\u56de\u5173',
   },
   {
     id: 3,
@@ -148,7 +148,7 @@ const notices = computed<Notice[]>(() => [
     action: '\u5f00\u59cb\u5173\u6ce8\u4e86\u4f60',
     time: '3 \u5929\u524d',
     avatars: ['F'],
-    followLabel: '\u5173\u6ce8',
+    followLabel: '\u56de\u5173',
   },
 ])
 

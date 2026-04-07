@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.File;
 import java.util.Arrays;
@@ -14,8 +15,8 @@ import java.util.UUID;
 @RestController
 public class FileUploadController {
 
-    // 改为动态项目路径，存放在后端项目的 uploads 文件夹下
-    private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads/";
+    @Value("${file.upload-dir}")
+    private String UPLOAD_DIR;
 
     @PostMapping("/upload")
     // 必须加上 @RequestParam("file") 才能接到前端的图！
