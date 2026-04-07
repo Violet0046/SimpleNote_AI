@@ -45,6 +45,7 @@ export interface Post {
   tags?: string
   commentCount?: number
   isVideo?: number
+  isLiked?: boolean
 }
 
 // 评论信息

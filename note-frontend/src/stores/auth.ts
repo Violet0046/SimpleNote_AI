@@ -4,6 +4,7 @@ import { ElMessage } from 'element-plus'
 import type { UserInfo } from '@/types'
 import { get } from '@/utils/request'
 import { tokenStorage } from '@/shared/utils/storage'
+import { useLikeStore } from './like'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -47,6 +48,8 @@ export const useAuthStore = defineStore('auth', {
       this.userInfo = null
       tokenStorage.clear()
       this.isLoginModalVisible = false
+      const likeStore = useLikeStore()
+      likeStore.clear()
       ElMessage.success('Logged out successfully')
     },
 

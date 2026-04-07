@@ -1,19 +1,11 @@
 import { defineStore } from 'pinia'
 
-import { get } from '@/utils/request'
 import {
   LIKED_POSTS_STORAGE_KEY,
   readJsonStorage,
   writeJsonStorage,
 } from '@/shared/utils/storage'
-
-const normalizeLikedPostIds = (postIds: unknown): number[] => {
-  if (!Array.isArray(postIds)) return []
-
-  return postIds
-    .map((postId) => Number(postId))
-    .filter((postId) => Number.isInteger(postId) && postId > 0)
-}
+import type { Post } from '@/types'
 
 export const useLikeStore = defineStore('like', {
   state: () => ({
@@ -26,17 +18,16 @@ export const useLikeStore = defineStore('like', {
   },
 
   actions: {
-    async fetchUserLikedIds() {
-      try {
-        const res = await get<number[]>('/post/liked/ids')
-        if (res.code === 1) {
-          this.likedPosts = new Set(normalizeLikedPostIds(res.data))
+    syncPostLikes(posts: Post[]) {
+          posts.forEach(post => {
+            if (post.isLiked) {
+              this.likedPosts.add(post.id)
+            } else {
+              this.likedPosts.delete(post.id)
+            }
+          })
           this.saveToLocalStorage()
-        }
-      } catch (error) {
-        console.error('Failed to fetch liked post ids:', error)
-      }
-    },
+        },
 
     addLikedPost(postId: number) {
       this.likedPosts.add(postId)
@@ -55,11 +46,6 @@ export const useLikeStore = defineStore('like', {
         this.likedPosts.add(postId)
       }
 
-      this.saveToLocalStorage()
-    },
-
-    setLikedPosts(postIds: number[]) {
-      this.likedPosts = new Set(normalizeLikedPostIds(postIds))
       this.saveToLocalStorage()
     },
 

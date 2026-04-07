@@ -3,18 +3,22 @@
     :data-post-id="post.id"
     class="group relative mb-5 w-full cursor-pointer break-inside-avoid transition-transform duration-300 hover:scale-[1.02]"
     @click="handleCardClick"
+    @mouseenter="handleMouseEnter"
+    @mouseleave="handleMouseLeave"
   >
     <div class="relative w-full overflow-hidden rounded-2xl bg-gray-100">
       <video
         v-if="isVideoPost"
+        ref="videoRef"
         :src="previewMedia"
         class="block h-auto w-full object-cover transition-all duration-700 ease-out pointer-events-none"
         :class="isImageLoaded ? 'blur-0 scale-100' : 'blur-xl scale-110'"
         muted
         loop
-        autoplay
         playsinline
+        preload="metadata"
         @loadeddata="isImageLoaded = true"
+        @timeupdate="handleTimeUpdate"
       ></video>
 
       <img
@@ -125,6 +129,9 @@ const likeStore = useLikeStore()
 const { openUserPage } = useOpenUserPage()
 const { toggleLike } = usePostLikeAction()
 
+const videoRef = ref<HTMLVideoElement | null>(null)
+const currentPlayTime = ref(0)
+
 const isPending = ref(false)
 const isImageLoaded = ref(false)
 const previewMedia = computed(() => (props.post.images?.split(',')[0] || '').trim())
@@ -141,8 +148,35 @@ const getCardRect = () => {
   return card instanceof HTMLElement ? card.getBoundingClientRect() : null
 }
 
+const handleMouseEnter = async () => {
+  if (isVideoPost.value && videoRef.value) {
+    try {
+      await videoRef.value.play()
+    } catch (e) {
+      console.warn('Play interrupted or blocked by browser', e)
+    }
+  }
+}
+
+const handleMouseLeave = () => {
+  if (isVideoPost.value && videoRef.value) {
+    videoRef.value.pause()
+  }
+}
+
+const handleTimeUpdate = () => {
+  if (videoRef.value) {
+    currentPlayTime.value = videoRef.value.currentTime
+  }
+}
+
 const handleCardClick = () => {
-  emit('click', props.post, getCardRect())
+  const postWithTime = {
+    ...props.post,
+    _initialVideoTime: currentPlayTime.value
+  } as Post & { _initialVideoTime?: number }
+
+  emit('click', postWithTime, getCardRect())
 }
 
 const handleLike = async () => {

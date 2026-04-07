@@ -23,7 +23,14 @@ public interface UserLikesMapper {
     @Delete("DELETE FROM user_likes WHERE user_id = #{userId} AND post_id = #{postId}")
     void removeLike(@Param("userId") Integer userId, @Param("postId") Integer postId);
 
-    // 查询当前用户所有点赞过的帖子 ID 列表
-    @Select("SELECT post_id FROM user_likes WHERE user_id = #{userId}")
-    List<Integer> listLikedPostIds(Integer userId);
+    // 批量查询当前用户在给定帖子ID列表中点赞了哪些
+    @Select({
+        "<script>",
+        "SELECT post_id FROM user_likes WHERE user_id = #{userId} AND post_id IN ",
+        "<foreach item='id' collection='postIds' open='(' separator=',' close=')'>",
+        "#{id}",
+        "</foreach>",
+        "</script>"
+    })
+    List<Integer> checkUserLikesInBatch(@Param("userId") Integer userId, @Param("postIds") List<Integer> postIds);
 }

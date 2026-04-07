@@ -54,7 +54,6 @@ import {
   nextTick,
   onActivated,
   onBeforeUnmount,
-  onDeactivated,
   onMounted,
   ref,
   watch,
@@ -151,7 +150,7 @@ const fetchPosts = async (isLoadMore = false) => {
     if (res.code !== 1) return
 
     const items = res.data.items || []
-
+    likeStore.syncPostLikes(items)
     if (items.length === 0 && posts.value.length === 0) {
       hasMore.value = false
       return
@@ -220,18 +219,30 @@ const handleModalLike = (postId: number) => {
 }
 
 const saveScroll = () => {
-  const top = scrollContainer.value?.scrollTop || 0
+  if (!scrollContainer.value) return
+  const top = scrollContainer.value.scrollTop
   savedScrollTop.value = top
   sessionStorage.setItem(SCROLL_STORAGE_KEY, String(top))
 }
 
-const restoreScroll = () => {
+const restoreScroll = (immediate = false) => {
   const stored = Number(sessionStorage.getItem(SCROLL_STORAGE_KEY))
   const top = Number.isFinite(stored) ? stored : savedScrollTop.value
   savedScrollTop.value = top
-  requestAnimationFrame(() => {
-    scrollContainer.value?.scrollTo({ top, behavior: 'auto' })
-  })
+  
+  if (immediate) {
+    nextTick(() => {
+      if (scrollContainer.value) {
+        scrollContainer.value.scrollTo({ top, behavior: 'auto' })
+      }
+    })
+  } else {
+    setTimeout(() => {
+      if (scrollContainer.value) {
+        scrollContainer.value.scrollTo({ top, behavior: 'auto' })
+      }
+    }, 50)
+  }
 }
 
 onMounted(() => {
@@ -239,7 +250,7 @@ onMounted(() => {
   void (async () => {
     await fetchPosts()
     await nextTick()
-    restoreScroll()
+    restoreScroll(false)
   })()
 
   const handler = saveScroll
@@ -257,17 +268,11 @@ onMounted(() => {
   }
 })
 
-onDeactivated(() => {
-  saveScroll()
-})
-
 onBeforeUnmount(() => {
-  saveScroll()
   detachScrollListener?.()
 })
 
-onActivated(async () => {
-  await nextTick()
-  restoreScroll()
+onActivated(() => {
+  restoreScroll(true)
 })
 </script>

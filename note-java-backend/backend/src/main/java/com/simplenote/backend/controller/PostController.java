@@ -74,14 +74,7 @@ public class PostController {
         return Result.success("操作成功");
     }
 
-    // 5. 获取当前用户点赞过的帖子 ID 列表 (用于前端点亮红心)
-    @GetMapping("/liked/ids")
-    public Result<List<Integer>> getLikedPostIds() {
-        List<Integer> ids = postService.getLikedPostIds();
-        return Result.success(ids);
-    }
-
-    // 6. 获取当前登录用户发布的所有笔记 (修复：加入分页，复用 pageQueryByUser)
+    // 5. 获取当前登录用户发布的所有笔记 (修复：加入分页，复用 pageQueryByUser)
     @GetMapping("/list/own")
     public Result<PageBean<PostVO>> listOwn(
             @RequestParam(defaultValue = "1") Integer pageNum,
@@ -95,7 +88,7 @@ public class PostController {
         return Result.success(pageBean);
     }
 
-    // 7. 根据指定用户ID分页查询帖子 (用于看他人的主页)
+    // 6. 根据指定用户ID分页查询帖子 (用于看他人的主页)
     @GetMapping("/list/user")
     public Result<PageBean<PostVO>> getUserPosts(
             @RequestParam Integer userId,
@@ -106,7 +99,7 @@ public class PostController {
         return Result.success(pageBean);
     }
 
-    // 8. 获取当前登录用户点赞过的所有笔记 (修复：加入分页参数)
+    // 7. 获取当前登录用户点赞过的所有笔记 (修复：加入分页参数)
     @GetMapping("/list/liked")
     public Result<PageBean<PostVO>> listLiked(
             @RequestParam(defaultValue = "1") Integer pageNum,
@@ -120,7 +113,7 @@ public class PostController {
         return Result.success(pageBean);
     }
 
-    // 9. 删除笔记接口
+    // 8. 删除笔记接口
     @DeleteMapping("/{id}")
     public Result<String> delete(@PathVariable Integer id) {
         Map<String, Object> map = ThreadLocalUtil.get();

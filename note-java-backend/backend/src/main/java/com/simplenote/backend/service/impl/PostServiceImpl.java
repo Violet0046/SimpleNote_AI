@@ -10,8 +10,10 @@ import com.simplenote.backend.pojo.PostVO;
 import com.simplenote.backend.service.PostService;
 import com.simplenote.backend.utils.ThreadLocalUtil;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,31 @@ public class PostServiceImpl implements PostService {
     @Autowired
     private UserLikesMapper userLikesMapper;
 
+    // 统一处理点赞状态的方法
+    private void populateLikeStatus(List<PostVO> posts) {
+        if (posts == null || posts.isEmpty()) {
+            return;
+        }
+        // 1. 尝试获取当前登录用户
+        Map<String, Object> map = ThreadLocalUtil.get();
+        if (map == null || map.get("id") == null) {
+            // 用户未登录，所有帖子都标为未点赞
+            posts.forEach(post -> post.setIsLiked(false));
+            return;
+        }
+        Integer currentUserId = (Integer) map.get("id");
+        // 2. 提取当前页所有帖子的 ID
+        List<Integer> postIds = posts.stream()
+                .map(PostVO::getId)
+                .collect(Collectors.toList());
+
+        // 3. 一次性从数据库中查出当前用户点赞过这些 ID 中的哪几个
+        List<Integer> likedPostIds = userLikesMapper.checkUserLikesInBatch(currentUserId, postIds);
+        // 4. 给 VO 赋值
+        posts.forEach(post -> {
+            post.setIsLiked(likedPostIds.contains(post.getId()));
+        });
+    }
 
     @Override
     public void add(Post post) {
@@ -33,26 +60,28 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public List<PostVO> listWithAuthor() {
-        List<PostVO> list = postMapper.listWithAuthor();
-        return list; // 返回处理过的数据，而不是再去查一遍数据库！
+        return postMapper.listWithAuthor();
     }
 
     @Override
     public PageBean<PostVO> listWithPage(Integer pageNum, Integer pageSize) {
         PageHelper.startPage(pageNum, pageSize);
         List<PostVO> list = postMapper.listWithAuthor();
-
         PageInfo<PostVO> pageInfo = new PageInfo<>(list);
+        
+        populateLikeStatus(pageInfo.getList());
+        
         return new PageBean<>(pageInfo.getTotal(), pageInfo.getList());
     }
 
     @Override
     public PageBean<PostVO> pageQueryByUser(Integer userId, Integer pageNum, Integer pageSize) {
         PageHelper.startPage(pageNum, pageSize);
-        // 统一调用合并后的接口！
         List<PostVO> list = postMapper.listByUserId(userId); 
-        
         PageInfo<PostVO> pageInfo = new PageInfo<>(list);
+        
+        populateLikeStatus(pageInfo.getList());
+        
         return new PageBean<>(pageInfo.getTotal(), pageInfo.getList());
     }
 
@@ -79,14 +108,12 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PageBean<PostVO> listLiked(Integer userId, Integer pageNum, Integer pageSize) {
-        // 1. 开启分页拦截
         PageHelper.startPage(pageNum, pageSize);
-        
-        // 2. 查数据库（SQL 完全不用改，PageHelper 会自动加 Limit）
         List<PostVO> list = postMapper.listLiked(userId);
-        
-        // 3. 封装成分页对象返回
         PageInfo<PostVO> pageInfo = new PageInfo<>(list);
+        
+        populateLikeStatus(pageInfo.getList());
+        
         return new PageBean<>(pageInfo.getTotal(), pageInfo.getList());
     }
 
@@ -97,13 +124,10 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PostVO getPostDetailById(Integer id) {
-        return postMapper.getPostDetailById(id);
-    }
-
-    @Override
-    public List<Integer> getLikedPostIds() {
-        Map<String, Object> map = ThreadLocalUtil.get();
-        Integer userId = (Integer) map.get("id");
-        return userLikesMapper.listLikedPostIds(userId);
+        PostVO postVO = postMapper.getPostDetailById(id);
+        if (postVO != null) {
+            populateLikeStatus(Collections.singletonList(postVO));
+        }
+        return postVO;
     }
 }

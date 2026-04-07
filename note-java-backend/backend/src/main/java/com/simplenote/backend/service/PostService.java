@@ -24,6 +24,4 @@ public interface PostService {
     int softDelete(Integer id, Integer userId);
     // 获取笔记详情（包含作者信息和评论列表）
     PostVO getPostDetailById(Integer id);
-    // 获取用户点赞的帖子ID列表
-    List<Integer> getLikedPostIds();
 }

@@ -14,4 +14,6 @@ public class PostVO extends Post {
     private Integer likeCount;   // 点赞数
     private String title;         // 帖子标题
     private String images;        // 第一张配图
+
+    private Boolean isLiked;    // 当前登录用户是否已点赞（未登录则统一下发 false）
 }

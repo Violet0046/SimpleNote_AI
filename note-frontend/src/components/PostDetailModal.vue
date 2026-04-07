@@ -42,7 +42,7 @@
         </div>
 
         <div v-if="isVideoPost" class="relative z-10 flex h-full w-full items-center justify-center">
-          <video :src="firstImage" controls autoplay loop playsinline class="max-h-full max-w-full object-contain outline-none drop-shadow-lg"></video>
+          <video ref="detailVideoRef" :src="firstImage" controls autoplay loop playsinline class="max-h-full max-w-full object-contain outline-none drop-shadow-lg"></video>
         </div>
 
         <div v-else-if="imageList.length > 0" class="group relative z-10 h-full w-full overflow-hidden">
@@ -243,6 +243,7 @@ const { openUserPage } = useOpenUserPage()
 const { toggleLike } = usePostLikeAction()
 
 const postDetail = ref<Post | null>(null)
+const detailVideoRef = ref<HTMLVideoElement | null>(null)
 const isExpanded = ref(false)
 const isFollowing = ref<boolean | null>(null)
 const currentImageIndex = ref(0)
@@ -423,6 +424,11 @@ const openPostDetail = async () => {
   ])
 
   await nextTick()
+
+  const initialTime = (props.post as any)._initialVideoTime
+  if (isVideoPost.value && detailVideoRef.value && typeof initialTime === 'number') {
+    detailVideoRef.value.currentTime = initialTime
+  }
   await animateModalOpen()
 }
 
