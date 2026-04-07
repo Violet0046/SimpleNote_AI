@@ -241,7 +241,12 @@ const restoreScroll = (immediate = false) => {
   }
 }
 
+const clearScrollStorage = () => {
+  sessionStorage.removeItem(SCROLL_STORAGE_KEY)
+}
+
 onMounted(() => {
+  window.addEventListener('beforeunload', clearScrollStorage)
   updateColumnCount()
   void (async () => {
     await fetchPosts()
@@ -266,6 +271,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   detachScrollListener?.()
+  window.removeEventListener('beforeunload', clearScrollStorage)
 })
 
 onActivated(() => {
