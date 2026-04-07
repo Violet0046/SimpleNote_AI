@@ -30,6 +30,11 @@ const router = createRouter({
           path: 'live',
           name: 'live',
           component: () => import('../views/LiveView.vue')
+        },
+        {
+          path: '/notifications',
+          name: 'notifications',
+          component: () => import('../views/NotificationView.vue')
         }
       ]
     },

@@ -3,7 +3,7 @@
     <div class="mb-5 flex items-center justify-between">
       <h3 class="text-[14px] font-medium text-gray-600 dark:text-gray-400">
         <template v-if="totalCommentsCount > 0">
-          {{ commentsLabel }} {{ totalCommentsCount }} {{ commentsLabel2 }}
+          <span>{{ commentsLabel }}</span>
         </template>
         <template v-else>
           {{ emptyCommentsTitle }}
@@ -72,7 +72,6 @@ defineProps<{
   postUserId: number
   avatarFallback: string
   commentsLabel: string
-  commentsLabel2: string
   emptyCommentsTitle: string
   hottestLabel: string
   newestLabel: string

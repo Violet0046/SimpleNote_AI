@@ -26,7 +26,7 @@
         <button
           v-if="user.id !== authUserId"
           type="button"
-          class="w-full rounded-full py-1.5 text-[13px] font-medium transition-colors"
+          class="w-full rounded-full py-1.5 text-[13px] font-bold transition-colors"
           :class="getFollowButtonInfo(user).class"
           @click="$emit('follow', user)"
         >

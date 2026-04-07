@@ -30,5 +30,4 @@ const authStore = useAuthStore()
 if (authStore.token) {
   authStore.fetchUserInfo()
   const likeStore = useLikeStore()
-  likeStore.fetchUserLikedIds()
 }

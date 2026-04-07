@@ -3,6 +3,8 @@ package com.simplenote.backend.pojo;
 import lombok.Data;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * 帖子实体类
  */
@@ -15,6 +17,6 @@ public class Post {
     private String images;        // 配图
     private Integer likesCount;   // 点赞数
     private LocalDateTime createTime; // 发布时间
-
-    private Integer isVideo;      // 是否为视频帖子
+    @JsonProperty("isVideo")
+    private Boolean isVideo;      // 是否为视频帖子
 }

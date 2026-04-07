@@ -44,7 +44,7 @@ public class PostServiceImpl implements PostService {
         List<Integer> postIds = posts.stream()
                 .map(PostVO::getId)
                 .collect(Collectors.toList());
-
+        if (postIds.isEmpty()) return;
         // 3. 一次性从数据库中查出当前用户点赞过这些 ID 中的哪几个
         List<Integer> likedPostIds = userLikesMapper.checkUserLikesInBatch(currentUserId, postIds);
         // 4. 给 VO 赋值

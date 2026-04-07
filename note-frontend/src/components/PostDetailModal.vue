@@ -133,8 +133,7 @@
             :current-sort-type="currentSortType"
             :post-user-id="postDetail.userId"
             :avatar-fallback="avatarFallback"
-            :comments-label="COPY.commentsLabel"
-            :comments-label2="COPY.commentsLabel2"
+            :comments-label="COPY.CommentsCount(totalCommentsCount)"
             :empty-comments-title="COPY.emptyCommentsTitle"
             :hottest-label="COPY.hottest"
             :newest-label="COPY.newest"
@@ -197,8 +196,6 @@ import type { Post } from '@/types'
 const COPY = {
   follow: '\u5173\u6ce8',
   following: '\u5df2\u5173\u6ce8',
-  commentsLabel: '\u5171',
-  commentsLabel2: '\u6761\u8bc4\u8bba',
   emptyCommentsTitle: '\u8fd9\u662f\u4e00\u7247\u8352\u5730',
   hottest: '\u6700\u70ed',
   newest: '\u6700\u65b0',
@@ -221,7 +218,7 @@ const COPY = {
   followFailed: '\u64cd\u4f5c\u5931\u8d25',
   commentSent: '\u8bc4\u8bba\u53d1\u9001\u6210\u529f',
   commentFailed: '\u8bc4\u8bba\u53d1\u9001\u5931\u8d25',
-  like: '\u8d5e',
+  CommentsCount: (count: number | string) => `\u5171 ${count} \u6761\u8bc4\u8bba`,
 } as const
 
 interface Props {
@@ -296,7 +293,7 @@ const canSubmitComment = computed(() => Boolean(commentText.value.trim()) && !is
 const isPostLiked = computed(() => Boolean(postDetail.value && likeStore.isPostLiked(postDetail.value.id)))
 const likeCountLabel = computed(() => {
   const count = postDetail.value?.likesCount ?? postDetail.value?.likeCount
-  return count ? formatDetailCount(count) : COPY.like
+  return count ? formatDetailCount(count) : '0'
 })
 
 const avatarFallback = 'http://localhost:8080/1.jpg'

@@ -42,7 +42,7 @@
       :visible="showModal"
       :trigger-rect="triggerRect"
       @close="closePostDetail"
-      @like-toggle="selectedPost ? handleModalLike(selectedPost.id) : null"
+      @like-toggle="handleLike"
     />
   </main>
 </template>
@@ -212,10 +212,6 @@ const handleLike = (postId: number, isLiked: boolean) => {
       post.likesCount = isLiked ? (post.likesCount || 0) + 1 : Math.max(0, (post.likesCount || 0) - 1)
     }
   })
-}
-
-const handleModalLike = (postId: number) => {
-  handleLike(postId, !likeStore.isPostLiked(postId))
 }
 
 const saveScroll = () => {
