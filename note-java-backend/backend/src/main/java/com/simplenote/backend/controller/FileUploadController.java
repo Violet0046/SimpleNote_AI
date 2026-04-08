@@ -22,7 +22,7 @@ public class FileUploadController {
     // 必须加上 @RequestParam("file") 才能接到前端的图！
     public Result<String> upload(@RequestParam("file") MultipartFile file) {
         try {
-            // 3. 加了 file == null 的双重防御，彻底杜绝空指针异常
+            // 加了 file == null 的双重防御，彻底杜绝空指针异常
             if (file == null || file.isEmpty()) {
                 return Result.error("上传失败：请选择一个文件");
             }
@@ -47,17 +47,19 @@ public class FileUploadController {
 
             File directory = new File(UPLOAD_DIR);
             if (!directory.exists()) {
-                directory.mkdirs(); // 如果 uploads 文件夹不存在，自动帮你建一个
+                directory.mkdirs(); // 在当前 backend 目录下创建 uploads
             }
 
-            File destFile = new File(UPLOAD_DIR + newFileName);
+            // 使用 .getAbsolutePath() 获取真实绝对路径
+            File destFile = new File(directory.getAbsolutePath(), newFileName);
+            
             file.transferTo(destFile);
 
             String imageUrl = "http://localhost:8080/uploads/" + newFileName;
             return Result.success(imageUrl);
 
         } catch (Exception e) {
-            // 🌟 4. 加上 try-catch，以后就算报错也能在网页看到具体原因，不再报 500！
+            //  加上 try-catch，以后就算报错也能在网页看到具体原因，不再报 500！
             e.printStackTrace();
             return Result.error("服务器内部错误：" + e.getMessage());
         }

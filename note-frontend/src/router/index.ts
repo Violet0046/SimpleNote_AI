@@ -38,12 +38,6 @@ const router = createRouter({
         }
       ]
     },
-    // post 详情现在使用模态框，不再需要路由
-    {
-      path: '/about',
-      name: 'about',
-      component: () => import('../views/AboutView.vue')
-    },
     {
       path: '/login',
       name: 'login',

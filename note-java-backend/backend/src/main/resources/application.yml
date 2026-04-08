@@ -39,5 +39,4 @@ logging:
     "[org.springframework.web.servlet.mvc.method.annotation.SseEmitter]": TRACE
 
 file:
-  # 这里写死你想存放图片的绝对路径（注意最后的 / 不能丢）
-  upload-dir: D:/VS/26project/SimpleNote_AI/note-java-backend/backend/uploads/
+  upload-dir: uploads/
