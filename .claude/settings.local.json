@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(where mvn:*)",
-      "Bash(mvn.cmd -version)",
-      "Bash(echo $M2_HOME)"
-    ]
-  }
-}

@@ -1,21 +1,35 @@
-# Java
-target/
-*.class
-.mvn/wrapper/maven-wrapper.jar
-*.jpg
-*.png
-*.mp4
-# Python
-__pycache__/
+# ------------------------------
+# IDE and OS
+# ------------------------------
+.vscode/
+.idea/
+.DS_Store
+
+# Claude/Codex local permissions
+.claude/
+**/.claude/
+
+# ------------------------------
+# Python (ai-agent-service)
+# ------------------------------
+**/__pycache__/
 *.py[cod]
 *$py.class
 .venv/
 venv/
+ai-agent-service/.env
 
-# VS Code & OS
-.vscode/
-.idea/
-.DS_Store
-.env
+# ------------------------------
+# Frontend (note-frontend)
+# ------------------------------
+note-frontend/node_modules/
+note-frontend/dist/
+note-frontend/.eslintcache
+note-frontend/coverage/
+note-frontend/*.local
 
-*.sql
+# ------------------------------
+# Backend (note-java-backend)
+# ------------------------------
+note-java-backend/backend/target/
+note-java-backend/backend/uploads/
