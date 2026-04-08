@@ -29,6 +29,7 @@ export const useCreatePostFlow = () => {
   const step = ref<CreatePostStep>(1)
   const publishType = ref<PublishType>('video')
   const uploadedMedia = ref<string[]>([])
+  const selectedMediaFiles = ref<File[]>([])
   const isUploading = ref(false)
   const isPublishing = ref(false)
   const countdown = ref(5)
@@ -50,6 +51,7 @@ export const useCreatePostFlow = () => {
     stopCountdown()
     step.value = 1
     uploadedMedia.value = []
+    selectedMediaFiles.value = []
     postForm.title = ''
     postForm.content = ''
     countdown.value = 5
@@ -83,6 +85,7 @@ export const useCreatePostFlow = () => {
         const mediaUrl = await uploadFile(file)
         uploadedUrls.push(mediaUrl)
         uploadedMedia.value.push(mediaUrl)
+        selectedMediaFiles.value.push(file)
       }
 
       return uploadedUrls
@@ -99,6 +102,7 @@ export const useCreatePostFlow = () => {
 
   const removeMediaAt = (index: number) => {
     uploadedMedia.value.splice(index, 1)
+    selectedMediaFiles.value.splice(index, 1)
 
     if (uploadedMedia.value.length === 0) {
       step.value = 1
@@ -151,6 +155,7 @@ export const useCreatePostFlow = () => {
     step,
     publishType,
     uploadedMedia,
+    selectedMediaFiles,
     isUploading,
     isPublishing,
     countdown,

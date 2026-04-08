@@ -123,6 +123,53 @@
 
             <div class="flex h-[600px] flex-1 flex-col bg-white p-6 lg:p-10">
               <div class="flex-1">
+                <div class="mb-6 rounded-2xl border border-[#FFD9DF] bg-[linear-gradient(135deg,#FFF7F8_0%,#FFFFFF_100%)] p-4 shadow-[0_10px_30px_rgba(255,36,66,0.06)]">
+                  <div class="flex flex-col gap-4 lg:flex-row lg:items-center">
+                    <div class="flex-1">
+                      <div class="flex items-start gap-3">
+                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#FF2442] text-white shadow-sm shadow-red-200">
+                          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="1.8"
+                              d="M13 3l-1.743 4.358a1 1 0 01-.55.55L6.35 9.65l4.358 1.743a1 1 0 01.55.55L13 16.3l1.743-4.358a1 1 0 01.55-.55L19.65 9.65l-4.358-1.742a1 1 0 01-.55-.55L13 3z"
+                            />
+                          </svg>
+                        </div>
+                        <div class="min-w-0">
+                          <div class="text-[15px] font-semibold text-gray-900">{{ COPY.aiMagicTitle }}</div>
+                          <p class="mt-1 text-[12px] leading-5 text-gray-500">{{ COPY.aiMagicHint }}</p>
+                        </div>
+                      </div>
+
+                      <div class="mt-4 flex flex-col gap-3 sm:flex-row">
+                        <input
+                          v-model="magicKeywords"
+                          type="text"
+                          :placeholder="COPY.aiMagicPlaceholder"
+                          class="h-11 flex-1 rounded-xl border border-[#FFD0D7] bg-white px-4 text-[14px] text-gray-800 outline-none transition-all placeholder:text-gray-400 focus:border-[#FF2442] focus:ring-4 focus:ring-red-50"
+                        />
+                        <button
+                          class="inline-flex h-11 items-center justify-center rounded-xl px-5 text-[14px] font-semibold text-white transition-all"
+                          :class="canUseAiMagic ? 'bg-[#FF2442] shadow-sm shadow-red-200 hover:-translate-y-0.5 hover:bg-red-600' : 'cursor-not-allowed bg-[#FF9AA8]'"
+                          :disabled="!canUseAiMagic"
+                          type="button"
+                          @click="handleGenerateWithAi"
+                        >
+                          <svg v-if="isAiGenerating" class="mr-2 h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                          </svg>
+                          {{ aiActionText }}
+                        </button>
+                      </div>
+
+                      <p class="mt-2 text-[12px] text-gray-400">{{ COPY.aiMagicExample }}</p>
+                    </div>
+                  </div>
+                </div>
+
                 <input
                   v-model="postForm.title"
                   type="text"
@@ -206,6 +253,7 @@ import { useRouter } from 'vue-router'
 
 import { ElMessage } from 'element-plus'
 
+import { useAiPostAssistant } from '@/modules/ai/composables/useAiPostAssistant'
 import { useCreatePostFlow } from '@/modules/post/composables/useCreatePostFlow'
 import { useAuthStore } from '@/stores/auth'
 
@@ -235,6 +283,15 @@ const COPY = {
   publishing: '\u7b14\u8bb0\u53d1\u5e03\u4e2d...',
   uploadFailed: '\u6587\u4ef6\u4e0a\u4f20\u4e2d\u65ad',
   publishFailed: '\u53d1\u5e03\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5',
+  aiMagicTitle: '\u9b54\u6cd5\u751f\u6210',
+  aiMagicHint: '\u8f93\u5165\u51e0\u4e2a\u7b80\u6d01\u5173\u952e\u8bcd\uff0cAI \u4f1a\u7ed3\u5408\u4f60\u5f53\u524d\u4e0a\u4f20\u7684\u56fe\u7247\u6216\u89c6\u9891\u5173\u952e\u5e27\uff0c\u5e2e\u4f60\u751f\u6210\u6807\u9898\u548c\u6b63\u6587\u8349\u7a3f\u3002',
+  aiMagicPlaceholder: '\u4f8b\u5982\uff1a\u7a7f\u642d \u3001 \u5973\u5b69 \u3001 \u6625\u65e5',
+  aiMagicExample: '\u5efa\u8bae\u8f93\u5165 2-5 \u4e2a\u5173\u952e\u8bcd\uff0cAI \u4f1a\u76f4\u63a5\u56de\u586b\u5230\u6807\u9898\u548c\u6b63\u6587\u533a\u57df\u3002',
+  aiGenerate: '\u9b54\u6cd5\u751f\u6210',
+  aiRegenerate: '\u91cd\u65b0\u751f\u6210',
+  aiGenerating: '\u751f\u6210\u4e2d...',
+  aiGenerateFailed: 'AI \u751f\u6210\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5',
+  aiGenerateSuccess: 'AI \u5df2\u4e3a\u4f60\u751f\u6210\u8349\u7a3f',
 } as const
 
 const router = useRouter()
@@ -244,6 +301,7 @@ const {
   step,
   publishType,
   uploadedMedia,
+  selectedMediaFiles,
   isUploading,
   isPublishing,
   countdown,
@@ -257,10 +315,36 @@ const {
   stopCountdown,
 } = useCreatePostFlow()
 
+const {
+  keywords: magicKeywords,
+  isGenerating: isAiGenerating,
+  canGenerate: canGenerateMagic,
+  generate: generateWithAi,
+  reset: resetAiAssistant,
+} = useAiPostAssistant({
+  publishType,
+  mediaFiles: selectedMediaFiles,
+  postForm,
+})
+
 const inputAccept = computed(() => (publishType.value === 'video' ? 'video/*' : 'image/*'))
 const uploadPrompt = computed(() => (publishType.value === 'video' ? COPY.videoPrompt : COPY.imagePrompt))
 const uploadHint = computed(() => (publishType.value === 'video' ? COPY.videoHint : COPY.imageHint))
 const busyLabel = computed(() => (isUploading.value ? COPY.uploading : COPY.publishing))
+const aiActionText = computed(() => {
+  if (isAiGenerating.value) {
+    return COPY.aiGenerating
+  }
+
+  return postForm.title.trim() || postForm.content.trim()
+    ? COPY.aiRegenerate
+    : COPY.aiGenerate
+})
+const canUseAiMagic = computed(() => (
+  canGenerateMagic.value
+  && !isUploading.value
+  && !isPublishing.value
+))
 
 const toMessage = (error: unknown, fallback: string) => {
   if (error instanceof Error && error.message) {
@@ -288,6 +372,7 @@ const removeImage = (index: number) => {
 
 const resetUpload = () => {
   reset()
+  resetAiAssistant()
 }
 
 const goToHome = () => {
@@ -305,6 +390,15 @@ const handlePublish = async () => {
     await publish()
   } catch (error) {
     ElMessage.error(toMessage(error, COPY.publishFailed))
+  }
+}
+
+const handleGenerateWithAi = async () => {
+  try {
+    await generateWithAi()
+    ElMessage.success(COPY.aiGenerateSuccess)
+  } catch (error) {
+    ElMessage.error(toMessage(error, COPY.aiGenerateFailed))
   }
 }
 </script>
