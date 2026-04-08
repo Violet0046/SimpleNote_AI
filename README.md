@@ -71,6 +71,8 @@ npm run dev
 **访问 http://localhost:5173**
 
 ## 项目目录速览
+```text
+SimpleNote_AI/
 ├── note-frontend/              # 前端 Vue 3 工程 (FSD架构)
 │   ├── src/modules/            # 核心业务域 (auth, post, profile, social, ai)
 │   ├── src/shared/             # 底层公共组件与 Hooks
@@ -80,3 +82,4 @@ npm run dev
 ├── ai-agent-service/           # Python AI 微服务
 │   └── src/api/routes/         # FastAPI 路由逻辑
 └── init.sql                    # 数据库初始化脚本
+```
