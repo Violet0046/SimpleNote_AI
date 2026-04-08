@@ -50,8 +50,8 @@ cd note-java-backend/backend
 mvn clean install
 mvn spring-boot:run
 ```
-**提示：项目已配置默认连接本地 MySQL (root / 1234，数据库名 simplenote_db)。**
-**若你的本地数据库配置不同，或连接云数据库，无需修改代码，请直接配置环境变量：DB_HOST=你的IP DB_PORT=3306 DB_NAME=库名 DB_USERNAME=账号 DB_PASSWORD=密码**
+**提示：项目已配置默认连接本地 MySQL (root / 1234，数据库名 simplenote_db)。**<br>
+**若你的本地数据库配置不同，或连接云数据库，无需修改代码，请直接配置环境变量：DB_HOST=你的IP DB_PORT=3306 DB_NAME=库名 DB_USERNAME=账号 DB_PASSWORD=密码**<br>
 **服务将运行在 http://localhost:8080**
 ### 3. Python 后端 (AI Agent 微服务)
 **配置你的 OpenAI API Key (如果在 .env 中)**
@@ -71,21 +71,12 @@ npm run dev
 **访问 http://localhost:5173**
 
 ## 项目目录速览
-
 ├── note-frontend/              # 前端 Vue 3 工程 (FSD架构)
-
 │   ├── src/modules/            # 核心业务域 (auth, post, profile, social, ai)
-
 │   ├── src/shared/             # 底层公共组件与 Hooks
-
 │   └── src/pages/              # 页面级容器
-
 ├── note-java-backend/          # Java 核心后端
-
 │   └── backend/src/main/java/  # Spring Boot (Controller, Service, Mapper, Pojo)
-
 ├── ai-agent-service/           # Python AI 微服务
-
 │   └── src/api/routes/         # FastAPI 路由逻辑
-
 └── init.sql                    # 数据库初始化脚本
