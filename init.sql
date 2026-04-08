@@ -1,7 +1,7 @@
 -- 初始化数据库和表结构的SQL脚本
 -- 创建数据库
-CREATE DATABASE IF NOT EXISTS simplenote DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE simplenote;
+CREATE DATABASE IF NOT EXISTS simplenote_db DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE simplenote_db;
 
 -- 1. 用户表
 CREATE TABLE IF NOT EXISTS `user` (
