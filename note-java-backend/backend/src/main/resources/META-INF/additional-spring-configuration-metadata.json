@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "file.upload-dir",
+      "type": "java.lang.String",
+      "description": "Directory used to store uploaded media files.",
+      "defaultValue": "uploads/"
+    }
+  ]
+}
