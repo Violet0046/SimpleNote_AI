@@ -13,6 +13,13 @@ spring:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:simplenote_db}?serverTimezone=Asia/Shanghai&characterEncoding=utf8&useSSL=false
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:1234}
+
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      database: ${REDIS_DATABASE:0}
+      timeout: 2s
     
   # ================= 新增：打破体型封印，允许上传大图 =================
   servlet:
@@ -40,3 +47,12 @@ logging:
 
 file:
   upload-dir: uploads/
+
+cache:
+  post:
+    detail-ttl: 30m
+    null-ttl: 5m
+
+social:
+  sync:
+    fixed-delay-ms: 10000

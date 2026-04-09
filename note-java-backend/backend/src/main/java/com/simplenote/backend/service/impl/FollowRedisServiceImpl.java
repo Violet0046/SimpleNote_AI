@@ -7,22 +7,32 @@ import com.simplenote.backend.mapper.UserMapper;
 import com.simplenote.backend.pojo.PageBean;
 import com.simplenote.backend.pojo.UserDetailVO;
 import com.simplenote.backend.service.FollowService;
+import com.simplenote.backend.service.support.InteractionRedisService;
 import com.simplenote.backend.utils.JwtUtils;
 import com.simplenote.backend.utils.ThreadLocalUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.List;
 import java.util.Map;
 
-public class FollowServiceImpl implements FollowService {
+@Primary
+@Service
+public class FollowRedisServiceImpl implements FollowService {
 
     @Autowired
     private FollowMapper followMapper;
+
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private InteractionRedisService interactionRedisService;
+
     @Override
     public String toggleFollow(Integer followedId) {
         Integer myId = getCurrentUserId();
@@ -30,16 +40,21 @@ public class FollowServiceImpl implements FollowService {
             throw new RuntimeException("请先登录");
         }
         if (myId.equals(followedId)) {
-            throw new RuntimeException("不能关注你自己哦");
+            throw new RuntimeException("不能关注自己");
         }
 
-        if (followMapper.isFollowing(myId, followedId) > 0) {
-            followMapper.unfollow(myId, followedId);
-            return "已取消关注";
-        } else {
-            followMapper.follow(myId, followedId);
-            return "关注成功";
+        return interactionRedisService.toggleFollow(myId, followedId) ? "关注成功" : "已取消关注";
+    }
+
+    @Override
+    public boolean isFollowing(Integer followerId, Integer followedId) {
+        Boolean cachedStatus = interactionRedisService.getCachedFollowStatus(followerId, followedId);
+        if (cachedStatus != null) {
+            return cachedStatus;
         }
+
+        Integer count = followMapper.checkFollowStatus(followerId, followedId);
+        return count != null && count > 0;
     }
 
     @Override
@@ -47,6 +62,7 @@ public class FollowServiceImpl implements FollowService {
         Integer myId = getCurrentUserId();
         PageHelper.startPage(pageNum, pageSize);
         List<UserDetailVO> list = userMapper.getFollowingList(userId, myId);
+        applyFollowStatusFromCache(list, myId);
         PageInfo<UserDetailVO> pageInfo = new PageInfo<>(list);
         return new PageBean<>(pageInfo.getTotal(), list);
     }
@@ -56,27 +72,38 @@ public class FollowServiceImpl implements FollowService {
         Integer myId = getCurrentUserId();
         PageHelper.startPage(pageNum, pageSize);
         List<UserDetailVO> list = userMapper.getFollowersList(userId, myId);
+        applyFollowStatusFromCache(list, myId);
         PageInfo<UserDetailVO> pageInfo = new PageInfo<>(list);
         return new PageBean<>(pageInfo.getTotal(), list);
     }
 
-    @Override
-    public boolean isFollowing(Integer followerId, Integer followedId) {
-        Integer count = followMapper.checkFollowStatus(followerId, followedId);
-        return count != null && count > 0;
+    private void applyFollowStatusFromCache(List<UserDetailVO> list, Integer myId) {
+        if (list == null || list.isEmpty() || myId == null || myId == 0) {
+            return;
+        }
+
+        list.forEach(user -> {
+            Boolean cachedFollowing = interactionRedisService.getCachedFollowStatus(myId, user.getId());
+            if (cachedFollowing != null) {
+                user.setIsFollowing(cachedFollowing ? 1 : 0);
+            }
+
+            Boolean cachedFollower = interactionRedisService.getCachedFollowStatus(user.getId(), myId);
+            if (cachedFollower != null) {
+                user.setIsFollower(cachedFollower ? 1 : 0);
+            }
+        });
     }
 
-    // 修复：穿透拦截器白名单，手动解析 HTTP 请求头里的 Token 拿真实用户 ID
     private Integer getCurrentUserId() {
         try {
-            // 1. 常规获取（针对没有被白名单放行的接口）
             Map<String, Object> map = ThreadLocalUtil.get();
             if (map != null && map.get("id") != null) {
                 return (Integer) map.get("id");
             }
-            
-            // 2. 暴力破解：如果拦截器罢工了，我们自己从请求头里把 Token 抠出来解析！
-            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+
+            ServletRequestAttributes attributes =
+                    (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             if (attributes != null) {
                 HttpServletRequest request = attributes.getRequest();
                 String token = request.getHeader("Authorization");
@@ -87,7 +114,8 @@ public class FollowServiceImpl implements FollowService {
                     }
                 }
             }
-        } catch (Exception e) {}
-        return 0; // 真正的没登录游客才返回 0
+        } catch (Exception ignored) {
+        }
+        return 0;
     }
 }

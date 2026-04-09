@@ -19,4 +19,19 @@ public interface FollowMapper {
     // 查询是否已经关注
     @Select("SELECT COUNT(*) FROM follow_user WHERE follower_id = #{followerId} AND followed_id = #{followedId}")
     Integer checkFollowStatus(@Param("followerId") Integer followerId, @Param("followedId") Integer followedId);
+    @Select("SELECT followed_id FROM follow_user WHERE follower_id = #{followerId}")
+    java.util.List<Integer> findFollowedIdsByFollowerId(@Param("followerId") Integer followerId);
+
+    @Delete("DELETE FROM follow_user WHERE follower_id = #{followerId}")
+    void deleteByFollowerId(@Param("followerId") Integer followerId);
+
+    @Insert({
+        "<script>",
+        "INSERT INTO follow_user(follower_id, followed_id, create_time) VALUES ",
+        "<foreach item='followedId' collection='followedIds' separator=','>",
+        "(#{followerId}, #{followedId}, now())",
+        "</foreach>",
+        "</script>"
+    })
+    void batchInsertByFollowerId(@Param("followerId") Integer followerId, @Param("followedIds") java.util.List<Integer> followedIds);
 }

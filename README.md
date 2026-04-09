@@ -48,7 +48,7 @@ SimpleNote AI 是一款内容社区全栈社交应用。本项目不仅实现了
 cd note-java-backend/backend
 
 mvn clean install
-mvn spring-boot:run
+.\mvnw spring-boot:run
 ```
 **提示：项目已配置默认连接本地 MySQL (root / 1234，数据库名 simplenote_db)。**<br>
 **若你的本地数据库配置不同，或连接云数据库，无需修改代码，请直接配置环境变量：DB_HOST=你的IP DB_PORT=3306 DB_NAME=库名 DB_USERNAME=账号 DB_PASSWORD=密码**<br>
@@ -83,3 +83,17 @@ SimpleNote_AI/
 │   └── src/api/routes/         # FastAPI 路由逻辑
 └── init.sql                    # 数据库初始化脚本
 ```
+
+docker exec -it simplenote-redis redis-cli
+# 
+KEYS post:*
+"post:likes:init:3"      帖子 3 的点赞集合，已经从 MySQL 加载到 Redis 里了
+"post:likes:users:3"     真正的点赞关系数据
+
+SMEMBERS post:likes:users:3   哪些用户给帖子 3 点过赞
+
+# GET post:likes:init:3
+如果返回 1，就表示后端已经做过这一步：
+去 MySQL 查帖子 3 的点赞用户
+把这些用户装进 Redis
+然后打上这个初始化标记

@@ -33,4 +33,19 @@ public interface UserLikesMapper {
         "</script>"
     })
     List<Integer> checkUserLikesInBatch(@Param("userId") Integer userId, @Param("postIds") List<Integer> postIds);
+    @Select("SELECT user_id FROM user_likes WHERE post_id = #{postId}")
+    List<Integer> findUserIdsByPostId(@Param("postId") Integer postId);
+
+    @Delete("DELETE FROM user_likes WHERE post_id = #{postId}")
+    void deleteByPostId(@Param("postId") Integer postId);
+
+    @Insert({
+        "<script>",
+        "INSERT INTO user_likes(user_id, post_id, create_time) VALUES ",
+        "<foreach item='userId' collection='userIds' separator=','>",
+        "(#{userId}, #{postId}, now())",
+        "</foreach>",
+        "</script>"
+    })
+    void batchInsertByPostId(@Param("postId") Integer postId, @Param("userIds") List<Integer> userIds);
 }

@@ -21,14 +21,16 @@ CREATE TABLE IF NOT EXISTS `user` (
 
 -- 2. 帖子/笔记表 (严格对齐 Post.java 实体类)
 CREATE TABLE IF NOT EXISTS `post` (
-  `id` INT(11) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `user_id` INT(11) NOT NULL COMMENT '发帖人用户ID',
-  `title` VARCHAR(128) NOT NULL COMMENT '帖子标题',
-  `content` TEXT DEFAULT NULL COMMENT '帖子正文(可为空)',
-  `images` TEXT DEFAULT NULL COMMENT '多图URL列表(逗号分隔)',
-  `is_video` INT(11) DEFAULT 0 COMMENT '是否为视频: 0-图文, 1-视频',
-  `likes_count` INT(11) DEFAULT 0 COMMENT '点赞数',
-  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '发布时间',
+  `id` BIGINT(20) NOT NULL AUTO_INCREMENT COMMENT '帖子主键ID',
+  `user_id` BIGINT(20) NOT NULL COMMENT '发帖人用户ID',
+  `title` VARCHAR(255) NOT NULL COMMENT '帖子标题',
+  `content` MEDIUMTEXT COMMENT '帖子正文(可为空)',
+  `images` TEXT COMMENT '多图URL列表(逗号分隔)',
+  `likes_count` INT(11) NOT NULL DEFAULT 0 COMMENT '点赞数',
+  `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '发布时间',
+  `is_deleted` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '逻辑删除：0-未删除，1-已删除',
+  `ip_location` VARCHAR(64) COMMENT '发布时的IP属地',
+  `is_video` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否为视频：0-图文，1-视频',
   PRIMARY KEY (`id`),
   KEY `idx_user_id` (`user_id`),
   KEY `idx_create_time` (`create_time`)

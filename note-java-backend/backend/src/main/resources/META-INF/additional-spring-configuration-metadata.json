@@ -5,6 +5,24 @@
       "type": "java.lang.String",
       "description": "Directory used to store uploaded media files.",
       "defaultValue": "uploads/"
+    },
+    {
+      "name": "cache.post.detail-ttl",
+      "type": "java.time.Duration",
+      "description": "TTL for cached post detail payloads.",
+      "defaultValue": "30m"
+    },
+    {
+      "name": "cache.post.null-ttl",
+      "type": "java.time.Duration",
+      "description": "TTL for cached empty post detail markers.",
+      "defaultValue": "5m"
+    },
+    {
+      "name": "social.sync.fixed-delay-ms",
+      "type": "java.lang.Long",
+      "description": "Fixed delay in milliseconds for syncing Redis social interaction data back to MySQL.",
+      "defaultValue": 10000
     }
   ]
 }

@@ -73,4 +73,6 @@ public interface PostMapper {
     // 9. 点赞数 -1
     @Update("UPDATE post SET likes_count = likes_count - 1 WHERE id = #{postId} AND likes_count > 0")
     void decrementLikes(Integer postId);
+    @Update("UPDATE post SET likes_count = #{likesCount} WHERE id = #{postId}")
+    void updateLikesCount(@Param("postId") Integer postId, @Param("likesCount") Integer likesCount);
 }
