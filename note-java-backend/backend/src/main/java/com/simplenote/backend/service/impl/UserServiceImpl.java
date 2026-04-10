@@ -1,16 +1,27 @@
 package com.simplenote.backend.service.impl;
 
+import com.simplenote.backend.mapper.PostMapper;
 import com.simplenote.backend.mapper.UserMapper;
+import com.simplenote.backend.pojo.Post;
 import com.simplenote.backend.pojo.User;
 import com.simplenote.backend.pojo.UserDetailVO;
 import com.simplenote.backend.service.UserService;
+import com.simplenote.backend.service.support.InteractionRedisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class UserServiceImpl implements UserService {
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private PostMapper postMapper;
+
+    @Autowired
+    private InteractionRedisService interactionRedisService;
 
     @Override
     public User findByUsername(String username) {
@@ -36,9 +47,9 @@ public class UserServiceImpl implements UserService {
         
         // 容错处理：万一查出来的统计数据是 null，给个默认值 0 (防御性编程)
         if (userDetailVO != null) {
-            if (userDetailVO.getFollowingCount() == null) userDetailVO.setFollowingCount(0);
-            if (userDetailVO.getFollowersCount() == null) userDetailVO.setFollowersCount(0);
-            if (userDetailVO.getLikesCount() == null) userDetailVO.setLikesCount(0);
+            userDetailVO.setFollowingCount(Math.toIntExact(interactionRedisService.getFollowingCount(id)));
+            userDetailVO.setFollowersCount(Math.toIntExact(interactionRedisService.getFollowersCount(id)));
+            userDetailVO.setLikesCount(calculateRealtimeReceivedLikes(id));
         }
         
         return userDetailVO;
@@ -47,5 +58,19 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateInfo(User user) {
         userMapper.update(user);
+    }
+
+    private Integer calculateRealtimeReceivedLikes(Integer userId) {
+        List<Post> posts = postMapper.findLikeStatsByUserId(userId);
+        int totalLikes = 0;
+        for (Post post : posts) {
+            Integer cachedLikeCount = interactionRedisService.getCachedLikeCount(post.getId());
+            if (cachedLikeCount != null) {
+                totalLikes += cachedLikeCount;
+            } else if (post.getLikesCount() != null) {
+                totalLikes += post.getLikesCount();
+            }
+        }
+        return totalLikes;
     }
 }

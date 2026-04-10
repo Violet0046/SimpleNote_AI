@@ -61,4 +61,14 @@ public interface UserMapper {
             "JOIN follow_user fu ON u.id = fu.follower_id " +
             "WHERE fu.followed_id = #{userId}")
     List<UserDetailVO> getFollowersList(@Param("userId") Integer userId, @Param("myId") Integer myId);
+    @Select({
+        "<script>",
+        "SELECT id, nickname, avatar, intro, gender, ip_location ",
+        "FROM user WHERE id IN ",
+        "<foreach item='id' collection='userIds' open='(' separator=',' close=')'>",
+        "#{id}",
+        "</foreach>",
+        "</script>"
+    })
+    List<UserDetailVO> findUserCardsByIds(@Param("userIds") List<Integer> userIds);
 }

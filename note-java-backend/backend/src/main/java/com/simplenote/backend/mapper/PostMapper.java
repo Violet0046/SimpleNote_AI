@@ -75,4 +75,22 @@ public interface PostMapper {
     void decrementLikes(Integer postId);
     @Update("UPDATE post SET likes_count = #{likesCount} WHERE id = #{postId}")
     void updateLikesCount(@Param("postId") Integer postId, @Param("likesCount") Integer likesCount);
+    @Select({
+        "<script>",
+        "SELECT p.*, ",
+        "u.nickname AS authorName, ",
+        "u.avatar AS authorAvatar, ",
+        "p.likes_count AS likeCount ",
+        "FROM post p ",
+        "JOIN user u ON p.user_id = u.id ",
+        "WHERE p.is_deleted = 0 AND p.id IN ",
+        "<foreach item='id' collection='postIds' open='(' separator=',' close=')'>",
+        "#{id}",
+        "</foreach>",
+        "</script>"
+    })
+    List<PostVO> listByIds(@Param("postIds") List<Integer> postIds);
+
+    @Select("SELECT id, likes_count FROM post WHERE user_id = #{userId} AND is_deleted = 0")
+    List<Post> findLikeStatsByUserId(@Param("userId") Integer userId);
 }

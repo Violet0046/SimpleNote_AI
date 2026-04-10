@@ -14,6 +14,8 @@ import com.simplenote.backend.service.support.InteractionRedisService;
 import com.simplenote.backend.utils.ThreadLocalUtil;
 
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -130,14 +132,18 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PageBean<PostVO> listLiked(Integer userId, Integer pageNum, Integer pageSize) {
-        PageHelper.startPage(pageNum, pageSize);
-        List<PostVO> list = postMapper.listLiked(userId);
-        PageInfo<PostVO> pageInfo = new PageInfo<>(list);
-        
-        populateLikeStatus(pageInfo.getList());
-        applyCachedLikeMetrics(pageInfo.getList());
-        
-        return new PageBean<>(pageInfo.getTotal(), pageInfo.getList());
+        long total = interactionRedisService.getLikedPostCount(userId);
+        List<Integer> postIds = interactionRedisService.getLikedPostIdsPage(userId, pageNum, pageSize);
+        if (postIds.isEmpty()) {
+            return new PageBean<>(total, Collections.emptyList());
+        }
+
+        List<PostVO> list = postMapper.listByIds(postIds);
+        sortPostsByIdOrder(list, postIds);
+        populateLikeStatus(list);
+        applyCachedLikeMetrics(list);
+
+        return new PageBean<>(total, list);
     }
 
     @Override
@@ -193,6 +199,7 @@ public class PostServiceImpl implements PostService {
             Integer cachedLikeCount = interactionRedisService.getCachedLikeCount(post.getId());
             if (cachedLikeCount != null) {
                 post.setLikeCount(cachedLikeCount);
+                post.setLikesCount(cachedLikeCount);
             }
 
             if (currentUserId == null) {
@@ -204,6 +211,15 @@ public class PostServiceImpl implements PostService {
                 post.setIsLiked(cachedLikeStatus);
             }
         });
+    }
+
+    private void sortPostsByIdOrder(List<PostVO> posts, List<Integer> orderedIds) {
+        Map<Integer, Integer> orderMap = new HashMap<>(orderedIds.size());
+        for (int i = 0; i < orderedIds.size(); i++) {
+            orderMap.put(orderedIds.get(i), i);
+        }
+
+        posts.sort(Comparator.comparingInt(post -> orderMap.getOrDefault(post.getId(), Integer.MAX_VALUE)));
     }
 
     @NonNull

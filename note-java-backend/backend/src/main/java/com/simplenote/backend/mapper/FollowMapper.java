@@ -19,15 +19,31 @@ public interface FollowMapper {
     // 查询是否已经关注
     @Select("SELECT COUNT(*) FROM follow_user WHERE follower_id = #{followerId} AND followed_id = #{followedId}")
     Integer checkFollowStatus(@Param("followerId") Integer followerId, @Param("followedId") Integer followedId);
-    @Select("SELECT followed_id FROM follow_user WHERE follower_id = #{followerId}")
+    @Select("SELECT followed_id FROM follow_user WHERE follower_id = #{followerId} ORDER BY create_time DESC")
     java.util.List<Integer> findFollowedIdsByFollowerId(@Param("followerId") Integer followerId);
+
+    @Select("SELECT follower_id FROM follow_user WHERE followed_id = #{followedId} ORDER BY create_time DESC")
+    java.util.List<Integer> findFollowerIdsByFollowedId(@Param("followedId") Integer followedId);
 
     @Delete("DELETE FROM follow_user WHERE follower_id = #{followerId}")
     void deleteByFollowerId(@Param("followerId") Integer followerId);
 
+    @Delete({
+        "<script>",
+        "DELETE FROM follow_user ",
+        "WHERE follower_id = #{followerId} ",
+        "AND followed_id NOT IN ",
+        "<foreach item='followedId' collection='followedIds' open='(' separator=',' close=')'>",
+        "#{followedId}",
+        "</foreach>",
+        "</script>"
+    })
+    void deleteByFollowerIdAndFollowedIdNotIn(@Param("followerId") Integer followerId,
+                                              @Param("followedIds") java.util.List<Integer> followedIds);
+
     @Insert({
         "<script>",
-        "INSERT INTO follow_user(follower_id, followed_id, create_time) VALUES ",
+        "INSERT IGNORE INTO follow_user(follower_id, followed_id, create_time) VALUES ",
         "<foreach item='followedId' collection='followedIds' separator=','>",
         "(#{followerId}, #{followedId}, now())",
         "</foreach>",
