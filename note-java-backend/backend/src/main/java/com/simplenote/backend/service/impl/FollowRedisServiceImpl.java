@@ -2,7 +2,6 @@ package com.simplenote.backend.service.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.simplenote.backend.mapper.FollowMapper;
 import com.simplenote.backend.mapper.UserMapper;
 import com.simplenote.backend.pojo.PageBean;
 import com.simplenote.backend.pojo.UserDetailVO;
@@ -19,9 +18,6 @@ import java.util.List;
 import java.util.Map;
 
 public class FollowRedisServiceImpl implements FollowService {
-
-    @Autowired
-    private FollowMapper followMapper;
 
     @Autowired
     private UserMapper userMapper;
