@@ -17,33 +17,29 @@ spring:
   data:
     redis:
       host: ${REDIS_HOST:127.0.0.1}
-      port: ${REDIS_PORT:6379}
+      port: ${REDIS_PORT:6600}
       database: ${REDIS_DATABASE:0}
       timeout: 2s
-    
-  # ================= 新增：打破体型封印，允许上传大图 =================
+
   servlet:
     multipart:
       max-file-size: 10MB
       max-request-size: 100MB
 
-# =================  MyBatis 配置 =================
 mybatis:
   configuration:
-    # 开启驼峰命名自动映射
     map-underscore-to-camel-case: true
-    # 在控制台打印执行的 SQL 语句
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 logging:
   charset:
     console: UTF-8
     file: UTF-8
   level:
-    "[com.simplenote.backend]": TRACE
-    "[org.springframework.web]": DEBUG
+    "[com.simplenote.backend]": INFO
+    "[org.springframework.web]": WARN
+    "[org.springframework.data.redis]": WARN
+    "[org.springframework.web.servlet.mvc.method.annotation.SseEmitter]": WARN
     root: INFO
-    "[org.springframework.web.servlet.mvc.method.annotation.SseEmitter]": TRACE
 
 file:
   upload-dir: uploads/
@@ -56,3 +52,12 @@ cache:
 social:
   sync:
     fixed-delay-ms: 10000
+
+agent:
+  knowledge:
+    min-post-id: 24
+    max-post-id: 60
+    max-posts: 40
+    max-comments-per-post: 2
+    max-content-length: 360
+    max-comment-length: 120

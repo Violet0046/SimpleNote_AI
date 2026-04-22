@@ -2,6 +2,7 @@ package com.simplenote.backend.service;
 
 import com.simplenote.backend.pojo.CommentAddDTO;
 import com.simplenote.backend.pojo.CommentVO;
+import com.simplenote.backend.pojo.LikeStateVO;
 import com.simplenote.backend.pojo.PageBean;
 
 
@@ -14,5 +15,5 @@ public interface CommentService {
     PageBean<CommentVO> getCommentTreePage(Integer postId, Integer pageNum, Integer pageSize, Integer sortType);
     
     PageBean<CommentVO> getRepliesPage(Long parentId, Integer pageNum, Integer pageSize);
-    void toggleCommentLike(Long commentId);
+    LikeStateVO setCommentLikeState(Long commentId, boolean desiredLiked);
 }

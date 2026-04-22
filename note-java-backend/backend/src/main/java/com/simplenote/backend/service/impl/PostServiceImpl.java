@@ -6,12 +6,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.simplenote.backend.mapper.PostMapper;
 import com.simplenote.backend.mapper.UserLikesMapper;
+import com.simplenote.backend.pojo.LikeStateVO;
 import com.simplenote.backend.pojo.PageBean;
 import com.simplenote.backend.pojo.Post;
 import com.simplenote.backend.pojo.PostVO;
 import com.simplenote.backend.service.PostService;
-import com.simplenote.backend.service.support.InteractionRedisService;
-import com.simplenote.backend.utils.ThreadLocalUtil;
+import com.simplenote.backend.interaction.InteractionRedisService;
+import com.simplenote.backend.security.context.UserContextHolder;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -61,7 +62,7 @@ public class PostServiceImpl implements PostService {
             return;
         }
         // 1. 尝试获取当前登录用户
-        Map<String, Object> map = ThreadLocalUtil.get();
+        Map<String, Object> map = UserContextHolder.get();
         if (map == null || map.get("id") == null) {
             // 用户未登录，所有帖子都标为未点赞
             posts.forEach(post -> post.setIsLiked(false));
@@ -117,17 +118,18 @@ public class PostServiceImpl implements PostService {
 
     @Transactional  
     @Override
-    public void toggleLike(Integer postId) {
+    public LikeStateVO setLikeState(Integer postId, boolean desiredLiked) {
         Post post = postMapper.findById(postId);
         if (post == null) {
             throw new RuntimeException("点赞失败：该帖子已被删除或不存在！");
         }
         
-        Map<String, Object> map = ThreadLocalUtil.get();
+        Map<String, Object> map = UserContextHolder.get();
         Integer userId = (Integer) map.get("id");
-        interactionRedisService.togglePostLike(postId, userId);
+        LikeStateVO state = interactionRedisService.setPostLikeState(postId, userId, desiredLiked);
 
         evictPostDetailCache(postId);
+        return state;
     }
 
     @Override
@@ -192,7 +194,7 @@ public class PostServiceImpl implements PostService {
             return;
         }
 
-        Map<String, Object> map = ThreadLocalUtil.get();
+        Map<String, Object> map = UserContextHolder.get();
         Integer currentUserId = map == null ? null : (Integer) map.get("id");
 
         posts.forEach(post -> {

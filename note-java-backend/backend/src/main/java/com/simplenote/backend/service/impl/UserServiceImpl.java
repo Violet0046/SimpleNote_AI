@@ -6,7 +6,7 @@ import com.simplenote.backend.pojo.Post;
 import com.simplenote.backend.pojo.User;
 import com.simplenote.backend.pojo.UserDetailVO;
 import com.simplenote.backend.service.UserService;
-import com.simplenote.backend.service.support.InteractionRedisService;
+import com.simplenote.backend.interaction.InteractionRedisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

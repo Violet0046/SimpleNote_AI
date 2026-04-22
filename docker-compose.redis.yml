@@ -4,7 +4,7 @@ services:
     container_name: simplenote-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "6600:6379"
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - simplenote-redis-data:/data

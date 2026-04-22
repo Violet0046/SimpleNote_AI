@@ -4,9 +4,8 @@ from typing import Any
 from openai import AsyncOpenAI
 
 from src.core.config import Settings
-from src.core.errors import ContentGenerationError
-from src.models.content import GeneratePostDraftResponse
-from src.providers.base import PromptPackage
+from src.core.errors import AIServiceError
+from src.providers.base import JsonGenerationRequest
 
 
 class OpenAICompatibleProvider:
@@ -19,64 +18,33 @@ class OpenAICompatibleProvider:
         self.model = settings.openai_model
         self.provider_name = settings.ai_provider
 
-    async def generate_post_draft(self, prompt: PromptPackage) -> GeneratePostDraftResponse:
-        user_content: list[dict[str, Any]] = [
-            {
-                "type": "text",
-                "text": prompt.user_prompt,
-            }
-        ]
-
-        for asset in prompt.assets:
-            user_content.append(
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": asset.data_url,
-                    },
-                }
-            )
-
+    async def generate_json(self, request: JsonGenerationRequest) -> dict[str, Any]:
         try:
             response = await self.client.chat.completions.create(
                 model=self.model,
-                temperature=0.8,
+                temperature=request.temperature,
                 messages=[
                     {
                         "role": "system",
-                        "content": prompt.system_prompt,
+                        "content": request.system_prompt,
                     },
                     {
                         "role": "user",
-                        "content": user_content,
+                        "content": request.user_content,
                     },
                 ],
             )
         except Exception as exc:  # pragma: no cover - depends on remote provider
-            raise ContentGenerationError(f"Model request failed: {exc}") from exc
+            raise AIServiceError(f"Model request failed: {exc}") from exc
 
         raw_content = self._extract_message_content(response)
-        parsed = self._parse_json_payload(raw_content)
-
-        title = self._sanitize_title(parsed.get("title"))
-        content = self._sanitize_content(parsed.get("content"))
-
-        if not title or not content:
-            raise ContentGenerationError("Model returned an incomplete draft.")
-
-        return GeneratePostDraftResponse(
-            title=title,
-            content=content,
-            keywords=prompt.keywords,
-            provider=self.provider_name,
-            model=self.model,
-        )
+        return self._parse_json_payload(raw_content)
 
     def _extract_message_content(self, response: Any) -> str:
         try:
             message_content = response.choices[0].message.content
         except Exception as exc:  # pragma: no cover - defensive
-            raise ContentGenerationError("Model returned an unexpected response format.") from exc
+            raise AIServiceError("Model returned an unexpected response format.") from exc
 
         if isinstance(message_content, str):
             return message_content.strip()
@@ -89,23 +57,30 @@ class OpenAICompatibleProvider:
             ]
             return "\n".join(part for part in text_parts if part)
 
-        raise ContentGenerationError("Model returned an empty response.")
+        raise AIServiceError("Model returned an empty response.")
 
     def _parse_json_payload(self, raw_content: str) -> dict[str, Any]:
         if not raw_content:
-            raise ContentGenerationError("Model returned an empty response.")
+            raise AIServiceError("Model returned an empty response.")
 
         try:
-            return json.loads(raw_content)
+            parsed = json.loads(raw_content)
+            if isinstance(parsed, dict):
+                return parsed
         except json.JSONDecodeError:
             pass
 
         json_fragment = self._extract_first_json_object(raw_content)
 
         try:
-            return json.loads(json_fragment)
+            parsed = json.loads(json_fragment)
         except json.JSONDecodeError as exc:
-            raise ContentGenerationError("Model did not return valid JSON.") from exc
+            raise AIServiceError("Model did not return valid JSON.") from exc
+
+        if not isinstance(parsed, dict):
+            raise AIServiceError("Model returned JSON in an unexpected shape.")
+
+        return parsed
 
     def _extract_first_json_object(self, text: str) -> str:
         start = text.find("{")
@@ -137,16 +112,8 @@ class OpenAICompatibleProvider:
                 elif char == "}":
                     depth -= 1
                     if depth == 0:
-                        return text[start : index + 1]
+                        return text[start:index + 1]
 
             start = text.find("{", start + 1)
 
-        raise ContentGenerationError("Model did not return a JSON object.")
-
-    def _sanitize_title(self, value: Any) -> str:
-        title = str(value or "").replace("\n", " ").strip()
-        return title[:20].strip()
-
-    def _sanitize_content(self, value: Any) -> str:
-        content = str(value or "").strip()
-        return content[:1000].strip()
+        raise AIServiceError("Model did not return a JSON object.")

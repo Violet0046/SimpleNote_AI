@@ -5,9 +5,9 @@ from fastapi import APIRouter, HTTPException
 
 from src.core.config import get_settings
 from src.core.errors import ContentGenerationError
-from src.models.content import GeneratePostDraftRequest, GeneratePostDraftResponse
+from src.features.content.models import GeneratePostDraftRequest, GeneratePostDraftResponse
+from src.features.content.service import ContentGenerationService
 from src.providers.openai_compatible import OpenAICompatibleProvider
-from src.services.content_generation import ContentGenerationService
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +17,8 @@ router = APIRouter(prefix="/api/content", tags=["content"])
 @lru_cache
 def get_content_generation_service() -> ContentGenerationService:
     settings = get_settings()
-
-    if settings.ai_provider != "openai_compatible":
-        raise RuntimeError(f"Unsupported AI_PROVIDER: {settings.ai_provider}")
-
     provider = OpenAICompatibleProvider(settings)
-    return ContentGenerationService(provider)
+    return ContentGenerationService(provider, provider.provider_name, provider.model)
 
 
 @router.post("/generate", response_model=GeneratePostDraftResponse)

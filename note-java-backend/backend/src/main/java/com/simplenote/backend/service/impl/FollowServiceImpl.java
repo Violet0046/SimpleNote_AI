@@ -4,11 +4,12 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.simplenote.backend.mapper.FollowMapper;
 import com.simplenote.backend.mapper.UserMapper;
+import com.simplenote.backend.pojo.FollowStateVO;
 import com.simplenote.backend.pojo.PageBean;
 import com.simplenote.backend.pojo.UserDetailVO;
 import com.simplenote.backend.service.FollowService;
-import com.simplenote.backend.utils.JwtUtils;
-import com.simplenote.backend.utils.ThreadLocalUtil;
+import com.simplenote.backend.security.context.UserContextHolder;
+import com.simplenote.backend.security.jwt.JwtUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -24,7 +25,7 @@ public class FollowServiceImpl implements FollowService {
     @Autowired
     private UserMapper userMapper;
     @Override
-    public String toggleFollow(Integer followedId) {
+    public FollowStateVO setFollowState(Integer followedId, boolean desiredFollowing) {
         Integer myId = getCurrentUserId();
         if (myId == 0) {
             throw new RuntimeException("请先登录");
@@ -33,13 +34,18 @@ public class FollowServiceImpl implements FollowService {
             throw new RuntimeException("不能关注你自己哦");
         }
 
-        if (followMapper.isFollowing(myId, followedId) > 0) {
-            followMapper.unfollow(myId, followedId);
-            return "已取消关注";
-        } else {
-            followMapper.follow(myId, followedId);
-            return "关注成功";
+        boolean currentlyFollowing = followMapper.isFollowing(myId, followedId) > 0;
+        if (currentlyFollowing == desiredFollowing) {
+            return new FollowStateVO(desiredFollowing, false);
         }
+
+        if (desiredFollowing) {
+            followMapper.follow(myId, followedId);
+        } else {
+            followMapper.unfollow(myId, followedId);
+        }
+
+        return new FollowStateVO(desiredFollowing, true);
     }
 
     @Override
@@ -70,7 +76,7 @@ public class FollowServiceImpl implements FollowService {
     private Integer getCurrentUserId() {
         try {
             // 1. 常规获取（针对没有被白名单放行的接口）
-            Map<String, Object> map = ThreadLocalUtil.get();
+            Map<String, Object> map = UserContextHolder.get();
             if (map != null && map.get("id") != null) {
                 return (Integer) map.get("id");
             }

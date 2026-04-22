@@ -37,6 +37,12 @@ class Settings:
     app_port: int
     cors_origins: list[str]
     request_timeout: float
+    backend_base_url: str
+    knowledge_request_timeout: float
+    knowledge_min_post_id: int
+    knowledge_max_post_id: int
+    knowledge_limit: int
+    retrieval_top_k: int
 
 
 @lru_cache
@@ -61,4 +67,10 @@ def get_settings() -> Settings:
             ["http://localhost:5173"],
         ),
         request_timeout=float(os.getenv("AI_REQUEST_TIMEOUT", "60")),
+        backend_base_url=os.getenv("BACKEND_BASE_URL", "http://127.0.0.1:8080").strip().rstrip("/"),
+        knowledge_request_timeout=float(os.getenv("KNOWLEDGE_REQUEST_TIMEOUT", "10")),
+        knowledge_min_post_id=int(os.getenv("KNOWLEDGE_MIN_POST_ID", "24")),
+        knowledge_max_post_id=int(os.getenv("KNOWLEDGE_MAX_POST_ID", "60")),
+        knowledge_limit=int(os.getenv("KNOWLEDGE_LIMIT", "40")),
+        retrieval_top_k=int(os.getenv("RETRIEVAL_TOP_K", "6")),
     )

@@ -2,6 +2,7 @@ package com.simplenote.backend.service;
 
 import java.util.List;
 
+import com.simplenote.backend.pojo.LikeStateVO;
 import com.simplenote.backend.pojo.PageBean;
 import com.simplenote.backend.pojo.Post;
 import com.simplenote.backend.pojo.PostVO;
@@ -15,8 +16,8 @@ public interface PostService {
     PageBean<PostVO> listWithPage(Integer pageNum, Integer pageSize);
     // 根据用户ID分页查询帖子
     PageBean<PostVO> pageQueryByUser(Integer userId, Integer pageNum, Integer pageSize);
-    // 点赞或取消点赞 (Toggle逻辑)
-    void toggleLike(Integer postId);
+    // 显式设置点赞状态
+    LikeStateVO setLikeState(Integer postId, boolean desiredLiked);
     // 获取用户点赞的帖子列表
     PageBean<PostVO> listLiked(Integer userId, Integer pageNum, Integer pageSize);
 

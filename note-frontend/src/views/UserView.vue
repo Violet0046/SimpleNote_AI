@@ -90,9 +90,9 @@ import PostWaterfall from '@/modules/post/components/PostWaterfall.vue'
 import {
   fetchFollowStatus,
   fetchProfileRelations,
+  setFollowUser,
   fetchUserPosts,
   fetchUserProfileById,
-  toggleFollowUser,
 } from '@/modules/profile/profile.api'
 import { useProfilePostFeed } from '@/modules/profile/composables/useProfilePostFeed'
 import { useRelationList } from '@/modules/profile/composables/useRelationList'
@@ -341,8 +341,8 @@ const handleListFollow = async (user: RelationUser) => {
 
   try {
     const relationUser = user as NormalizedRelationUser
-    await toggleFollowUser(relationUser.id)
-    relationUser.isFollowing = !relationUser.isFollowing
+    const nextState = await setFollowUser(relationUser.id, !relationUser.isFollowing)
+    relationUser.isFollowing = nextState.following
   } catch (error) {
     ElMessage.error(getErrorMessage(error, COPY.actionFailed))
   }
@@ -355,14 +355,14 @@ const toggleFollow = async () => {
   }
 
   try {
-    await toggleFollowUser(targetUserId.value)
-    isFollowing.value = !isFollowing.value
-
-    if (isFollowing.value) {
+    const nextState = await setFollowUser(targetUserId.value, !isFollowing.value)
+    if (nextState.changed && nextState.following) {
       userInfo.value.followersCount += 1
-    } else {
+    } else if (nextState.changed) {
       userInfo.value.followersCount = Math.max(0, userInfo.value.followersCount - 1)
     }
+
+    isFollowing.value = nextState.following
   } catch (error) {
     ElMessage.error(getErrorMessage(error, COPY.actionFailed))
   }
@@ -436,4 +436,3 @@ onMounted(() => {
   void resetUserPageState()
 })
 </script>
-

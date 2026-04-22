@@ -6,10 +6,11 @@ import com.simplenote.backend.mapper.CommentMapper;
 import com.simplenote.backend.pojo.Comment;
 import com.simplenote.backend.pojo.CommentAddDTO;
 import com.simplenote.backend.pojo.CommentVO;
+import com.simplenote.backend.pojo.LikeStateVO;
 import com.simplenote.backend.pojo.PageBean;
+import com.simplenote.backend.security.context.UserContextHolder;
+import com.simplenote.backend.security.jwt.JwtUtils;
 import com.simplenote.backend.service.CommentService;
-import com.simplenote.backend.utils.JwtUtils;
-import com.simplenote.backend.utils.ThreadLocalUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,7 +28,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public void addComment(CommentAddDTO dto) {
-        Map<String, Object> map = ThreadLocalUtil.get();
+        Map<String, Object> map = UserContextHolder.get();
         Integer userId = (Integer) map.get("id");
 
         Comment comment = new Comment();
@@ -44,7 +45,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public void deleteComment(Long id) {
         // 1. 获取当前登录人
-        Map<String, Object> map = ThreadLocalUtil.get();
+        Map<String, Object> map = UserContextHolder.get();
         Integer userId = (Integer) map.get("id");
 
         // 2. 调用 Mapper 执行逻辑删除
@@ -95,7 +96,7 @@ public class CommentServiceImpl implements CommentService {
     private Integer getCurrentUserId() {
         try {
             // 1. 先尝试从 ThreadLocal 获取（走拦截器的普通接口）
-            Map<String, Object> map = ThreadLocalUtil.get();
+            Map<String, Object> map = UserContextHolder.get();
             if (map != null && map.get("id") != null) {
                 return (Integer) map.get("id");
             }
@@ -121,17 +122,23 @@ public class CommentServiceImpl implements CommentService {
     }
 
     // 处理点赞逻辑的 Service
-    public void toggleCommentLike(Long commentId) {
+    public LikeStateVO setCommentLikeState(Long commentId, boolean desiredLiked) {
         Integer userId = getCurrentUserId();
         if (userId == 0) throw new RuntimeException("请先登录");
 
-        int count = commentMapper.checkLikeStatus(commentId, userId);
-        if (count > 0) { // 已点赞 -> 取消
-            commentMapper.removeLike(commentId, userId);
-            commentMapper.updateLikesCount(commentId, -1);
-        } else { // 未点赞 -> 增加
+        boolean currentlyLiked = commentMapper.checkLikeStatus(commentId, userId) > 0;
+        if (currentlyLiked == desiredLiked) {
+            return new LikeStateVO(desiredLiked, false, commentMapper.findLikesCountById(commentId));
+        }
+
+        if (desiredLiked) {
             commentMapper.addLike(commentId, userId);
             commentMapper.updateLikesCount(commentId, 1);
+        } else {
+            commentMapper.removeLike(commentId, userId);
+            commentMapper.updateLikesCount(commentId, -1);
         }
+
+        return new LikeStateVO(desiredLiked, true, commentMapper.findLikesCountById(commentId));
     }
 }

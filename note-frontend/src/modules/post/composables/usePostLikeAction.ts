@@ -1,13 +1,14 @@
 ﻿import { ElMessage } from 'element-plus'
 
-import { togglePostLike } from '@/modules/post/post-detail.api'
+import { setPostLike } from '@/modules/post/post-detail.api'
+import type { LikeStateResponse } from '@/modules/post/post-detail.types'
 import { useAuthStore } from '@/stores/auth'
 import { useLikeStore } from '@/stores/like'
 
-interface TogglePostLikeOptions {
+interface SetPostLikeOptions {
   postId: number
-  isLiked: boolean
-  onToggled?: ((nextLiked: boolean) => void) | null
+  desiredLiked: boolean
+  onToggled?: ((nextState: LikeStateResponse) => void) | null
   likeSuccessMessage?: string
   unlikeSuccessMessage?: string
   errorMessage?: string
@@ -17,33 +18,34 @@ export const usePostLikeAction = () => {
   const authStore = useAuthStore()
   const likeStore = useLikeStore()
 
-  const toggleLike = async ({
+  const setLike = async ({
     postId,
-    isLiked,
+    desiredLiked,
     onToggled = null,
     likeSuccessMessage = 'Liked successfully',
     unlikeSuccessMessage = 'Removed like',
     errorMessage = 'Action failed, please try again later',
-  }: TogglePostLikeOptions) => {
+  }: SetPostLikeOptions) => {
     if (!authStore.isLoggedIn) {
       authStore.showLoginModal()
       return null
     }
 
     try {
-      await togglePostLike(postId)
-      const nextLiked = !isLiked
+      const nextState = await setPostLike(postId, desiredLiked)
 
-      if (nextLiked) {
+      if (nextState.liked) {
         likeStore.addLikedPost(postId)
-        ElMessage.success(likeSuccessMessage)
       } else {
         likeStore.removeLikedPost(postId)
-        ElMessage.success(unlikeSuccessMessage)
       }
 
-      onToggled?.(nextLiked)
-      return nextLiked
+      if (nextState.changed) {
+        ElMessage.success(nextState.liked ? likeSuccessMessage : unlikeSuccessMessage)
+      }
+
+      onToggled?.(nextState)
+      return nextState
     } catch (error) {
       ElMessage.error(errorMessage)
       return null
@@ -51,6 +53,6 @@ export const usePostLikeAction = () => {
   }
 
   return {
-    toggleLike,
+    setLike,
   }
 }

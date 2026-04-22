@@ -127,7 +127,7 @@ const emit = defineEmits<{
 
 const likeStore = useLikeStore()
 const { openUserPage } = useOpenUserPage()
-const { toggleLike } = usePostLikeAction()
+const { setLike } = usePostLikeAction()
 
 const videoRef = ref<HTMLVideoElement | null>(null)
 const currentPlayTime = ref(0)
@@ -183,13 +183,13 @@ const handleLike = async () => {
   isPending.value = true
 
   try {
-    const nextLiked = await toggleLike({
+    const nextState = await setLike({
       postId: props.post.id,
-      isLiked: isLiked.value,
+      desiredLiked: !isLiked.value,
     })
 
-    if (nextLiked !== null) {
-      emit('like', props.post.id, nextLiked)
+    if (nextState !== null) {
+      emit('like', props.post.id, nextState.liked)
     }
   } finally {
     isPending.value = false

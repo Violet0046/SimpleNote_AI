@@ -7,7 +7,7 @@ import {
   addPostComment,
   fetchCommentReplies,
   fetchPostComments,
-  toggleCommentLike as toggleCommentLikeRequest,
+  setCommentLike,
 } from '@/modules/post/post-detail.api'
 import type { CommentSortType, PostComment } from '@/modules/post/post-detail.types'
 
@@ -79,15 +79,13 @@ export const usePostComments = () => {
       return
     }
 
-    const isCurrentlyLiked = comment.isLiked === 1 || comment.isLiked === true
-    comment.isLiked = isCurrentlyLiked ? 0 : 1
-    comment.likesCount = Math.max(0, (comment.likesCount || 0) + (isCurrentlyLiked ? -1 : 1))
+    const desiredLiked = !(comment.isLiked === 1 || comment.isLiked === true)
 
     try {
-      await toggleCommentLikeRequest(comment.id)
+      const nextState = await setCommentLike(comment.id, desiredLiked)
+      comment.isLiked = nextState.liked ? 1 : 0
+      comment.likesCount = Math.max(0, nextState.likeCount || 0)
     } catch {
-      comment.isLiked = isCurrentlyLiked ? 1 : 0
-      comment.likesCount = Math.max(0, (comment.likesCount || 0) + (isCurrentlyLiked ? 1 : -1))
       ElMessage.error('Comment like failed')
     }
   }

@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.api.routes.agent import router as agent_router
 from src.api.routes.content import router as content_router
 from src.core.config import get_settings
 
@@ -8,8 +9,8 @@ settings = get_settings()
 
 app = FastAPI(
     title="SimpleNote AI Agent Service",
-    version="1.0.0",
-    summary="AI-powered draft generation for SimpleNote post publishing.",
+    version="2.0.0",
+    summary="AI-powered draft generation and social-search Agent for SimpleNote.",
 )
 
 app.add_middleware(
@@ -21,6 +22,7 @@ app.add_middleware(
 )
 
 app.include_router(content_router)
+app.include_router(agent_router)
 
 
 @app.get("/health")
@@ -29,6 +31,7 @@ async def health_check() -> dict[str, str]:
         "status": "ok",
         "provider": settings.ai_provider,
         "model": settings.openai_model,
+        "backend_base_url": settings.backend_base_url,
     }
 
 

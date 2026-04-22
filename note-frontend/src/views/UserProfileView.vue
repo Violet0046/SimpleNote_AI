@@ -98,7 +98,7 @@ import {
   fetchLikedPosts,
   fetchOwnProfilePosts,
   fetchProfileRelations,
-  toggleFollowUser,
+  setFollowUser,
 } from '@/modules/profile/profile.api'
 import { useProfilePostFeed } from '@/modules/profile/composables/useProfilePostFeed'
 import { useRelationList } from '@/modules/profile/composables/useRelationList'
@@ -323,14 +323,14 @@ const handleListFollow = async (user: RelationUser) => {
 
   try {
     const relationUser = user as NormalizedRelationUser
-    await toggleFollowUser(relationUser.id)
-    relationUser.isFollowing = !relationUser.isFollowing
-
-    if (relationUser.isFollowing) {
+    const nextState = await setFollowUser(relationUser.id, !relationUser.isFollowing)
+    if (nextState.changed && nextState.following) {
       userInfo.value.followingCount += 1
-    } else {
+    } else if (nextState.changed) {
       userInfo.value.followingCount = Math.max(0, userInfo.value.followingCount - 1)
     }
+
+    relationUser.isFollowing = nextState.following
   } catch (error) {
     ElMessage.error(getErrorMessage(error, COPY.actionFailed))
   }
@@ -373,4 +373,3 @@ onMounted(() => {
   void loadUserPosts()
 })
 </script>
-

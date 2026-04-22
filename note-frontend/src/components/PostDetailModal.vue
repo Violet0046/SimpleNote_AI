@@ -182,7 +182,7 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
 import { ElMessage } from 'element-plus'
 
-import { fetchFollowStatus, toggleFollowUser } from '@/modules/profile/profile.api'
+import { fetchFollowStatus, setFollowUser } from '@/modules/profile/profile.api'
 import PostCommentComposer from '@/modules/post/components/PostCommentComposer.vue'
 import PostCommentsPanel from '@/modules/post/components/PostCommentsPanel.vue'
 import { usePostComments } from '@/modules/post/composables/usePostComments'
@@ -237,7 +237,7 @@ const emit = defineEmits<{
 const authStore = useAuthStore()
 const likeStore = useLikeStore()
 const { openUserPage } = useOpenUserPage()
-const { toggleLike } = usePostLikeAction()
+const { setLike } = usePostLikeAction()
 
 const postDetail = ref<Post | null>(null)
 const detailVideoRef = ref<HTMLVideoElement | null>(null)
@@ -469,22 +469,21 @@ const handlePostLike = async () => {
   if (!postDetail.value) return
 
   const currentPost = postDetail.value
-  const currentCount = Number(currentPost.likesCount || currentPost.likeCount || 0)
-  const nextLiked = await toggleLike({
+  const nextState = await setLike({
     postId: currentPost.id,
-    isLiked: isPostLiked.value,
+    desiredLiked: !isPostLiked.value,
     likeSuccessMessage: COPY.likeSuccess,
     unlikeSuccessMessage: COPY.unlikeSuccess,
     errorMessage: COPY.likeFailed,
-    onToggled: (liked) => {
-      const nextCount = Math.max(0, currentCount + (liked ? 1 : -1))
+    onToggled: (state) => {
+      const nextCount = Math.max(0, state.likeCount || 0)
       currentPost.likesCount = nextCount
       currentPost.likeCount = nextCount
     },
   })
 
-  if (nextLiked !== null) {
-    emit('like-toggle', currentPost.id, nextLiked)
+  if (nextState !== null) {
+    emit('like-toggle', currentPost.id, nextState.liked)
   }
 }
 
@@ -497,8 +496,8 @@ const toggleFollow = async () => {
   if (!postDetail.value?.userId) return
 
   try {
-    await toggleFollowUser(postDetail.value.userId)
-    isFollowing.value = !isFollowing.value
+    const nextState = await setFollowUser(postDetail.value.userId, !Boolean(isFollowing.value))
+    isFollowing.value = nextState.following
   } catch {
     ElMessage.error(COPY.followFailed)
   }

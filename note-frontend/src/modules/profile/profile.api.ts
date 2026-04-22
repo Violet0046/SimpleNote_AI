@@ -1,6 +1,7 @@
 ﻿import type { ApiResponse, Post, PostListResponse, UserInfo } from '@/types'
 import { get, post } from '@/utils/request'
 
+import { del, put } from '@/utils/request'
 import type { PaginationInput, RelationUser } from './profile.types'
 
 interface RelationRequest extends PaginationInput {
@@ -10,6 +11,11 @@ interface RelationRequest extends PaginationInput {
 
 interface UserPostsRequest extends PaginationInput {
   userId: number
+}
+
+export interface FollowStateResponse {
+  following: boolean
+  changed: boolean
 }
 
 const ensureSuccess = <T>(response: ApiResponse<T>, fallback: string): T => {
@@ -71,7 +77,10 @@ export const fetchFollowStatus = async (userId: number) => {
   return ensureSuccess(response, 'Failed to fetch follow status')
 }
 
-export const toggleFollowUser = async (userId: number) => {
-  const response = await post<unknown>(`/follow/${userId}`)
+export const setFollowUser = async (userId: number, desiredFollowing: boolean) => {
+  const response = desiredFollowing
+    ? await put<FollowStateResponse>(`/follow/${userId}`)
+    : await del<FollowStateResponse>(`/follow/${userId}`)
+
   return ensureSuccess(response, 'Failed to update follow status')
 }

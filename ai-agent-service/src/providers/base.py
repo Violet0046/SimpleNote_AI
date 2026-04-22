@@ -1,18 +1,16 @@
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Any, Protocol
 
-from src.models.content import GeneratePostDraftResponse, MediaAsset
+ChatContent = str | list[dict[str, Any]]
 
 
 @dataclass(frozen=True)
-class PromptPackage:
+class JsonGenerationRequest:
     system_prompt: str
-    user_prompt: str
-    keywords: list[str]
-    media_type: str
-    assets: list[MediaAsset]
+    user_content: ChatContent
+    temperature: float = 0.4
 
 
-class ContentProvider(Protocol):
-    async def generate_post_draft(self, prompt: PromptPackage) -> GeneratePostDraftResponse:
-        """Generate a post draft from normalized multimodal prompt data."""
+class JsonCompletionProvider(Protocol):
+    async def generate_json(self, request: JsonGenerationRequest) -> dict[str, Any]:
+        """Generate a JSON object from an LLM prompt."""

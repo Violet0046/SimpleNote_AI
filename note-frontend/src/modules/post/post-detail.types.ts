@@ -1,5 +1,11 @@
 ﻿export type CommentSortType = 1 | 2
 
+export interface LikeStateResponse {
+  liked: boolean
+  changed: boolean
+  likeCount: number | null
+}
+
 export interface PostComment {
   id: number
   userId: number

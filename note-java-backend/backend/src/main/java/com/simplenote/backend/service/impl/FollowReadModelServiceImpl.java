@@ -1,12 +1,13 @@
 package com.simplenote.backend.service.impl;
 
 import com.simplenote.backend.mapper.UserMapper;
+import com.simplenote.backend.pojo.FollowStateVO;
 import com.simplenote.backend.pojo.PageBean;
 import com.simplenote.backend.pojo.UserDetailVO;
 import com.simplenote.backend.service.FollowService;
-import com.simplenote.backend.service.support.InteractionRedisService;
-import com.simplenote.backend.utils.JwtUtils;
-import com.simplenote.backend.utils.ThreadLocalUtil;
+import com.simplenote.backend.interaction.InteractionRedisService;
+import com.simplenote.backend.security.context.UserContextHolder;
+import com.simplenote.backend.security.jwt.JwtUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
@@ -31,7 +32,7 @@ public class FollowReadModelServiceImpl implements FollowService {
     private InteractionRedisService interactionRedisService;
 
     @Override
-    public String toggleFollow(Integer followedId) {
+    public FollowStateVO setFollowState(Integer followedId, boolean desiredFollowing) {
         Integer myId = getCurrentUserId();
         if (myId == 0) {
             throw new RuntimeException("请先登录");
@@ -40,7 +41,7 @@ public class FollowReadModelServiceImpl implements FollowService {
             throw new RuntimeException("不能关注自己");
         }
 
-        return interactionRedisService.toggleFollow(myId, followedId) ? "关注成功" : "已取消关注";
+        return interactionRedisService.setFollowState(myId, followedId, desiredFollowing);
     }
 
     @Override
@@ -96,7 +97,7 @@ public class FollowReadModelServiceImpl implements FollowService {
 
     private Integer getCurrentUserId() {
         try {
-            Map<String, Object> map = ThreadLocalUtil.get();
+            Map<String, Object> map = UserContextHolder.get();
             if (map != null && map.get("id") != null) {
                 return (Integer) map.get("id");
             }

@@ -1,0 +1,115 @@
+{
+  "answer": "最近大家讨论的周末好去处主要集中在几个方向：一是室内展览，适合天气不好或想掌控节奏的人；二是低预算的户外活动，比如逛公园、河边散步，更注重氛围；三是轻松的户外路线，如徒步或散步，适合不想太累的人；四是具有生活感或自然氛围的拍照打卡地。",
+  "summary_points": [
+    "室内展览成为热门选择，节奏可控，适合天气不佳时",
+    "低预算户外活动受欢迎，更注重氛围而非花费",
+    "轻松的户外路线如徒步或散步，适合放松",
+    "具有生活感或自然氛围的拍照打卡地很火"
+  ],
+  "confidence": "high",
+  "analysis": {
+    "intent": "trend",
+    "locations": [],
+    "topics": [
+      "周末去处"
+    ],
+    "recency": true,
+    "originalQuestion": "最近大家都在讨论什么好玩的去处？"
+  },
+  "retrieved_posts": [
+    {
+      "postId": 41,
+      "title": "周末室内去处我投展览一票",
+      "location": "上海",
+      "createTime": "2026-04-10 18:30",
+      "likesCount": 20,
+      "commentCount": 3,
+      "score": 9.456,
+      "matchReasons": [
+        "topic-match",
+        "keyword-overlap",
+        "engagement",
+        "recency",
+        "trend-candidate"
+      ]
+    },
+    {
+      "postId": 48,
+      "title": "预算不高也能有周末约会感",
+      "location": "上海",
+      "createTime": "2026-04-07 18:50",
+      "likesCount": 27,
+      "commentCount": 3,
+      "score": 9.146,
+      "matchReasons": [
+        "topic-match",
+        "keyword-overlap",
+        "engagement",
+        "recency",
+        "trend-candidate"
+      ]
+    },
+    {
+      "postId": 30,
+      "title": "杭州九溪徒步新手也能走",
+      "location": "杭州",
+      "createTime": "2026-04-13 09:20",
+      "likesCount": 33,
+      "commentCount": 4,
+      "score": 9.098,
+      "matchReasons": [
+        "topic-match",
+        "engagement",
+        "recency",
+        "trend-candidate"
+      ]
+    },
+    {
+      "postId": 35,
+      "title": "法喜寺附近春天太有氛围",
+      "location": "杭州",
+      "createTime": "2026-04-08 13:50",
+      "likesCount": 25,
+      "commentCount": 3,
+      "score": 9.086,
+      "matchReasons": [
+        "topic-match",
+        "keyword-overlap",
+        "engagement",
+        "recency",
+        "trend-candidate"
+      ]
+    },
+    {
+      "postId": 33,
+      "title": "湘湖比我想象中更松弛",
+      "location": "杭州",
+      "createTime": "2026-04-10 15:00",
+      "likesCount": 17,
+      "commentCount": 0,
+      "score": 9.05,
+      "matchReasons": [
+        "topic-match",
+        "keyword-overlap",
+        "engagement",
+        "recency",
+        "trend-candidate"
+      ]
+    },
+    {
+      "postId": 29,
+      "title": "上海最近很火的拍照小街",
+      "location": "上海",
+      "createTime": "2026-04-11 16:35",
+      "likesCount": 31,
+      "commentCount": 3,
+      "score": 8.998,
+      "matchReasons": [
+        "topic-match",
+        "engagement",
+        "recency",
+        "trend-candidate"
+      ]
+    }
+  ]
+}
