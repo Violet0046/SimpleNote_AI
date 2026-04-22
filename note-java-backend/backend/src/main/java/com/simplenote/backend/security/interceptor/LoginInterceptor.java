@@ -10,13 +10,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Component
 public class LoginInterceptor implements HandlerInterceptor {
-    private static final List<String> PUBLIC_PATHS = Arrays.asList(
+    private static final List<String> PUBLIC_PATHS = List.of(
             "/user/login",
             "/user/register",
             "/user/info/*",
@@ -39,15 +39,15 @@ public class LoginInterceptor implements HandlerInterceptor {
             @NonNull HttpServletResponse response,
             @NonNull Object handler
     ) throws Exception {
-        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+        String requestMethod = Objects.requireNonNullElse(request.getMethod(), "");
+        if ("OPTIONS".equalsIgnoreCase(requestMethod)) {
             return true;
         }
 
-        String requestUri = request.getRequestURI();
+        String requestUri = Objects.requireNonNullElse(request.getRequestURI(), "");
         String token = request.getHeader("Authorization");
 
-        boolean isPublicPath = PUBLIC_PATHS.stream()
-                .anyMatch(pattern -> pathMatcher.match(pattern, requestUri));
+        boolean isPublicPath = isPublicPath(requestUri);
 
         try {
             if (token != null && !token.isEmpty()) {
@@ -77,5 +77,11 @@ public class LoginInterceptor implements HandlerInterceptor {
             @Nullable Exception ex
     ) throws Exception {
         UserContextHolder.remove();
+    }
+
+    @SuppressWarnings("null")
+    private boolean isPublicPath(String requestUri) {
+        return PUBLIC_PATHS.stream()
+                .anyMatch(pattern -> pathMatcher.match(pattern, requestUri));
     }
 }

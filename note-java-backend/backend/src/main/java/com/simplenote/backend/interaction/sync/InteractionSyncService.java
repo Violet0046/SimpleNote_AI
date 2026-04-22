@@ -1,96 +1,77 @@
 package com.simplenote.backend.interaction.sync;
 
 import com.simplenote.backend.interaction.InteractionRedisKeys;
-import com.simplenote.backend.mapper.FollowMapper;
-import com.simplenote.backend.mapper.PostMapper;
-import com.simplenote.backend.mapper.UserLikesMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Set;
+import java.util.function.Consumer;
 
 @Service
 public class InteractionSyncService {
+    private static final long DIRTY_SCAN_COUNT = 100L;
+
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
     @Autowired
-    private UserLikesMapper userLikesMapper;
+    private InteractionProjectionService interactionProjectionService;
 
-    @Autowired
-    private FollowMapper followMapper;
-
-    @Autowired
-    private PostMapper postMapper;
-
-    @Transactional
+    @SuppressWarnings("null")
     public void syncDirtyPostLikes() {
-        String dirtyPostId;
-        while ((dirtyPostId = stringRedisTemplate.opsForSet().pop(InteractionRedisKeys.POST_LIKE_DIRTY_KEY)) != null) {
-            Integer postId = Integer.valueOf(dirtyPostId);
-            List<Integer> userIds = readIntegerSetMembers(InteractionRedisKeys.buildPostLikeSetKey(postId));
-
-            syncPostLikesToDatabase(postId, userIds);
-            postMapper.updateLikesCount(postId, userIds.size());
-        }
+        processDirtyEntities(
+                InteractionRedisKeys.POST_LIKE_DIRTY_KEY,
+                InteractionRedisKeys.POST_LIKE_PROCESSING_KEY,
+                dirtyPostId -> interactionProjectionService.syncPostLikeProjection(Integer.valueOf(dirtyPostId))
+        );
     }
 
-    @Transactional
+    @SuppressWarnings("null")
     public void syncDirtyFollows() {
-        String dirtyFollowerId;
-        while ((dirtyFollowerId = stringRedisTemplate.opsForSet().pop(InteractionRedisKeys.USER_FOLLOWING_DIRTY_KEY)) != null) {
-            Integer followerId = Integer.valueOf(dirtyFollowerId);
-            List<Integer> followedIds = readAllZSetMembers(InteractionRedisKeys.buildFollowingKey(followerId));
+        processDirtyEntities(
+                InteractionRedisKeys.USER_FOLLOWING_DIRTY_KEY,
+                InteractionRedisKeys.USER_FOLLOWING_PROCESSING_KEY,
+                dirtyFollowerId -> interactionProjectionService.syncFollowProjection(Integer.valueOf(dirtyFollowerId))
+        );
+    }
 
-            syncFollowsToDatabase(followerId, followedIds);
+    @SuppressWarnings("null")
+    private void processDirtyEntities(String dirtyKey, String processingKey, Consumer<String> projector) {
+        for (String dirtyEntityId : scanSetMembers(dirtyKey)) {
+            boolean claimed = Boolean.TRUE.equals(
+                    stringRedisTemplate.opsForSet().move(dirtyKey, dirtyEntityId, processingKey)
+            );
+            if (!claimed) {
+                continue;
+            }
+
+            try {
+                projector.accept(dirtyEntityId);
+                stringRedisTemplate.opsForSet().remove(processingKey, dirtyEntityId);
+            } catch (RuntimeException ex) {
+                stringRedisTemplate.opsForSet().move(processingKey, dirtyEntityId, dirtyKey);
+                throw ex;
+            }
         }
     }
 
-    private void syncPostLikesToDatabase(Integer postId, List<Integer> userIds) {
-        if (userIds.isEmpty()) {
-            userLikesMapper.deleteByPostId(postId);
-            return;
+    @SuppressWarnings("null")
+    @NonNull
+    private List<String> scanSetMembers(String key) {
+        List<String> members = new ArrayList<>();
+        ScanOptions options = ScanOptions.scanOptions().count(DIRTY_SCAN_COUNT).build();
+
+        try (Cursor<String> cursor = stringRedisTemplate.opsForSet().scan(key, options)) {
+            while (cursor.hasNext()) {
+                members.add(cursor.next());
+            }
         }
 
-        userLikesMapper.deleteByPostIdAndUserIdNotIn(postId, userIds);
-        userLikesMapper.batchInsertByPostId(postId, userIds);
-    }
-
-    private void syncFollowsToDatabase(Integer followerId, List<Integer> followedIds) {
-        if (followedIds.isEmpty()) {
-            followMapper.deleteByFollowerId(followerId);
-            return;
-        }
-
-        followMapper.deleteByFollowerIdAndFollowedIdNotIn(followerId, followedIds);
-        followMapper.batchInsertByFollowerId(followerId, followedIds);
-    }
-
-    private List<Integer> readAllZSetMembers(@NonNull String key) {
-        Set<String> members = stringRedisTemplate.opsForZSet().range(key, 0, -1);
-        return toIntegerList(members);
-    }
-
-    private List<Integer> readIntegerSetMembers(@NonNull String key) {
-        Set<String> members = stringRedisTemplate.opsForSet().members(key);
-        return toIntegerList(members);
-    }
-
-    private List<Integer> toIntegerList(Set<String> members) {
-        if (members == null || members.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        List<Integer> result = new ArrayList<>(members.size());
-        for (String member : members) {
-            result.add(Integer.valueOf(member));
-        }
-        return result;
+        return members;
     }
 }

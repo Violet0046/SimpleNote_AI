@@ -18,6 +18,7 @@ import java.util.Set;
 public class InteractionRedisLikeService {
     private static final String POST_LIKE_EVENT_TYPE = "POST_LIKE_SET";
 
+    @SuppressWarnings("null")
     private static final RedisScript<String> SET_POST_LIKE_STATE_SCRIPT = buildStringScript("""
             local currentlyLiked = redis.call('SISMEMBER', KEYS[1], ARGV[1]) == 1
             local desiredLiked = ARGV[3] == '1'
@@ -55,6 +56,7 @@ public class InteractionRedisLikeService {
     @Autowired
     private InteractionCacheInitService interactionCacheInitService;
 
+    @SuppressWarnings("null")
     public LikeStateVO setPostLikeState(Integer postId, Integer userId, boolean desiredLiked) {
         interactionCacheInitService.ensurePostLikeCacheInitialized(postId);
         interactionCacheInitService.ensureUserLikedPostsCacheInitialized(userId);
@@ -157,6 +159,7 @@ public class InteractionRedisLikeService {
         return result;
     }
 
+    @SuppressWarnings("null")
     @NonNull
     private static RedisScript<String> buildStringScript(String scriptText) {
         DefaultRedisScript<String> script = new DefaultRedisScript<>();

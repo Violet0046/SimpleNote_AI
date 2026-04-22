@@ -6,8 +6,11 @@ import java.util.Objects;
 
 public final class InteractionRedisKeys {
     public static final String POST_LIKE_DIRTY_KEY = "post:likes:dirty";
+    public static final String POST_LIKE_PROCESSING_KEY = "post:likes:processing";
     public static final String USER_FOLLOWING_DIRTY_KEY = "user:following:dirty";
+    public static final String USER_FOLLOWING_PROCESSING_KEY = "user:following:processing";
     public static final String SOCIAL_INTERACTION_STREAM_KEY = "social:interaction:stream";
+    public static final String SOCIAL_INTERACTION_DLQ_KEY = "social:interaction:dlq";
 
     private static final String POST_LIKE_SET_KEY = "post:likes:users:";
     private static final String POST_LIKE_INIT_KEY = "post:likes:init:";

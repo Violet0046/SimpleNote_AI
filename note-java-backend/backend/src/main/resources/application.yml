@@ -52,6 +52,16 @@ cache:
 social:
   sync:
     fixed-delay-ms: 10000
+  stream:
+    group: social-interaction-sync
+    consumer: backend-1
+    batch-size: 50
+    block-ms: 1000
+    poll-fixed-delay-ms: 1000
+    reclaim-fixed-delay-ms: 5000
+    reclaim-idle-ms: 30000
+    reclaim-batch-size: 50
+    max-deliveries: 5
 
 agent:
   knowledge:

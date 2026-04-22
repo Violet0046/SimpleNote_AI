@@ -1,5 +1,6 @@
 package com.simplenote.backend.ai.knowledge.service.impl;
 
+import com.simplenote.backend.ai.knowledge.config.AgentKnowledgeProperties;
 import com.simplenote.backend.ai.knowledge.dto.KnowledgeCommentDTO;
 import com.simplenote.backend.ai.knowledge.dto.KnowledgePostCorpusResponse;
 import com.simplenote.backend.ai.knowledge.dto.KnowledgePostDocument;
@@ -9,7 +10,6 @@ import com.simplenote.backend.mapper.PostMapper;
 import com.simplenote.backend.pojo.CommentVO;
 import com.simplenote.backend.pojo.PostVO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.format.DateTimeFormatter;
@@ -25,29 +25,16 @@ public class KnowledgePostServiceImpl implements KnowledgePostService {
     @Autowired
     private CommentMapper commentMapper;
 
-    @Value("${agent.knowledge.min-post-id}")
-    private Integer defaultMinPostId;
-
-    @Value("${agent.knowledge.max-post-id}")
-    private Integer defaultMaxPostId;
-
-    @Value("${agent.knowledge.max-posts}")
-    private Integer defaultMaxPosts;
-
-    @Value("${agent.knowledge.max-comments-per-post}")
-    private Integer maxCommentsPerPost;
-
-    @Value("${agent.knowledge.max-content-length}")
-    private Integer maxContentLength;
-
-    @Value("${agent.knowledge.max-comment-length}")
-    private Integer maxCommentLength;
+    @Autowired
+    private AgentKnowledgeProperties properties;
 
     @Override
     public KnowledgePostCorpusResponse buildCorpus(Integer minPostId, Integer maxPostId, Integer limit) {
-        int resolvedMinPostId = minPostId == null ? defaultMinPostId : minPostId;
-        int resolvedMaxPostId = maxPostId == null ? defaultMaxPostId : maxPostId;
-        int resolvedLimit = limit == null || limit <= 0 ? defaultMaxPosts : Math.min(limit, defaultMaxPosts);
+        int resolvedMinPostId = minPostId == null ? properties.getMinPostId() : minPostId;
+        int resolvedMaxPostId = maxPostId == null ? properties.getMaxPostId() : maxPostId;
+        int resolvedLimit = limit == null || limit <= 0
+                ? properties.getMaxPosts()
+                : Math.min(limit, properties.getMaxPosts());
 
         List<KnowledgePostDocument> posts = postMapper.listWithAuthor().stream()
                 .filter(post -> post.getId() != null)
@@ -60,7 +47,7 @@ public class KnowledgePostServiceImpl implements KnowledgePostService {
         response.setMinPostId(resolvedMinPostId);
         response.setMaxPostId(resolvedMaxPostId);
         response.setTotalPosts(posts.size());
-        response.setMaxCommentsPerPost(maxCommentsPerPost);
+        response.setMaxCommentsPerPost(properties.getMaxCommentsPerPost());
         response.setPosts(posts);
         return response;
     }
@@ -70,7 +57,7 @@ public class KnowledgePostServiceImpl implements KnowledgePostService {
         document.setPostId(post.getId());
         document.setUserId(post.getUserId());
         document.setTitle(sanitize(post.getTitle(), 120));
-        document.setContent(sanitize(post.getContent(), maxContentLength));
+        document.setContent(sanitize(post.getContent(), properties.getMaxContentLength()));
         document.setAuthorName(post.getAuthorName());
         document.setAuthorAvatar(post.getAuthorAvatar());
         document.setLocation(post.getIpLocation());
@@ -78,7 +65,8 @@ public class KnowledgePostServiceImpl implements KnowledgePostService {
         document.setLikesCount(resolveLikeCount(post));
         document.setCommentCount(commentMapper.countByPostId(post.getId()));
         document.setVideo(Boolean.TRUE.equals(post.getIsVideo()));
-        document.setTopComments(commentMapper.listEvidenceCommentsByPostId(post.getId(), maxCommentsPerPost).stream()
+        document.setTopComments(commentMapper
+                .listEvidenceCommentsByPostId(post.getId(), properties.getMaxCommentsPerPost()).stream()
                 .map(this::toKnowledgeCommentDTO)
                 .toList());
         return document;
@@ -89,7 +77,7 @@ public class KnowledgePostServiceImpl implements KnowledgePostService {
         dto.setId(comment.getId());
         dto.setUserId(comment.getUserId());
         dto.setAuthorName(comment.getAuthorName());
-        dto.setContent(sanitize(comment.getContent(), maxCommentLength));
+        dto.setContent(sanitize(comment.getContent(), properties.getMaxCommentLength()));
         dto.setLikesCount(comment.getLikesCount());
         dto.setCreateTime(comment.getCreateTime() == null ? null : comment.getCreateTime().format(DATE_TIME_FORMATTER));
         return dto;

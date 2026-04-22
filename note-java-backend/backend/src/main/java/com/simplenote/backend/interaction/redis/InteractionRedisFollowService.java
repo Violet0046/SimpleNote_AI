@@ -18,6 +18,7 @@ import java.util.Set;
 public class InteractionRedisFollowService {
     private static final String FOLLOW_EVENT_TYPE = "FOLLOW_SET";
 
+    @SuppressWarnings("null")
     private static final RedisScript<String> SET_FOLLOW_STATE_SCRIPT = buildStringScript("""
             local currentlyFollowing = redis.call('ZSCORE', KEYS[1], ARGV[2]) ~= false
             local desiredFollowing = ARGV[3] == '1'
@@ -53,6 +54,7 @@ public class InteractionRedisFollowService {
     @Autowired
     private InteractionCacheInitService interactionCacheInitService;
 
+    @SuppressWarnings("null")
     public FollowStateVO setFollowState(Integer followerId, Integer followedId, boolean desiredFollowing) {
         interactionCacheInitService.ensureFollowingCacheInitialized(followerId);
         interactionCacheInitService.ensureFollowersCacheInitialized(followedId);
@@ -153,6 +155,7 @@ public class InteractionRedisFollowService {
         return result;
     }
 
+    @SuppressWarnings("null")
     @NonNull
     private static RedisScript<String> buildStringScript(String scriptText) {
         DefaultRedisScript<String> script = new DefaultRedisScript<>();
