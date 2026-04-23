@@ -1,6 +1,7 @@
 ﻿import { get, post } from '@/utils/request'
 
 import { del, put } from '@/utils/request'
+import type { Post } from '@/types'
 import type { AddCommentPayload, CommentSortType, LikeStateResponse, PostComment } from './post-detail.types'
 
 const resolveItems = <T>(data: { items?: T[] } | T[] | null | undefined): T[] => {
@@ -48,5 +49,10 @@ export const setPostLike = async (postId: number, desiredLiked: boolean) => {
     ? await put<LikeStateResponse>(`/post/${postId}/like`)
     : await del<LikeStateResponse>(`/post/${postId}/like`)
 
+  return response.data
+}
+
+export const fetchPostDetail = async (postId: number) => {
+  const response = await get<Post>(`/post/detail/${postId}`)
   return response.data
 }

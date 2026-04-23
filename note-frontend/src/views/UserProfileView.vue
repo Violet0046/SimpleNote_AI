@@ -1,5 +1,5 @@
 ﻿<template>
-  <main ref="scrollContainer" class="no-scrollbar relative flex h-screen flex-1 flex-col overflow-y-auto scroll-smooth bg-white">
+  <main ref="scrollContainer" class="no-scrollbar relative flex h-screen flex-1 flex-col overflow-y-auto scroll-smooth bg-[var(--sn-bg-app)]">
     <AppSearchBar placeholder="Search Notes" sticky z-class="z-50" />
 
     <ProfileHeader
@@ -15,7 +15,7 @@
 
     <ProfileTabs :items="profileTabs" :active-tab="activeTab" @select="switchTab" />
 
-    <div class="w-full bg-white px-[6px] pb-[60px] pt-[20px]">
+    <div class="w-full bg-[var(--sn-bg-app)] px-[6px] pb-[60px] pt-[20px]">
       <section v-if="isPostTab">
         <div v-if="loading && userPosts.length === 0" class="mt-10 flex justify-center">
           <svg class="h-8 w-8 animate-spin text-[#FF2442]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

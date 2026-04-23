@@ -1,6 +1,6 @@
 ﻿<template>
   <div class="flex h-screen overflow-hidden bg-white">
-    <div class="mx-auto flex h-full w-full max-w-[2130px] px-[30px] 2xl:px-[210px]">
+    <div class="relative mx-auto flex h-full w-full max-w-[2130px] px-[30px] 2xl:px-[210px]">
       <aside class="flex h-full w-[320px] flex-shrink-0 flex-col bg-white">
         <div class="mt-[25px] flex items-center pl-[50px]">
           <img :src="logo" alt="Simple Note" class="h-8 w-8 rounded-full object-cover" />
@@ -68,6 +68,23 @@
               </svg>
               <span>通知</span>
             </RouterLink>
+
+            <button
+              class="mx-auto flex h-[56px] w-[272px] items-center gap-[16px] rounded-full pl-[24px] text-lg font-semibold transition-colors hover:bg-[#F7F7F7]"
+              :class="isAiSearchPanelOpen ? 'text-[#FF2442] bg-[#F7F7F7]' : 'text-gray-800'"
+              type="button"
+              @click="isAiSearchPanelOpen = !isAiSearchPanelOpen"
+            >
+              <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M9.813 15.904L9 18l-.813-2.096a2 2 0 00-1.116-1.116L5 14l2.071-.788a2 2 0 001.116-1.116L9 10l.813 2.096a2 2 0 001.116 1.116L13 14l-2.071.788a2 2 0 00-1.116 1.116zM17.813 7.904L17 10l-.813-2.096a2 2 0 00-1.116-1.116L13 6l2.071-.788a2 2 0 001.116-1.116L17 2l.813 2.096a2 2 0 001.116 1.116L21 6l-2.071.788a2 2 0 00-1.116 1.116z"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="1.8"
+                />
+              </svg>
+              <span>AI 搜推</span>
+            </button>
 
             <template v-if="authStore.isLoggedIn">
               <RouterLink
@@ -165,6 +182,8 @@
         </div>
       </aside>
 
+      <AiSocialSearchPanel :open="isAiSearchPanelOpen" @close="isAiSearchPanelOpen = false" />
+
       <RouterView v-slot="{ Component, route: currentRoute }">
         <KeepAlive>
           <component :is="Component" v-if="currentRoute.path === '/'" :key="'feed'" />
@@ -176,22 +195,26 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, provide, ref } from 'vue'
+import { computed, onMounted, onUnmounted, provide, ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
 import logo from '@/assets/logo.png'
+import AiSocialSearchPanel from '@/modules/ai/components/AiSocialSearchPanel.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useThemeStore } from '@/stores/theme'
 import { removeStorageItem } from '@/shared/utils/storage'
 
 const authStore = useAuthStore()
+const themeStore = useThemeStore()
 const route = useRoute()
 const router = useRouter()
 
 const refreshDiscoverTrigger = ref(0)
 const showMoreMenu = ref(false)
-const isDarkMode = ref(false)
+const isAiSearchPanelOpen = ref(false)
 const moreMenuContainerRef = ref<HTMLElement | null>(null)
+const isDarkMode = computed(() => themeStore.isDarkMode)
 
 provide('refreshDiscoverTrigger', refreshDiscoverTrigger)
 
@@ -230,14 +253,8 @@ const handleLogout = () => {
 }
 
 const toggleDarkMode = () => {
-  isDarkMode.value = !isDarkMode.value
   showMoreMenu.value = false
-
-  if (isDarkMode.value) {
-    document.documentElement.classList.add('dark-theme')
-  } else {
-    document.documentElement.classList.remove('dark-theme')
-  }
+  themeStore.toggleTheme()
 }
 
 const closeMenuOnClickOutside = (event: MouseEvent) => {
@@ -266,46 +283,5 @@ onUnmounted(() => {
 .fade-leave-to {
   opacity: 0;
   transform: translateY(10px);
-}
-
-html.dark-theme,
-html.dark-theme body,
-html.dark-theme #app,
-html.dark-theme .bg-white,
-html.dark-theme main,
-html.dark-theme aside {
-  background-color: #0a0a0a !important;
-  color: #ffffff !important;
-}
-
-html.dark-theme .text-gray-800,
-html.dark-theme .text-gray-900,
-html.dark-theme .text-gray-700,
-html.dark-theme span {
-  color: #ffffff !important;
-}
-
-html.dark-theme .bg-\[\#F7F7F7\],
-html.dark-theme .hover\:bg-\[\#F7F7F7\]:hover,
-html.dark-theme .bg-gray-100,
-html.dark-theme .bg-gray-50 {
-  background-color: #1a1a1a !important;
-}
-
-/* 修复暗色下 hover:bg-gray-50 变成白底的问题 */
-html.dark-theme .hover\:bg-gray-50:hover {
-  background-color: #1a1a1a !important;
-}
-
-html.dark-theme input {
-  color: #ffffff !important;
-}
-
-html.dark-theme input::placeholder {
-  color: #666666 !important;
-}
-
-html.dark-theme .border-gray-100 {
-  border-color: #333333 !important;
 }
 </style>

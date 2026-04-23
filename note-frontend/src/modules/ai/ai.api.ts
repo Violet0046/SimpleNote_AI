@@ -1,6 +1,11 @@
 import { AI_API_BASE_URL } from '@/shared/api/env'
 
-import type { GeneratePostDraftRequest, GeneratePostDraftResponse } from './ai.types'
+import type {
+  GeneratePostDraftRequest,
+  GeneratePostDraftResponse,
+  SocialSearchRequest,
+  SocialSearchResponse,
+} from './ai.types'
 
 const resolveErrorMessage = (payload: unknown, fallback: string) => {
   if (payload && typeof payload === 'object' && 'detail' in payload) {
@@ -42,4 +47,30 @@ export const generatePostDraft = async (
   }
 
   return data as GeneratePostDraftResponse
+}
+
+export const socialSearchPosts = async (
+  payload: SocialSearchRequest,
+): Promise<SocialSearchResponse> => {
+  const response = await fetch(`${AI_API_BASE_URL}/api/agent/social-search`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      question: payload.question,
+      min_post_id: payload.minPostId,
+      max_post_id: payload.maxPostId,
+      knowledge_limit: payload.knowledgeLimit,
+      top_k: payload.topK,
+    }),
+  })
+
+  const data = await response.json().catch(() => null)
+
+  if (!response.ok) {
+    throw new Error(resolveErrorMessage(data, 'AI social search failed.'))
+  }
+
+  return data as SocialSearchResponse
 }

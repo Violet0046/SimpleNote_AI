@@ -1,13 +1,19 @@
 ﻿<template>
   <Teleport to="body">
     <Transition name="fade" appear>
-      <div v-if="visible" class="fixed inset-0 z-[9998] bg-black/60 transition-opacity" @click="handleClose"></div>
+      <div
+        v-if="visible"
+        data-post-detail-overlay="true"
+        class="fixed inset-0 z-[9998] bg-black/60 transition-opacity"
+        @click="handleClose"
+      ></div>
     </Transition>
 
     <Transition name="fade" appear>
       <button
         v-if="visible"
         type="button"
+        data-post-detail-close="true"
         class="fixed left-6 top-6 z-[10000] flex h-12 w-12 items-center justify-center rounded-full border border-white/20 bg-black/20 text-white shadow-lg backdrop-blur-md transition-all hover:bg-white/20"
         @click="handleClose"
       >
@@ -19,6 +25,7 @@
 
     <div
       v-if="visible && postDetail"
+      data-post-detail-dialog="true"
       class="fixed z-[9999] flex overflow-hidden bg-white shadow-2xl transition-all duration-[400ms] ease-[cubic-bezier(0.32,0.72,0,1)] dark:bg-gray-900"
       :style="modalStyle"
       @click.stop
